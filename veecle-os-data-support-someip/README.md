@@ -1,6 +1,9 @@
-# Veecle OS SOME/IP support
+# veecle-os-data-support-someip
 
 This is a reference implementation to prototype compatibility between the `veecle-os` framework and [vSomeIP](https://github.com/COVESA/vsomeip).
+
+**Note**: Most users should depend on the [`veecle-os`](https://crates.io/crates/veecle-os) crate instead of using this crate directly.
+The `veecle-os` crate re-exports this functionality and provides a more complete API for building Veecle OS applications.
 
 ## Patent and Intellectual Property Notice
 

@@ -1,3 +1,17 @@
+# veecle-osal-freertos
+
+Veecle OS operating system abstraction layer implementation for [FreeRTOS](https://www.freertos.org/).
+
+## Overview
+
+This crate provides the FreeRTOS implementation of the Veecle OS operating system abstraction layer API.
+It implements the traits defined in `veecle-osal-api`.
+
+**Note**: Most users should depend on the [`veecle-os`](https://crates.io/crates/veecle-os) crate instead of using this crate directly.
+The `veecle-os` crate re-exports this functionality and provides a more complete API for building Veecle OS applications.
+
+For examples and more detailed usage information, please refer to the [repository](https://github.com/veecle/veecle-os).
+
 ## Tests
 
 All tests are written using the FreeRTOS POSIX port.
