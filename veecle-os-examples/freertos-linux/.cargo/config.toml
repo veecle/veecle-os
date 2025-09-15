@@ -1,0 +1,2 @@
+[env]
+FREERTOS_CONFIG_INCLUDE_PATH = { value = "", relative = true }

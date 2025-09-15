@@ -1,0 +1,25 @@
+[build]
+target = "thumbv7em-none-eabihf"
+
+[target.'cfg(all(target_arch = "arm", target_os = "none"))']
+rustflags = [
+  # LLD (shipped with the Rust toolchain) is used as the default linker.
+  # Provide the custom linker script before the dependency-provided one to set interrupt handlers.
+  "-C", "link-arg=-Tlink-customization.x",
+  "-C", "link-arg=-Tlink.x",
+  # If you run into problems with LLD switch to the GNU linker by commenting out
+  # this line:
+  # "-C", "linker=arm-none-eabi-ld",
+
+  # If you need to link to pre-compiled C libraries provided by a C toolchain,
+  # use GCC as the linker by commenting out both lines above and uncommenting
+  # the lines below:
+  # "-C", "linker=arm-none-eabi-gcc",
+  # "-C", "link-arg=-Wl,-Tlink.x",
+  # "-C", "link-arg=-nostartfiles",
+]
+runner = 'probe-rs run'
+
+[env]
+PROBE_RS_CHIP = "STM32F767ZITx"
+FREERTOS_CONFIG_INCLUDE_PATH = { value = "", relative = true }

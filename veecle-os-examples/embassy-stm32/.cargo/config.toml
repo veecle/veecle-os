@@ -1,0 +1,12 @@
+[build]
+target = "thumbv7em-none-eabihf"
+
+[target.'cfg(all(target_arch = "arm", target_os = "none"))']
+runner = ["probe-rs", "run"]
+rustflags = [
+  # Use the linker script provided by cortex-m-rt crate.
+  "-C", "link-arg=-Tlink.x",
+]
+
+[env]
+PROBE_RS_CHIP = "STM32F767ZITx"

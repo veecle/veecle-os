@@ -1,0 +1,18 @@
+[alias]
+veecle-os = "run --locked --package veecle-os-cli --bin veecle-os --"
+
+[env]
+FREERTOS_CONFIG_INCLUDE_PATH = { value = "", relative = true }
+
+FREERTOS_KERNEL_INCLUDE_PATH = { value = "external/submodules/FreeRTOS-Kernel/include", relative = true }
+FREERTOS_HEAP_FILE_PATH = { value = "external/submodules/FreeRTOS-Kernel/portable/MemMang/heap_4.c", relative = true }
+
+VSOMEIP_PATH = { value = "external/submodules/vsomeip", relative = true }
+COMMON_API_CORE_PATH = { value = "external/submodules/capicxx-core-runtime", relative = true }
+COMMON_API_SOMEIP_PATH = { value = "external/submodules/capicxx-someip-runtime", relative = true }
+
+[doc.extern-map.registries]
+crates-io = "https://docs.rs/"
+
+[unstable]
+rustdoc-map = true
