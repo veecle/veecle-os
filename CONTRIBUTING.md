@@ -13,6 +13,13 @@ Follow this workflow to ensure smooth review and integration.
 3. Claim your work: Comment on issues to indicate you're working on them to avoid duplicate effort.
 4. Read our guidelines: Familiarize yourself with the [Code of Conduct](CODE_OF_CONDUCT.md) and this contribution guide.
 
+### Developer certificate of origin (DCO)
+
+To make a good faith effort to ensure licensing criteria are met, this repository requires a DCO process to be followed.
+You must sign-off the DCO that you can see at <https://developercertificate.org/> to contribute to the repository by adding a sign-off to your commits.
+Use `git commit -s` to sign off your commits.
+Refer to [the Developer Certificate of Origin GitHub app](https://probot.github.io/apps/dco/) for details on how this repository enforces sign-off.
+
 ### Submitting Changes
 
 1. Make your changes following the code quality guidelines below.
