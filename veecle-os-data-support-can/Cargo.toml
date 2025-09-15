@@ -1,0 +1,39 @@
+[package]
+description = "Support for working with CAN messages within Veecle OS"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-os-data-support-can"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+arbitrary = ["dep:arbitrary", "veecle-os-data-support-can-macros/arbitrary"]
+
+[dependencies]
+arbitrary = { workspace = true, optional = true }
+serde = { workspace = true, features = ["derive"] }
+tinyvec = { workspace = true, features = ["serde"] }
+veecle-os-data-support-can-macros = { workspace = true }
+veecle-os-runtime = { workspace = true }
+
+[dev-dependencies]
+hex = { workspace = true, features = ["alloc"] }
+libtest-mimic = { workspace = true }
+pretty_assertions = { workspace = true, features = ["std"] }
+syn = { workspace = true, features = ["parsing"] }
+test-case = { workspace = true }
+veecle-os-data-support-can-codegen = { workspace = true }
+
+[[test]]
+harness = false
+name = "serialization"
+
+[package.metadata]
+# This crate will never involve any unsafe code.
+workspace-checks.miri = false

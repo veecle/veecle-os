@@ -1,0 +1,31 @@
+[package]
+description = "Veecle OS operating system abstraction layer implementation for FreeRTOS"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-osal-freertos"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# The tests involve FFI which miri cannot execute.
+workspace-checks.miri = false
+
+[lints]
+workspace = true
+
+[dependencies]
+futures = { workspace = true }
+rtt-target = { workspace = true }
+veecle-freertos-integration = { workspace = true }
+veecle-osal-api = { workspace = true }
+
+[dev-dependencies]
+veecle-freertos-integration = { workspace = true, features = [
+  "link-freertos",
+  # SAFETY: we use the same prototype in `FreeRTOSConfig.h` as required by this feature.
+  "unsafe-hooks-assert",
+] }
+veecle-freertos-sys = { workspace = true }

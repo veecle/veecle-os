@@ -1,0 +1,17 @@
+error: invalid value for `crate`, must be a simple path
+ --> tests/ui/actor/bad_renamed_crate.rs:4:43
+  |
+4 | #[veecle_os_runtime_macros::actor(crate = "::veecle_os_runtime")]
+  |                                           ^^^^^^^^^^^^^^^^^^^^^
+
+error: `crate` must be a name value pair (`crate = veecle_os_runtime`)
+ --> tests/ui/actor/bad_renamed_crate.rs:9:35
+  |
+9 | #[veecle_os_runtime_macros::actor(crate())]
+  |                                   ^^^^^^^
+
+error: setting `crate` argument multiple times
+  --> tests/ui/actor/bad_renamed_crate.rs:14:64
+   |
+14 | #[veecle_os_runtime_macros::actor(crate = ::veecle_os_runtime, crate = ::veecle_os_runtime2)]
+   |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

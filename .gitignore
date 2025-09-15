@@ -1,0 +1,8 @@
+# Cargo
+target/
+
+# VSCode
+.vscode
+
+# Jetbrains IDEs
+.idea

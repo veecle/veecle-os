@@ -1,0 +1,35 @@
+[package]
+description = "Veecle OS operating system abstraction layer API"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-osal-api"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[lints]
+workspace = true
+
+[features]
+# Enables test suites for TCP and UDP.
+# The test suites provide ready-made tests for implementations of the traits.
+test-suites = ["futures/async-await"]
+
+[dependencies]
+embedded-io-async = { workspace = true }
+futures = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+
+[dev-dependencies]
+futures = { workspace = true, features = ["executor"] }
+tokio = { workspace = true }
+trybuild = { workspace = true }
+veecle-os-runtime = { workspace = true }
+veecle-osal-std = { workspace = true }
+walkdir = { workspace = true }

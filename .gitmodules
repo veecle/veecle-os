@@ -1,0 +1,12 @@
+[submodule "external/submodules/FreeRTOS-Kernel"]
+	path = external/submodules/FreeRTOS-Kernel
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+[submodule "external/submodules/vsomeip"]
+	path = external/submodules/vsomeip
+	url = https://github.com/COVESA/vsomeip.git
+[submodule "external/submodules/capicxx-someip-runtime"]
+	path = external/submodules/capicxx-someip-runtime
+	url = https://github.com/COVESA/capicxx-someip-runtime.git
+[submodule "external/submodules/capicxx-core-runtime"]
+	path = external/submodules/capicxx-core-runtime
+	url = https://github.com/veecle/capicxx-core-runtime.git

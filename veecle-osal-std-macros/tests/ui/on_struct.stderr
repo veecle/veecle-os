@@ -1,0 +1,11 @@
+error: expected `fn`
+ --> tests/ui/on_struct.rs:2:1
+  |
+2 | struct Foo;
+  | ^^^^^^
+
+error[E0601]: `main` function not found in crate `$CRATE`
+ --> tests/ui/on_struct.rs:2:12
+  |
+2 | struct Foo;
+  |            ^ consider adding a `main` function to `$DIR/tests/ui/on_struct.rs`

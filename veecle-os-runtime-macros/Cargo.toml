@@ -1,0 +1,44 @@
+[package]
+description = "Macros for `veecle-os-runtime`"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-os-runtime-macros"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# Miri cannot test proc-macros.
+workspace-checks.miri = false
+
+[lints]
+workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+darling = { workspace = true, features = ["suggestions"] }
+heck = { workspace = true }
+proc-macro-crate = { workspace = true }
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+syn = { workspace = true, features = [
+  "clone-impls",
+  "derive",
+  "extra-traits",
+  "full",
+  "parsing",
+  "printing",
+  "proc-macro",
+  "visit",
+  "visit-mut",
+] }
+
+[dev-dependencies]
+runtime-macros = { workspace = true }
+trybuild = { workspace = true }
+veecle-os-runtime = { workspace = true }
+walkdir = { workspace = true }

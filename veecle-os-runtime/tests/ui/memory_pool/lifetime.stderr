@@ -1,0 +1,11 @@
+error[E0597]: `pool` does not live long enough
+ --> tests/ui/memory_pool/lifetime.rs:6:9
+  |
+4 |     let _chunk = {
+  |         ------ borrow later stored here
+5 |         let pool: MemoryPool<usize, 2> = MemoryPool::new();
+  |             ---- binding `pool` declared here
+6 |         pool.chunk(0)
+  |         ^^^^ borrowed value does not live long enough
+7 |     };
+  |     - `pool` dropped here while still borrowed

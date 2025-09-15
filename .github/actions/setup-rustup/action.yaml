@@ -1,0 +1,28 @@
+inputs:
+  rust-toolchain-toml:
+    description: "Name of the Rust toolchain file in the root of the repository that should be installed."
+    required: false
+    default: "rust-toolchain.toml"
+runs:
+  using: composite
+  steps:
+    - if: ${{inputs.rust-toolchain-toml != 'rust-toolchain.toml'}}
+      shell: bash
+      run: |
+        cp ${{inputs.rust-toolchain-toml}} rust-toolchain.toml
+
+    - shell: bash
+      run: |
+        echo "CARGO_HOME=$RUNNER_TEMP/cargo" | tee -a "$GITHUB_ENV"
+        echo "RUSTUP_HOME=$RUNNER_TEMP/rustup" | tee -a "$GITHUB_ENV"
+        echo "PATH=$RUNNER_TEMP/cargo/bin:$PATH" | tee -a "$GITHUB_ENV"
+
+    # `rustup` installs to the directories specified in the environment variables above.
+    - shell: bash
+      run: >
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs
+        | sh -s -- --profile minimal --no-modify-path --no-update-default-toolchain -y
+
+    # Trigger installation of what is specified in the `rust-toolchain.toml` if it exists.
+    - shell: bash
+      run: rustup toolchain install

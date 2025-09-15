@@ -1,0 +1,10 @@
+error[E0412]: cannot find type `Inner` in this scope
+ --> tests/ui/storable/missing_import.rs:6:24
+  |
+6 | #[storable(data_type = "Vec<Inner>")]
+  |                        ^^^^^^^^^^^^ not found in this scope
+  |
+help: consider importing this struct
+  |
+1 + use crate::inner::Inner;
+  |

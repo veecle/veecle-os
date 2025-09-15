@@ -1,0 +1,21 @@
+[package]
+description = "Message definition for the WebSocket tracing data protocol"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-telemetry-server-protocol"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { workspace = true, features = ["std"] }
+serde_derive = { workspace = true }

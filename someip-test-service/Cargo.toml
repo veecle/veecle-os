@@ -1,0 +1,32 @@
+[package]
+description = "SOME/IP test service"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "someip-test-service"
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+rand = { workspace = true, features = ["thread_rng"] }
+serde = { workspace = true, features = ["derive"] }
+serde_ini = { workspace = true }
+serde_json = { workspace = true, features = ["std"] }
+signal-hook = { workspace = true }
+someip-test-service-sys = { workspace = true }
+strum = { workspace = true, features = ["derive"] }
+tempfile = { workspace = true }
+
+[dev-dependencies]
+ntest_timeout = { workspace = true }
+
+[package.metadata]
+# miri is having issues with the tempfile crate
+# because it uses "open", which is unsupported.
+workspace-checks.miri = false

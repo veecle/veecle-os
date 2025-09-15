@@ -1,0 +1,5 @@
+error: arguments must have a simple identifier pattern (e.g. `reader: Reader<..>`)
+ --> tests/ui/actor/bad_argument_names.rs:6:5
+  |
+6 |     Reader { .. }: veecle_os_runtime::Reader<'_, Sensor>,
+  |     ^^^^^^

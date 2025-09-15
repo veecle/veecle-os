@@ -1,0 +1,46 @@
+[package]
+description = "Macros for `veecle-osal-std`"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-osal-std-macros"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# Miri cannot test proc-macros.
+workspace-checks.miri = false
+
+[lints]
+workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+darling = { workspace = true, features = ["suggestions"] }
+proc-macro-crate = { workspace = true }
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+syn = { workspace = true, features = [
+  "clone-impls",
+  "derive",
+  "extra-traits",
+  "full",
+  "parsing",
+  "printing",
+  "proc-macro",
+  "visit",
+] }
+
+[dev-dependencies]
+runtime-macros = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+trybuild = { workspace = true }
+veecle-os = { workspace = true, features = ["osal-std"] }
+veecle-osal-std = { workspace = true }
+veecle-osal-std-macros = { workspace = true }
+veecle-telemetry = { workspace = true, features = ["enable", "std"] }
+walkdir = { workspace = true }

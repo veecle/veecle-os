@@ -1,0 +1,25 @@
+[package]
+description = "Support for working with SOME/IP within Veecle OS"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-os-data-support-someip"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+bitflags = { workspace = true }
+thiserror = { workspace = true }
+veecle-os-data-support-someip-macros = { workspace = true }
+
+[dev-dependencies]
+pretty_assertions = { workspace = true, features = ["std"] }
+
+[package.metadata]
+# This crate will never involve any unsafe code.
+workspace-checks.miri = false

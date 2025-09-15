@@ -1,0 +1,24 @@
+[package]
+description = "Utilities for testing actors in Veecle OS"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-os-test"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[dependencies]
+futures = { workspace = true, features = ["executor"] }
+veecle-os-runtime = { workspace = true }
+
+[dev-dependencies]
+veecle-os.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,25 @@
+[package]
+description = "Defines the shared protocol used to communicate between runtime instances and the `veecle-orchestrator`"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-ipc-protocol"
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[dependencies]
+displaydoc = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true, features = ["std"] }
+thiserror = { workspace = true, features = ["std"] }
+tokio-util = { workspace = true, features = ["codec"] }
+veecle-telemetry = { workspace = true, features = ["std"] }
+
+[lints]
+workspace = true

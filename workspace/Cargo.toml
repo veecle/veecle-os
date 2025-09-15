@@ -1,0 +1,39 @@
+[package]
+description = "Internal workspace tests"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "workspace"
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# We don't want to recursively test this (and it is purely a test helper crate).
+workspace-checks.miri = false
+
+[lib]
+test = false
+
+[lints]
+workspace = true
+
+[dependencies]
+
+[[test]]
+name = "checks"
+harness = false
+
+[dev-dependencies]
+camino = { workspace = true, features = ["serde"] }
+cargo_metadata = { workspace = true }
+libtest-mimic = { workspace = true }
+serde_json = { workspace = true, features = ["std"] }
+toml = { workspace = true, features = ["parse", "serde", "std"] }
+
+[build-dependencies]
+camino = { workspace = true, features = ["serde"] }
+cargo_metadata = { workspace = true }
+serde_json = { workspace = true }
+walkdir = { workspace = true }

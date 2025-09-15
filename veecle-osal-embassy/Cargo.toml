@@ -1,0 +1,44 @@
+[package]
+description = "Veecle OS operating system abstraction layer implementation for Embassy"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-osal-embassy"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[dependencies]
+# TODO:
+# Ideally, we wouldn't enable any features, as that should be done by the end user.
+# embassy-net doesn't allow us to compile without at least one `medium-*` feature.
+# To build abstractions over the TCP and UDP sockets, we need the respective features active and both IP features.
+# We could just live with the crate not being able to be built stand-alone,
+# but that conflicts with our CI as being able to build the library is required for things like clippy.
+# Tracked in DEV-654.
+embassy-net = { workspace = true, features = ["medium-ethernet", "proto-ipv4", "proto-ipv6", "tcp", "udp"] }
+embassy-time = { workspace = true }
+embedded-hal-async = { workspace = true }
+embedded-io = { workspace = true }
+embedded-io-async = { workspace = true }
+futures = { workspace = true }
+rtt-target = { workspace = true }
+veecle-osal-api = { workspace = true }
+
+[dev-dependencies]
+critical-section = { workspace = true, features = ["std"] }
+embassy-executor = { workspace = true, features = ["arch-std", "executor-thread"] }
+embassy-net = { workspace = true, features = ["medium-ip"] }
+embassy-net-driver = { workspace = true }
+embassy-time = { workspace = true, features = ["generic-queue-32", "mock-driver"] }
+heapless = { workspace = true }
+static_cell = { workspace = true }
+veecle-osal-api = { workspace = true, features = ["test-suites"] }
+
+[lints]
+workspace = true

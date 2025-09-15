@@ -1,0 +1,35 @@
+[package]
+description = "Veecle OS Runtime"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-os-runtime"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[features]
+default = []
+veecle-telemetry = ["dep:veecle-telemetry"]
+
+[lints]
+workspace = true
+
+[dependencies]
+futures = { workspace = true, features = ["async-await"] }
+generic-array = { workspace = true }
+pin-cell.workspace = true
+pin-project.workspace = true
+typenum = { workspace = true, features = ["const-generics"] }
+veecle-os-runtime-macros = { workspace = true }
+veecle-telemetry = { workspace = true, optional = true }
+wakerset.workspace = true
+
+[dev-dependencies]
+futures = { workspace = true, features = ["executor"] }
+futures-test = { workspace = true, features = ["std"] }
+tokio = { workspace = true, features = ["full"] }
+trybuild = { workspace = true }
+veecle-os-test = { workspace = true }
+walkdir = { workspace = true }

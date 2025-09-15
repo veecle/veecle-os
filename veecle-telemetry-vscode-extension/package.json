@@ -1,0 +1,134 @@
+{
+  "name": "veecle-telemetry-ui",
+  "displayName": "veecle-telemetry-ui",
+  "description": "veecle-telemetry-ui in vscode",
+  "version": "0.0.1",
+  "engines": {
+    "node": "^22.13.1",
+    "pnpm": "9.12.1",
+    "vscode": "^1.97.0"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^22.13.1",
+      "onFail": "download"
+    }
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onWebviewPanel:veecleTelemetry.app",
+    "onWebviewPanel:veecleTelemetry.preview",
+    "onWebviewPanel:veecleTelemetry.editorPreview"
+  ],
+  "imports": {
+    "#wasm": ["./wasm/index.js"],
+    "#*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*.tsx",
+      "./src/*.js",
+      "./src/*.jsx",
+      "./src/*/index.ts",
+      "./src/*/index.tsx",
+      "./src/*/index.js",
+      "./src/*/index.jsx"
+    ]
+  },
+  "main": "./dist/extension-node.js",
+  "browser": "./dist/extension-web.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "veecleTelemetry.open",
+        "title": "Open `veecle-telemetry-ui`",
+        "category": "Veecle Telemetry UI"
+      },
+      {
+        "command": "veecleTelemetry.showPreview",
+        "title": "Open Preview",
+        "category": "Veecle Telemetry UI"
+      },
+      {
+        "command": "veecleTelemetry.showPreviewToSide",
+        "title": "Open Preview to the Side",
+        "category": "Veecle Telemetry UI",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "veecleTelemetry.showSource",
+        "title": "Show Source",
+        "category": "Veecle Telemetry UI",
+        "icon": "$(go-to-file)"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "veecleTelemetry.editorPreview",
+        "displayName": "Preview with veecle-telemetry-ui",
+        "priority": "default",
+        "selector": [
+          {
+            "filenamePattern": "*.trace.jsonl"
+          }
+        ]
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "veecleTelemetry.showPreviewToSide",
+          "when": "editorLangId == jsonl && veecleTelemetry.isTraceFile",
+          "alt": "veecleTelemetry.showPreview",
+          "group": "navigation"
+        },
+        {
+          "command": "veecleTelemetry.showSource",
+          "when": "activeWebviewPanelId == 'veecleTelemetry.preview' || activeCustomEditorId == 'veecleTelemetry.editorPreview'",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "rspack build --mode production",
+    "compile": "rspack build",
+    "watch": "rspack build --watch",
+    "package": "cargo build --lib --release --target wasm32-unknown-unknown && vsce package --no-dependencies --allow-missing-repository -o veecle-telemetry-ui.vsix # Run cargo build explicitly to work around https://github.com/wasm-tool/wasm-pack-plugin/issues/90",
+    "pretest": "pnpm run compile && pnpm run lint",
+    "test": "pnpm run \"/^test:.*/\"",
+    "test:node": "vscode-test",
+    "test:web": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=./dist/test/web.js",
+    "lint": "pnpm run \"/^lint:.*/\"",
+    "lint:typescript": "tsc -p . --noEmit",
+    "lint:biome": "biome check .",
+    "format": "biome format --write .",
+    "fix": "biome check --fix .",
+    "run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@rspack/cli": "^1.2.6",
+    "@rspack/core": "^1.2.6",
+    "@types/assert": "^1.5.11",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.97.0",
+    "@types/vscode-webview": "^1.57.5",
+    "@types/webpack-env": "^1.18.8",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/test-web": "^0.0.66",
+    "@vscode/vsce": "^3.3.1",
+    "@wasm-tool/wasm-pack-plugin": "^1.7.0",
+    "assert": "^2.1.0",
+    "esbuild": "^0.25.0",
+    "esbuild-register": "^3.6.0",
+    "mocha": "^11.1.0",
+    "process": "^0.11.10",
+    "typescript": "^5.7.3",
+    "vscode-uri": "^3.1.0",
+    "webpack-merge": "^6.0.1"
+  },
+  "packageManager": "pnpm@9.12.1+sha512.e5a7e52a4183a02d5931057f7a0dbff9d5e9ce3161e33fa68ae392125b79282a8a8a470a51dfc8a0ed86221442eb2fb57019b0990ed24fab519bf0e1bc5ccfc4"
+}

@@ -1,0 +1,22 @@
+[package]
+description = "Markdown index generator for crates documentation"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "generate-markdown-index"
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[dependencies]
+anyhow = { workspace = true }
+scraper = { workspace = true }
+walkdir.workspace = true
+
+[lints]
+workspace = true

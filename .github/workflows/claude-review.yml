@@ -1,0 +1,33 @@
+name: claude-review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+    paths-ignore:
+      - '.github/workflows/claude-review.yaml'
+  issue_comment:
+    types: [created]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    if: |
+      (github.event_name == 'pull_request' && !github.event.pull_request.draft) ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       contains(github.event.comment.body, '/claude-review') &&
+       github.event.comment.user.type != 'Bot')
+
+    permissions:
+      contents: read
+      pull-requests: read
+      id-token: write
+      actions: read
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: veecle/style-guide/.github/actions/claude-review@main
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}

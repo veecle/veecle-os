@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -ue
+
+# This script passes its arguments to cargo for each workspace.
+# For example, run "cargo-in-all-workspaces upgrade --incompatible" to run "cargo upgrade --incompatible" and get semver major upgrades.
+
+# For running upgrade:
+# Note that if workspaces depend on each other, upgrades to a workspace can enable upgrades to a dependent workspace.
+# This script does not define an order of upgrades through workspaces, so running the script multiple times can produce further updates.
+# (Alternatively, if the order of upgrades follows dependencies, a single run should produce all updates.)
+
+find_workspaces() {
+    # finds Cargo.lock, excluding directories that can contain build artifacts named Cargo.lock
+    #
+    # "-printf %h\\0" produces the directories that contain Cargo.lock files, \0-terminated.
+    # (This is similar to -print0.)
+    # Combining this with "xargs -0" is one shell technique to prevent issues with paths containing spaces.
+    find . \
+         -name Cargo.lock \
+         -printf %h\\0
+}
+
+command_argument="$1"
+# Shifts all arguments to allow using the the catch-all without the command argument.
+shift
+
+find_workspaces | xargs -0 -t -I'{}' cargo "$command_argument" --manifest-path {}/Cargo.toml "$@"

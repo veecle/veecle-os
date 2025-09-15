@@ -1,0 +1,21 @@
+runs:
+  using: composite
+  steps:
+    - if: runner.environment == 'self-hosted'
+      shell: bash
+      run: |
+        tar xJf /shared/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz -C "$RUNNER_TEMP/"
+        ARM_TOOLCHAIN="$RUNNER_TEMP/arm-gnu-toolchain-13.3.rel1-$(arch)-arm-none-eabi"
+        [[ -d "$ARM_TOOLCHAIN" ]]
+        echo "PATH=$ARM_TOOLCHAIN/bin:$PATH" | tee -a "$GITHUB_ENV"
+        bindgen_args=(
+          "-isystem=$ARM_TOOLCHAIN/arm-none-eabi/include/"
+          "-isystem=$ARM_TOOLCHAIN/lib/gcc/arm-none-eabi/13.3.1/include/"
+        )
+        echo "BINDGEN_EXTRA_CLANG_ARGS_thumbv7em_none_eabihf=${bindgen_args[*]}" | tee -a "$GITHUB_ENV"
+
+    - if: runner.environment == 'github-hosted'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-arm-none-eabi

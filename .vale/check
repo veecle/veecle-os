@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# This script runs Vale over all code and documentation, excluding content outside our control.
+#
+# The script passes any arguments to Vale, so you can do things like:
+#
+# $ .vale/check --output=JSON | jq '.[] | .[] | .Message' | sort | uniq -c | sort -n
+#
+# to summarize errors by frequency, or:
+#
+# $ .vale/check --output=line | grep mispeled
+#
+# to list specific errors.
+
+find . \( \
+     -o -path ./external/submodules/vsomeip -prune \
+     -o -path ./external/submodules/capicxx-someip-runtime -prune \
+     -o -name target -prune \
+     -o -name node_modules -prune \
+     \) \
+     -o \( -name '*.md' -or -name '*.rs' \) \
+     -print | xargs vale "$@"

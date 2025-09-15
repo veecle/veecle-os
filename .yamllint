@@ -1,0 +1,31 @@
+---
+
+extends: default
+
+ignore:
+  - FreeRTOS-Kernel/
+  - external/
+  - pnpm-lock.yaml
+  - node-modules/
+  - target/
+
+rules:
+  braces:
+    max-spaces-inside: 1
+  comments:
+    level: error
+  comments-indentation:
+    level: error
+  line-length:
+    max: 200
+  new-line-at-end-of-file: enable
+  new-lines:
+    type: unix
+  indentation:
+    spaces: 2
+    indent-sequences: true
+  document-start: disable
+  truthy:
+    allowed-values: ['true', 'false']
+    check-keys: false
+    level: error

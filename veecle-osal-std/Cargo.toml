@@ -1,0 +1,34 @@
+[package]
+description = "Veecle OS operating system abstraction layer implementation for `std`"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-osal-std"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[dependencies]
+embedded-io = { workspace = true }
+embedded-io-adapters = { workspace = true, features = ["tokio-1"] }
+embedded-io-async = { workspace = true }
+futures = { workspace = true }
+rand = { workspace = true }
+socket2 = { workspace = true, features = ["all"] }
+tokio = { workspace = true, features = ["full"] }
+tokio-stream = { workspace = true, features = ["full"] }
+veecle-osal-api = { workspace = true }
+veecle-osal-std-macros = { workspace = true }
+
+[dev-dependencies]
+futures = { workspace = true, features = ["async-await"] }
+tokio = { workspace = true, features = ["test-util"] }
+veecle-osal-api = { workspace = true, features = ["test-suites"] }
+
+[lints]
+workspace = true

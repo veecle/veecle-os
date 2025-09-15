@@ -1,0 +1,11 @@
+error[E0499]: cannot borrow `input` as mutable more than once at a time
+  --> tests/ui/tcp_only_one_connection.rs:10:24
+   |
+6  |     let connection1 = input
+   |                       ----- first mutable borrow occurs here
+...
+10 |     let _connection2 = input
+   |                        ^^^^^ second mutable borrow occurs here
+...
+15 | }
+   | - first borrow might be used here, when `connection1` is dropped and runs the destructor for type `impl TcpConnection`

@@ -1,0 +1,159 @@
+# Shorten the path in the GitHub UI.
+name: release.yaml
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "The part of the version number that should be bumped"
+        required: true
+        default: major
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+      kind:
+        description: "Whether it's a production release or a pre-release"
+        required: true
+        default: pre-release
+        type: choice
+        options:
+          - production
+          - pre-release
+      check_commits:
+        description: Require conventional commits.
+        type: boolean
+        default: true
+
+jobs:
+  check-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-tools
+        with:
+          convco: true
+      - name: Check conventional commit guidelines using convco
+        if: ${{ inputs.check_commits }}
+        run: convco check
+
+  publish-crates-and-release:
+    needs:
+      - check-commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - uses: ./.github/actions/setup-rustup
+      - uses: ./.github/actions/setup-tools
+        with:
+          cargo-workspaces: true
+          just: true
+
+      - name: Publish
+        run: |
+          set -x
+
+          echo got BUMP: $BUMP KIND: $KIND
+          BUMP=${BUMP:=patch}
+          KIND=${KIND:=pre-release}
+          echo using BUMP: $BUMP KIND: $KIND
+
+          # GitHub runs are not hermetic, this prevents some problems from reusing checkouts.
+          git tag -l | xargs git tag -d
+          git fetch --prune-tags
+
+          if [ $KIND == "production" ]
+          then
+            # By default, cargo workspaces removes dev dependencies.
+            # This prevents issues with circular dependencies (e.g. veecle-os-runtime <-> veecle-os-runtime-macros).
+            # However, this causes an apparent bug because then cargo workspaces complains about Cargo.toml being dirty.
+            # This can be fixed by:
+            #
+            # * --allow-dirty. This is risky, but given this is a GitHub workflow, errors with dirty copies should be
+            #   mostly avoidable.
+            # * --no-remove-dev-deps --no-verify. This removes compilation checks. As we have validation, this should be
+            #   a reasonable risk.
+            #
+            # Although verification is slow and removing it is tempting, as of right now I believe --allow-dirty is a
+            # hair better.
+            GIT_AUTHOR_NAME=cargo-workspaces GIT_AUTHOR_EMAIL=devs@veecle.io \
+            GIT_COMMITTER_NAME=cargo-workspaces GIT_COMMITTER_EMAIL=devs@veecle.io \
+            cargo workspaces publish $BUMP \
+                             --token "${{ secrets.CARGO_REGISTRY_TOKEN }}" \
+                             --message "chore: release %v" \
+                             --no-individual-tags \
+                             --allow-dirty \
+                             --yes --force '*' --all
+            version="$(awk 'match($0, /^version = "(.*)"$/, a) { print a[1] }' Cargo.toml)"
+
+            # Amend the bump commit and tag created by cargo workspaces publish with a lockfile update
+            just update-lockfiles
+            git commit --all --amend --no-edit
+            git push --force-with-lease
+            git tag v$version --force
+            git push --force origin v$version
+
+            gh release create v$version
+
+          elif [ $KIND == "pre-release" ] ; then
+            cargo workspaces publish prerelease \
+                                     --pre-id nightly.$(date +%Y%m%d%H%M) \
+                                     --token "${{ secrets.CARGO_REGISTRY_TOKEN }}" \
+                                     --yes --force '*' --all --no-git-commit --allow-dirty
+            version="$(awk 'match($0, /^version = "(.*)"$/, a) { print a[1] }' Cargo.toml)"
+          else
+            echo unknown KIND: $KIND
+            exit 1
+          fi
+
+          git status
+          git diff
+
+          echo "Released $version" >> $GITHUB_STEP_SUMMARY
+
+        env:
+          BUMP: ${{ inputs.bump }}
+          KIND: ${{ inputs.kind }}
+          GH_TOKEN: ${{ github.token }}
+
+  attach-release-archive:
+    needs: publish-crates-and-release
+    runs-on: ubuntu-latest
+    if: ${{ inputs.kind == 'production' }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      # Because of non-hermetic builds, while iterating on builds, runner workspaces might become outdated subtly and
+      # cause hard to troubleshoot problems. Update the workspace to prevent issues.
+      - run: git pull
+      - run: git fetch --tags --force
+
+      - uses: ./.github/actions/setup-rustup
+        with:
+          rust-toolchain-toml: rust-toolchain-nightly.toml
+      - uses: ./.github/actions/setup-arm-gnu-toolchain
+      - uses: ./.github/actions/setup-cmake
+      - uses: ./.github/actions/setup-tools
+        with:
+          cargo-about: true
+          mdbook: true
+          just: true
+          trunk: true
+          cargo-nextest: true
+          cargo-llvm-cov: true
+      - uses: ./.github/actions/setup-fnm
+        with:
+          project-directory: veecle-telemetry-vscode-extension
+
+      - run: just build-release-archive
+
+      - run: gh release upload "$(git describe --tags)" release-archive.zip
+        env:
+          GH_TOKEN: ${{ github.token }}

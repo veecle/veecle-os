@@ -1,0 +1,37 @@
+[package]
+description = "Veecle OS Orchestrator"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-orchestrator"
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[dependencies]
+camino = { workspace = true }
+clap = { workspace = true, features = ["default", "derive", "env"] }
+eyre = { workspace = true }
+futures = { workspace = true, features = ["async-await", "std"] }
+libc = { workspace = true }
+nix = { workspace = true, features = ["signal"] }
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["std"] }
+tempfile = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tokio-stream = { workspace = true, features = ["net"] }
+tokio-util = { workspace = true, features = ["codec"] }
+tracing = { workspace = true, features = ["attributes", "std"] }
+tracing-error = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["ansi", "env-filter", "std"] }
+veecle-ipc-protocol = { workspace = true }
+veecle-orchestrator-protocol = { workspace = true }
+veecle-telemetry = { workspace = true, features = ["alloc", "std"] }
+
+[lints]
+workspace = true

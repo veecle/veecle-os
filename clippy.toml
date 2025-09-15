@@ -1,0 +1,10 @@
+disallowed-names = [
+  # Include the default configuration of Clippy.
+  # <https://rust-lang.github.io/rust-clippy/master/index.html#disallowed_names>
+  "..",
+  "addr",
+  "buf",
+  "e",
+  "err",
+  "len",
+]

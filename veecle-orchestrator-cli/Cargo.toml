@@ -1,0 +1,27 @@
+[package]
+description = "`veecle-os orchestrator` CLI"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-orchestrator-cli"
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[dependencies]
+anyhow = { workspace = true, features = ["std"] }
+camino = { workspace = true, features = ["serde1"] }
+clap = { workspace = true, features = ["default", "derive", "env"] }
+comfy-table = { workspace = true, features = ["tty"] }
+itertools = { workspace = true, features = ["use_std"] }
+serde = { workspace = true, features = ["derive", "std"] }
+serde_json = { workspace = true, features = ["std"] }
+veecle-orchestrator-protocol = { workspace = true }
+
+[lints]
+workspace = true

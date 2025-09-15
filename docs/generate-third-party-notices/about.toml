@@ -1,0 +1,28 @@
+accepted = [
+  "Apache-2.0",
+  "MIT",
+
+  "0BSD",
+  "BSD-3-Clause",
+  "BSL-1.0",
+  "ISC",
+  "MPL-2.0",
+  "Unicode-3.0",
+  "OFL-1.1",
+  "Ubuntu-font-1.0",
+  "Unicode-DFS-2016",
+  "Zlib",
+]
+
+targets = [
+  "aarch64-apple-darwin",
+  "thumbv7em-none-eabi",
+  "thumbv7em-none-eabihf",
+  "wasm32-unknown-unknown",
+  "x86_64-unknown-linux-gnu",
+]
+
+ignore-dev-dependencies = true
+no-clearly-defined = true
+
+private.ignore = true

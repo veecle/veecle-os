@@ -1,0 +1,134 @@
+package test
+
+interface TestService {
+    version { major 0 minor 1 }
+
+    method test_bool {
+        in { Boolean flag }
+        out { Boolean retflag }
+    }
+
+    method test_int8 {
+        in { Int8 param }
+        out { Int8 retcode }
+    }
+
+    method test_int16 {
+        in { Int16 param }
+        out { Int16 retcode }
+    }
+
+    method test_int32 {
+        in { Int32 param }
+        out { Int32 retcode }
+    }
+
+    method test_int64 {
+        in { Int64 param }
+        out { Int64 retcode }
+    }
+
+    method test_uint8 {
+        in { UInt8 param }
+        out { UInt8 retcode }
+    }
+
+    method test_uint16 {
+        in { UInt16 param }
+        out { UInt16 retcode }
+    }
+
+    method test_uint32 {
+        in { UInt32 param }
+        out { UInt32 retcode }
+    }
+
+    method test_uint64 {
+        in { UInt64 param }
+        out { UInt64 retcode }
+    }
+
+    method test_double {
+        in { Double param }
+        out { Double retcode }
+    }
+
+    method test_float {
+        in { Float param }
+        out { Float retcode }
+    }
+
+    method test_utf16le_dynamic_length_string {
+        in { String param }
+        out { String reval }
+    }
+
+    method test_utf16be_dynamic_length_string {
+        in { String param }
+        out { String reval }
+    }
+
+    method test_utf8_dynamic_length_string {
+        in { String param }
+        out { String reval }
+    }
+
+    method test_utf16le_fixed_length_string {
+        in { String param }
+        out { String reval }
+    }
+
+    method test_utf16be_fixed_length_string {
+        in { String param }
+        out { String reval }
+    }
+
+    method test_utf8_fixed_length_string {
+        in { String param }
+        out { String reval }
+    }
+
+    method test_struct {
+        in { AllPrimitiveDataTypes  request }
+        out { AllPrimitiveDataTypes response }
+    }
+
+    method test_fixed_length_array {
+        in { UInt32 [ ]  param }
+        out { UInt32 [ ] reval }
+    }
+
+    method test_dynamic_length_1_byte_array {
+        in { UInt32 [ ]  param }
+        out { UInt32 [ ] reval }
+    }
+
+    method test_dynamic_length_2_bytes_array {
+        in { UInt32 [ ]  param }
+        out { UInt32 [ ] reval }
+    }
+
+    method test_dynamic_length_4_bytes_array {
+        in { UInt32 [ ]  param }
+        out { UInt32 [ ] reval }
+    }
+
+    struct AllPrimitiveDataTypes {
+        String  param_1
+        Boolean param_2
+        Int8    param_3
+        Int16   param_4
+        Int32   param_5
+        Int64   param_6
+        UInt8   param_7
+        UInt16  param_8
+        UInt32  param_9
+        UInt64  param_10
+        Double  param_11
+        Float   param_12
+	}
+
+    method test_fire_and_forget_uint64 fireAndForget {
+        in { UInt64 param }
+    }
+}

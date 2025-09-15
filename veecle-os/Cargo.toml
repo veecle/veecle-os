@@ -1,0 +1,37 @@
+[package]
+description = "Veecle OS"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-os"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[features]
+alloc = ["veecle-telemetry?/alloc"]
+osal-freertos = ["dep:veecle-osal-freertos", "veecle-telemetry?/freertos"]
+osal-embassy = ["dep:veecle-osal-embassy"]
+osal-std = ["dep:veecle-osal-std", "veecle-telemetry?/std"]
+telemetry-enable = ["telemetry", "veecle-telemetry/enable"]
+telemetry = ["dep:veecle-telemetry", "veecle-os-runtime/veecle-telemetry"]
+data-support-can = ["dep:veecle-os-data-support-can"]
+data-support-someip = ["dep:veecle-os-data-support-someip"]
+
+[dependencies]
+veecle-os-data-support-can = { workspace = true, optional = true }
+veecle-os-data-support-someip = { workspace = true, optional = true }
+veecle-os-runtime = { workspace = true }
+veecle-osal-api = { workspace = true }
+veecle-osal-embassy = { workspace = true, optional = true }
+veecle-osal-freertos = { workspace = true, optional = true }
+veecle-osal-std = { workspace = true, optional = true }
+veecle-telemetry = { workspace = true, optional = true }
+
+[lints]
+workspace = true

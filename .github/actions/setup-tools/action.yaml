@@ -1,0 +1,83 @@
+inputs:
+  cargo-about:
+    description: cargo-about
+    default: "false"
+  cargo-deny:
+    description: cargo-deny
+    default: "false"
+  cargo-llvm-cov:
+    description: cargo-llvm-cov
+    default: "false"
+  cargo-nextest:
+    description: cargo-nextest
+    default: "false"
+  cargo-workspaces:
+    description: cargo-workspaces
+    default: "false"
+  cargo-vet:
+    description: cargo-vet
+    default: "false"
+  convco:
+    description: convco
+    default: "false"
+  taplo-cli:
+    description: taplo-cli
+    default: "false"
+  trunk:
+    description: trunk
+    default: "false"
+  mdbook:
+    description: mdbook
+    default: "false"
+  just:
+    description: just
+    default: "false"
+  fnm:
+    description: fnm
+    default: "false"
+  wasm-pack:
+    description: wasm-pack
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        get() {
+          if [[ "$1" == "true" ]]
+          then
+            local name="$2"
+            local version="$3"
+
+            local target="x86_64-unknown-linux-gnu"
+            local base="https://github.com/cargo-bins/cargo-quickinstall/releases/download"
+
+            local url="$base/$name-$version/$name-$version-$target.tar.gz"
+
+            curl -LsSf "$url" | tar zxf - -C "$RUNNER_TEMP/tools-bin" ||
+            cargo install "$name" --version "$version" --locked
+          fi
+        }
+
+        mkdir -p "$RUNNER_TEMP/tools-bin"
+
+        # Some of these have their own binary releases, but the cargo-quickinstall archives are nicely standardized.
+        #
+        # If you require a package or version that the cargo-quickinstall archives do not contain, then use
+        # cargo-quickinstall to install the package on any system. When cargo-quickinstall cannot fetch a prebuilt
+        # package or has an outdated version, cargo-quickinstall queues a public build.
+        get "${{ inputs.cargo-about }}" cargo-about 0.7.1
+        get "${{ inputs.cargo-deny }}" cargo-deny 0.18.4
+        get "${{ inputs.cargo-llvm-cov }}" cargo-llvm-cov 0.6.18
+        get "${{ inputs.cargo-nextest }}" cargo-nextest 0.9.103
+        get "${{ inputs.cargo-workspaces }}" cargo-workspaces 0.4.0
+        get "${{ inputs.cargo-vet }}" cargo-vet 0.10.1
+        get "${{ inputs.convco }}" convco 0.6.2
+        get "${{ inputs.taplo-cli }}" taplo-cli 0.10.0
+        get "${{ inputs.trunk }}" trunk 0.21.14
+        get "${{ inputs.mdbook }}" mdbook 0.4.52
+        get "${{ inputs.just }}" just 1.42.4
+        get "${{ inputs.fnm }}" fnm 1.38.1
+        get "${{ inputs.wasm-pack }}" wasm-pack 0.13.1
+
+        echo "PATH=$RUNNER_TEMP/tools-bin:$PATH" | tee -a "$GITHUB_ENV"

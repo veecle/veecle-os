@@ -1,0 +1,30 @@
+[package]
+description = "SOME/IP test service and unsafe Rust bindings to it"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "someip-test-service-sys"
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# The tests involve FFI which miri cannot execute.
+workspace-checks.miri = false
+
+[lints]
+workspace = true
+
+[build-dependencies]
+anyhow = { workspace = true }
+bindgen = { workspace = true, features = ["runtime"] }
+cmake = { workspace = true }
+
+[dependencies]
+capicxx-someip-sys = { workspace = true }
+
+[dev-dependencies]
+ntest_timeout = { workspace = true }
+rand = { workspace = true, features = ["thread_rng"] }
+tempfile = { workspace = true }

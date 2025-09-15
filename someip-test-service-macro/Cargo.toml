@@ -1,0 +1,29 @@
+[package]
+description = "Helps setup SOME/IP integration test"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "someip-test-service-macro"
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[package.metadata]
+# Miri cannot test proc-macros.
+workspace-checks.miri = false
+
+[lib]
+proc-macro = true
+
+[dependencies]
+darling = { workspace = true }
+quote = { workspace = true }
+syn = { workspace = true }
+
+[dev-dependencies]
+ntest_timeout = { workspace = true }
+someip-test-service = { workspace = true }

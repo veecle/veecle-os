@@ -1,0 +1,11 @@
+error: Unknown field: `invalid`. Available values: `telemetry`
+ --> tests/ui/invalid_attribute_name.rs:1:32
+  |
+1 | #[veecle_osal_std_macros::main(invalid = "debug")]
+  |                                ^^^^^^^
+
+error[E0601]: `main` function not found in crate `$CRATE`
+ --> tests/ui/invalid_attribute_name.rs:2:19
+  |
+2 | async fn main() {}
+  |                   ^ consider adding a `main` function to `$DIR/tests/ui/invalid_attribute_name.rs`

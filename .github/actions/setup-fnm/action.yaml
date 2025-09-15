@@ -1,0 +1,17 @@
+inputs:
+  project-directory:
+    description: "Path to where the Node environment is defined"
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/setup-tools
+      with:
+        fnm: true
+
+    - shell: bash
+      run: |
+        echo "FNM_DIR=$RUNNER_TEMP/fnm" | tee -a "$GITHUB_ENV"
+
+    - shell: bash
+      run: fnm install --corepack-enabled
+      working-directory: "${{ inputs.project-directory }}"

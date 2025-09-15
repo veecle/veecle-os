@@ -1,0 +1,5 @@
+error: unknown attribute argument
+ --> tests/ui/actor/unknown_attribute_argument.rs:1:35
+  |
+1 | #[veecle_os_runtime_macros::actor(foo = "bar")]
+  |                                   ^^^^^^^^^^^

@@ -1,0 +1,48 @@
+component_management:
+  individual_components:
+    - component_id: "main"
+      paths:
+        - "veecle-os-runtime/src"
+        - "veecle-os-runtime/macros"
+        - "veecle-osal-api"
+        - "veecle-osal-std"
+        - "veecle-osal-embassy"
+        - "veecle-osal-freertos"
+    - component_id: "freertos"
+      paths:
+        - "veecle-osal-freertos"
+    - component_id: "std"
+      paths:
+        - "veecle-osal-std"
+    - component_id: "can-core"
+      paths:
+        - "veecle-os-data-support-can/src"
+    - component_id: "can-support"
+      paths:
+        - "veecle-os-data-support-can-cli"
+        - "veecle-os-data-support-can-codegen"
+        - "veecle-os-data-support-can-macros"
+        - "veecle-os-data-support-can/tests"
+    - component_id: "someip-core"
+      paths:
+        - "veecle-os-data-support-someip/src"
+    - component_id: "someip-support"
+      paths:
+        - "veecle-os-data-support-someip-macros"
+    - component_id: "support"
+      paths:
+        - "veecle-os-examples"
+        - "veecle-os-test"
+        - "veecle-telemetry-ui"
+        - "veecle-telemetry-server"
+        - "veecle-telemetry-server-protocol"
+        - "veecle-telemetry-vscode-extension"
+        - "veecle-os-runtime/tests"
+        - "veecle-os-cli"
+    - component_id: "orchestrator-prototype"
+      paths:
+        - "veecle-ipc"
+        - "veecle-ipc-protocol"
+        - "veecle-orchestrator"
+        - "veecle-orchestrator-cli"
+        - "veecle-orchestrator-protocol"

@@ -1,0 +1,11 @@
+error: function must be named `main`
+ --> tests/ui/not_main.rs:2:10
+  |
+2 | async fn not_main() {}
+  |          ^^^^^^^^
+
+error[E0601]: `main` function not found in crate `$CRATE`
+ --> tests/ui/not_main.rs:2:23
+  |
+2 | async fn not_main() {}
+  |                       ^ consider adding a `main` function to `$DIR/tests/ui/not_main.rs`

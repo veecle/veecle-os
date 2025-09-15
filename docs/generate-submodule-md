@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -ue
+
+cat <<EOF
+# Submodules
+
+This release uses the following submodules:
+
+* <https://github.com/FreeRTOS/FreeRTOS-Kernel.git> is used for development and testing.
+
+* <https://github.com/COVESA/vsomeip.git>, <https://github.com/COVESA/capicxx-someip-runtime.git>, <https://github.com/veecle/capicxx-core-runtime-fork> are used for SOME/IP testing.
+  Refer to [Integration testing against external implementation](https://docs.google.com/document/d/1fGxlLsQnjQaVhDYaLejHuF_H_LnxjLjTLh86I6ZlimI/edit?tab=t.0#heading=h.3ko2n6a61qur) for details.
+
+## Submodules used
+
+The \`.gitmodules\` file shows the URL to the Git repositories of submodules used in this release.
+
+EOF
+echo '```console'
+echo '$ cat .gitmodules'
+cat .gitmodules
+echo '```'
+
+cat <<EOF
+
+## Submodule references
+
+\`git submodule status\` prints the submodule references (commit ids) used in this release.
+
+EOF
+
+
+echo '```console'
+echo '$ git submodule status'
+git submodule status
+echo '```'

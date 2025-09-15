@@ -1,0 +1,3 @@
+# Build the WASM package
+build-wasm:
+    trunk build --release

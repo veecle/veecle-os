@@ -1,0 +1,25 @@
+[package]
+description = "Tests against external SOME/IP service"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "someip-test-service-tests"
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+ntest_timeout = { workspace = true }
+pretty_assertions = { workspace = true, features = ["std"] }
+someip-test-service = { workspace = true }
+someip-test-service-macro = { workspace = true }
+veecle-os-data-support-someip = { workspace = true }
+
+[package.metadata]
+# Miri is having issues with the tempfile crate
+# because it uses "open", which is unsupported.
+workspace-checks.miri = false

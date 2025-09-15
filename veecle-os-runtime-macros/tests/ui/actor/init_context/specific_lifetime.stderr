@@ -1,0 +1,5 @@
+error: lifetimes on actor arguments must be anonymous or static
+ --> tests/ui/actor/init_context/specific_lifetime.rs:3:37
+  |
+3 |     #[init_context] _init_context: &'a u8,
+  |                                     ^^

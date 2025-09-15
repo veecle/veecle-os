@@ -1,0 +1,11 @@
+error: Unknown value: `invalid`
+ --> tests/ui/telemetry_invalid.rs:1:44
+  |
+1 | #[veecle_osal_std_macros::main(telemetry = "invalid")]
+  |                                            ^^^^^^^^^
+
+error[E0601]: `main` function not found in crate `$CRATE`
+ --> tests/ui/telemetry_invalid.rs:2:19
+  |
+2 | async fn main() {}
+  |                   ^ consider adding a `main` function to `$DIR/tests/ui/telemetry_invalid.rs`

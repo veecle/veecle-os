@@ -1,0 +1,23 @@
+error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
+ --> tests/ui/actor/unexpected_argument.rs:7:18
+  |
+7 |     _unexpected: u32,
+  |                  ^^^
+
+error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
+  --> tests/ui/actor/unexpected_argument.rs:13:40
+   |
+13 | async fn macro_test_actor(_unexpected: u32) -> std::convert::Infallible {
+   |                                        ^^^
+
+error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
+  --> tests/ui/actor/unexpected_argument.rs:18:40
+   |
+18 | async fn macro_test_actor(_unexpected: <Foo as Bar>::Ty) -> std::convert::Infallible {
+   |                                        ^
+
+error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
+  --> tests/ui/actor/unexpected_argument.rs:23:40
+   |
+23 | async fn macro_test_actor(_unexpected: [u32; 0]) -> std::convert::Infallible {
+   |                                        ^^^^^^^^

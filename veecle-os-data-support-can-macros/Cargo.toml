@@ -1,0 +1,31 @@
+[package]
+description = "Macros for `veecle-os-data-support-can`"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-os-data-support-can-macros"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# Miri cannot test proc-macros.
+workspace-checks.miri = false
+
+[lints]
+workspace = true
+
+[lib]
+proc-macro = true
+
+[features]
+arbitrary = []
+
+[dependencies]
+camino = { workspace = true }
+fs-err = { workspace = true }
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+syn = { workspace = true, features = ["visit-mut"] }
+veecle-os-data-support-can-codegen = { workspace = true }

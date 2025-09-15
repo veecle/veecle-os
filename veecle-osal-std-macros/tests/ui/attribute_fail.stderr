@@ -1,0 +1,11 @@
+error: expected identifier or literal
+ --> tests/ui/attribute_fail.rs:1:32
+  |
+1 | #[veecle_osal_std_macros::main((trace, foo))]
+  |                                ^
+
+error[E0601]: `main` function not found in crate `$CRATE`
+ --> tests/ui/attribute_fail.rs:2:19
+  |
+2 | async fn main() {}
+  |                   ^ consider adding a `main` function to `$DIR/tests/ui/attribute_fail.rs`

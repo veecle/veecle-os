@@ -1,0 +1,20 @@
+[licenses]
+allow = ["0BSD", "Apache-2.0", "BSD-3-Clause", "BSL-1.0", "ISC", "MIT", "MPL-2.0", "Unicode-3.0"]
+
+[[licenses.exceptions]]
+crate = "epaint_default_fonts"
+allow = ["OFL-1.1", "Ubuntu-font-1.0"]
+
+[[licenses.exceptions]]
+crate = "unicode-ident"
+allow = ["Unicode-DFS-2016"]
+
+[[licenses.exceptions]]
+crate = "slotmap"
+allow = ["Zlib"]
+
+[advisories]
+ignore = [
+  { id = "RUSTSEC-2024-0436", reason = "there aren't known vulnerabilities, we only use it in a dev-dependency, and we don't actually use the codepaths that use it" },
+  { id = "RUSTSEC-2025-0057", reason = "no known issues, just unmaintained, and we only use it in internal repo tooling, blocked on https://github.com/servo/stylo/issues/237" },
+]

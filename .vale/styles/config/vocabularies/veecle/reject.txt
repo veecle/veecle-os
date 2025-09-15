@@ -1,0 +1,2 @@
+# Non-US spellings that the default US Vale dictionary allows
+[aA]rtefacts?

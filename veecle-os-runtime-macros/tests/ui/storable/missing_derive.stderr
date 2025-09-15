@@ -1,0 +1,5 @@
+error: cannot find attribute `storable` in this scope
+ --> tests/ui/storable/missing_derive.rs:2:3
+  |
+2 | #[storable]
+  |   ^^^^^^^^ help: a built-in attribute with a similar name exists: `stable`

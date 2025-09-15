@@ -1,0 +1,38 @@
+[package]
+description = "Veecle OS telemetry"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-telemetry"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[features]
+# Enable collecting and exporting telemetry data, should only be set in the final binary crate.
+enable = ["veecle-telemetry-macros/enable"]
+default = []
+alloc = ["serde/alloc", "serde_json/alloc"]
+freertos = ["veecle-osal-freertos"]
+std = ["alloc", "rand/thread_rng", "veecle-osal-std"]
+system_time = []
+
+[dependencies]
+hex = { workspace = true, features = ["serde"] }
+pin-project = { workspace = true }
+rand = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true, optional = true }
+veecle-osal-freertos = { workspace = true, optional = true }
+veecle-osal-std = { workspace = true, optional = true }
+veecle-telemetry-macros = { workspace = true }
+
+[dev-dependencies]
+indoc = { workspace = true }
+serial_test = { workspace = true }
+tokio = { workspace = true }
+veecle-telemetry = { path = ".", features = ["enable", "std"] }
+
+[lints]
+workspace = true

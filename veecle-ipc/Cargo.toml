@@ -1,0 +1,33 @@
+[package]
+description = "Supports inter-runtime-communication when running multiple runtime instances under the `veecle-orchestrator`"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-ipc"
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[dependencies]
+anyhow = { workspace = true }
+futures = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["std"] }
+tokio = { workspace = true, features = ["macros", "net", "rt", "sync"] }
+tokio-util = { workspace = true, features = ["codec"] }
+veecle-ipc-protocol = { workspace = true }
+veecle-os-runtime = { workspace = true }
+veecle-telemetry = { workspace = true, features = ["alloc"] }
+
+[dev-dependencies]
+rand = { workspace = true, features = ["std_rng"] }
+serde = { workspace = true, features = ["derive"] }
+veecle-os = { workspace = true, features = ["telemetry"] }
+
+[lints]
+workspace = true

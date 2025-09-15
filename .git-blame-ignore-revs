@@ -1,0 +1,3 @@
+# .git-blame-ignore-revs
+# Reformatted the code after removing rustfmt.toml.
+9dfb4e28a08dcefa186d8e0d808c0258bc261647

@@ -1,0 +1,25 @@
+[package]
+description = "CAN features for Veecle OS' CLI"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-os-data-support-can-cli"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate will never involve any unsafe code.
+workspace-checks.miri = false
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true, features = ["derive", "std"] }
+patharg = { workspace = true }
+shlex = { workspace = true, features = ["std"] }
+syn = { workspace = true }
+veecle-os-data-support-can-codegen = { workspace = true }

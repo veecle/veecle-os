@@ -1,0 +1,11 @@
+error: #[actor] functions must return a `Result` or `Infallible`
+ --> tests/ui/actor/return_nothing.rs:5:1
+  |
+5 | async fn macro_test_actor(
+  | ^^^^^
+
+error[E0412]: cannot find type `MacroTestActor` in this scope
+  --> tests/ui/actor/return_nothing.rs:15:18
+   |
+15 |         actors: [MacroTestActor],
+   |                  ^^^^^^^^^^^^^^ not found in this scope

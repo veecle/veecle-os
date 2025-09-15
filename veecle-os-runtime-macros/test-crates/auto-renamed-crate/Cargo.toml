@@ -1,0 +1,11 @@
+[package]
+edition = "2024"
+license = "Apache-2.0"
+name = "auto-renamed-crate"
+publish = false
+version = "0.1.0"
+
+[workspace]
+
+[dependencies]
+my-veecle-os-runtime = { package = "veecle-os-runtime", path = "../../../veecle-os-runtime" }

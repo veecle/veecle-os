@@ -1,0 +1,8 @@
+{
+    "test.TestService" : {
+        "service_id": 1234,
+        "instances" : {
+            "test.TestService": 5678
+        }
+    }
+}

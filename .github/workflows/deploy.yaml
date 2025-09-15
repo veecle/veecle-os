@@ -1,0 +1,245 @@
+# Shorten the path in the GitHub UI.
+name: deploy.yaml
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+# Cancel jobs for previous commits in the same branch.
+# On main `head_ref` is not available and `run_id` is always unique.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build-private-docs:
+    runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: "--deny warnings --cfg docsrs"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - uses: ./.github/actions/setup-rustup
+        with:
+          rust-toolchain-toml: rust-toolchain-nightly.toml
+      - uses: ./.github/actions/setup-arm-gnu-toolchain
+      - uses: ./.github/actions/setup-cmake
+      - uses: ./.github/actions/setup-tools
+        with:
+          just: true
+
+      - run: just build-private-docs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs-private
+          path: target/doc
+          if-no-files-found: error
+          retention-days: 1
+
+  build-user-manual:
+    runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: "--deny warnings --cfg docsrs"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - uses: ./.github/actions/setup-rustup
+        with:
+          rust-toolchain-toml: rust-toolchain-nightly.toml
+      - uses: ./.github/actions/setup-arm-gnu-toolchain
+      - uses: ./.github/actions/setup-tools
+        with:
+          cargo-about: true
+          mdbook: true
+          just: true
+
+      - run: just build-user-manual
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: user-manual
+          path: docs/user-manual/book
+          if-no-files-found: error
+          retention-days: 1
+
+  build-veecle-telemetry-ui-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - uses: ./.github/actions/setup-rustup
+      - uses: ./.github/actions/setup-tools
+        with:
+          trunk: true
+          just: true
+
+      - run: just veecle-telemetry-ui/build-wasm
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: veecle-telemetry-ui-wasm
+          path: veecle-telemetry-ui/dist
+          retention-days: 1
+
+  build-veecle-telemetry-ui-vscode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-rustup
+      - uses: ./.github/actions/setup-fnm
+        with:
+          project-directory: veecle-telemetry-vscode-extension
+      - uses: ./.github/actions/setup-tools
+        with:
+          just: true
+          wasm-pack: true
+
+      - run: just veecle-telemetry-vscode-extension/package-extension
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: veecle-telemetry-vscode-extension.vsix
+          path: veecle-telemetry-vscode-extension/veecle-telemetry-ui.vsix
+          retention-days: 1
+
+  deploy-private-docs:
+    runs-on: ubuntu-latest
+    needs:
+      - build-private-docs
+    outputs:
+      url: ${{ steps.wrangler.outputs.deployment-url }}
+      alias-url: ${{ steps.wrangler.outputs.pages-deployment-alias-url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          name: docs-private
+          path: target/doc
+      # Since we're only publishing rustdoc output there is no root page, we can instead redirect to an arbitrary crate.
+      - run: echo '/ /veecle_os/' > target/doc/_redirects
+      - id: wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ vars.CF_ACCOUNT_ID }}
+          command: >
+            pages deploy target/doc
+            --project-name=private-docs
+            --branch ${{ github.ref_name }}
+            --commit-hash ${{ github.sha }}
+
+  deploy-user-manual:
+    runs-on: ubuntu-latest
+    needs:
+      - build-user-manual
+    outputs:
+      url: ${{ steps.wrangler.outputs.deployment-url }}
+      alias-url: ${{ steps.wrangler.outputs.pages-deployment-alias-url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          name: user-manual
+          path: docs/user-manual/book
+      - id: wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ vars.CF_ACCOUNT_ID }}
+          command: >
+            pages deploy docs/user-manual/book
+            --project-name=user-manual
+            --branch ${{ github.ref_name }}
+            --commit-hash ${{ github.sha }}
+
+  deploy-veecle-telemetry-ui-wasm:
+    runs-on: ubuntu-latest
+    needs: build-veecle-telemetry-ui-wasm
+    outputs:
+      url: ${{ steps.wrangler.outputs.deployment-url }}
+      alias-url: ${{ steps.wrangler.outputs.pages-deployment-alias-url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          name: veecle-telemetry-ui-wasm
+          path: veecle-telemetry-ui/dist
+      - id: wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ vars.CF_ACCOUNT_ID }}
+          command: >
+            pages deploy veecle-telemetry-ui/dist
+            --project-name=veecle-telemetry-ui
+            --branch ${{ github.ref_name }}
+            --commit-hash ${{ github.sha }}
+
+  deploy-veecle-telemetry-ui-vscode:
+    runs-on: ubuntu-latest
+    needs: build-veecle-telemetry-ui-vscode
+    outputs:
+      url: ${{ steps.wrangler.outputs.deployment-url }}
+      alias-url: ${{ steps.wrangler.outputs.pages-deployment-alias-url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          name: veecle-telemetry-vscode-extension.vsix
+          path: veecle-telemetry-vscode-extension/veecle-telemetry-ui.vsix
+      - id: wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ vars.CF_ACCOUNT_ID }}
+          command: >
+            pages deploy veecle-telemetry-vscode-extension/veecle-telemetry-ui.vsix
+            --project-name=veecle-telemetry-vscode-extension
+            --branch ${{ github.ref_name }}
+            --commit-hash ${{ github.sha }}
+
+  post-comment:
+    runs-on: ubuntu-latest
+    needs:
+      - deploy-user-manual
+      - deploy-private-docs
+      - deploy-veecle-telemetry-ui-wasm
+      - deploy-veecle-telemetry-ui-vscode
+    if: github.event_name == 'pull_request'
+    env:
+      PR: ${{ github.event.number }}
+      REF_NAME: ${{ github.ref_name }}
+      PRIVATE_DOCS_URL: ${{ needs.deploy-private-docs.outputs.url }}
+      PRIVATE_DOCS_ALIAS_URL: ${{ needs.deploy-private-docs.outputs.alias-url }}
+      USER_MANUAL_URL: ${{ needs.deploy-user-manual.outputs.url }}
+      USER_MANUAL_ALIAS_URL: ${{ needs.deploy-user-manual.outputs.alias-url }}
+      TELEMETRY_UI_URL: ${{ needs.deploy-veecle-telemetry-ui-wasm.outputs.url }}
+      TELEMETRY_UI_ALIAS_URL: ${{ needs.deploy-veecle-telemetry-ui-wasm.outputs.alias-url }}
+      TELEMETRY_UI_VSCODE_URL: ${{ needs.deploy-veecle-telemetry-ui-vscode.outputs.url }}/veecle-telemetry-ui.vsix
+      TELEMETRY_UI_VSCODE_ALIAS_URL: ${{ needs.deploy-veecle-telemetry-ui-vscode.outputs.alias-url }}/veecle-telemetry-ui.vsix
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          gh pr comment "$PR" --edit-last --create-if-none --body "
+            | Deployment - Branch link                                             | Commit link - $GITHUB_SHA   |
+            | -------------------------------------------------------------------- | --------------------------- |
+            | [user-manual preview]($USER_MANUAL_ALIAS_URL)                        | <$USER_MANUAL_URL>          |
+            | [private-docs preview]($PRIVATE_DOCS_ALIAS_URL)                      | <$PRIVATE_DOCS_URL>         |
+            | [veecle-telemetry-ui preview]($TELEMETRY_UI_ALIAS_URL)               | <$TELEMETRY_UI_URL>         |
+            | [veecle-telemetry-ui-vscode preview]($TELEMETRY_UI_VSCODE_ALIAS_URL) | <$TELEMETRY_UI_VSCODE_URL>  |
+          "
+        env:
+          GH_TOKEN: ${{ github.token }}

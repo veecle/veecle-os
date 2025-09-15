@@ -1,0 +1,15 @@
+runs:
+  using: composite
+  steps:
+    - if: runner.environment == 'self-hosted'
+      shell: bash
+      run: |
+        mkdir $RUNNER_TEMP/cmake
+        /shared/cmake-3.31.6-linux-x86_64.sh --skip-license --prefix=$RUNNER_TEMP/cmake
+        echo "PATH=$RUNNER_TEMP/cmake/bin:$PATH" | tee -a "$GITHUB_ENV"
+
+    - if: runner.environment == 'github-hosted'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake libboost-all-dev

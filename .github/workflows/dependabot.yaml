@@ -1,0 +1,19 @@
+# Shorten the path in the GitHub UI.
+name: dependabot.yaml
+
+on:
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  auto-approve-dependabot:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    env:
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - run: gh pr review --approve "$PR_URL"

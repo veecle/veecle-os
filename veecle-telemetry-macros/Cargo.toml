@@ -1,0 +1,40 @@
+[package]
+description = "Macros for `veecle-telemetry`"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-telemetry-macros"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# Miri cannot test proc-macros.
+workspace-checks.miri = false
+
+[lib]
+proc-macro = true
+
+[features]
+enable = []
+
+[dependencies]
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+syn = { workspace = true, features = [
+  "clone-impls",
+  "derive",
+  "extra-traits",
+  "full",
+  "parsing",
+  "printing",
+  "proc-macro",
+  "visit",
+] }
+
+[dev-dependencies]
+veecle-telemetry = { workspace = true, features = ["std"] }
+
+[lints]
+workspace = true

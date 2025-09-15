@@ -1,0 +1,21 @@
+error[E0277]: #[veecle_os_runtime::actor] functions should return either a `Result<Infallible, _>` or `Infallible`
+ --> tests/ui/actor/return_int.rs:4:1
+  |
+4 | #[veecle_os_runtime_macros::actor]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not a valid actor return type
+  |
+  = help: the trait `IsActorResult` is not implemented for `i32`
+  = help: the following other types implement trait `IsActorResult`:
+            Infallible
+            Result<Infallible, E>
+
+error[E0277]: #[veecle_os_runtime::actor] functions should return either a `Result<Infallible, _>` or `Infallible`
+ --> tests/ui/actor/return_int.rs:8:6
+  |
+8 | ) -> i32 {
+  |      ^^^ not a valid actor return type
+  |
+  = help: the trait `IsActorResult` is not implemented for `i32`
+  = help: the following other types implement trait `IsActorResult`:
+            Infallible
+            Result<Infallible, E>

@@ -1,0 +1,10 @@
+# Auto-format all project files.
+fmt_cpp:
+    cd cpp && clang-format -i *.hpp service/src/*.cpp service/src/*.hpp service_stub/*.cpp
+
+# Generate SOME/IP service stubs & proxies from Franca files.
+generate:
+    docker buildx build --platform linux/amd64 \
+        --build-arg USER_NAME=$(whoami) --build-arg USER_UID=$(id -u) --build-arg USER_GID=$(id -g) \
+        -t capicxx-generator .
+    docker run -it --rm --volume $(pwd):$(pwd) --workdir $(pwd) capicxx-generator

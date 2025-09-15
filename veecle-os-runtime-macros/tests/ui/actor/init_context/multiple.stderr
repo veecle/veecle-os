@@ -1,0 +1,5 @@
+error: only up to one argument with "[init_context]" attribute is allowed
+ --> tests/ui/actor/init_context/multiple.rs:9:37
+  |
+9 |     #[init_context] _init_context2: String,
+  |                                     ^^^^^^

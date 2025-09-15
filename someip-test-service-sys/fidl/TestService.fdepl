@@ -1,0 +1,255 @@
+import "platform:/plugin/org.genivi.commonapi.someip/deployment/CommonAPI-4-SOMEIP_deployment_spec.fdepl"
+import "TestService.fidl"
+
+define org.genivi.commonapi.someip.deployment for interface test.TestService {
+    SomeIpServiceID = 1234
+
+    method test_bool {
+        SomeIpMethodID = 0422
+        SomeIpReliable = false
+    }
+
+    method test_int8 {
+        SomeIpMethodID = 0423
+        SomeIpReliable = false
+    }
+
+    method test_int16 {
+        SomeIpMethodID = 0424
+        SomeIpReliable = false
+    }
+
+    method test_int32 {
+        SomeIpMethodID = 0425
+        SomeIpReliable = false
+    }
+
+    method test_int64 {
+        SomeIpMethodID = 0426
+        SomeIpReliable = false
+    }
+
+    method test_uint8 {
+        SomeIpMethodID = 0427
+        SomeIpReliable = false
+    }
+
+    method test_uint16 {
+        SomeIpMethodID = 0428
+        SomeIpReliable = false
+    }
+
+    method test_uint32 {
+        SomeIpMethodID = 0429
+        SomeIpReliable = false
+    }
+
+    method test_uint64 {
+        SomeIpMethodID = 0430
+        SomeIpReliable = false
+    }
+
+    method test_double {
+        SomeIpMethodID = 0431
+        SomeIpReliable = false
+    }
+
+    method test_float {
+        SomeIpMethodID = 0432
+        SomeIpReliable = false
+    }
+
+    method test_struct {
+        SomeIpMethodID = 0433
+        SomeIpReliable = false
+    }
+
+    method test_utf16le_dynamic_length_string {
+        SomeIpMethodID = 0434
+        SomeIpReliable = false
+
+        in {
+            param {
+                SomeIpStringEncoding = utf16le
+            }
+        }
+        out {
+            reval {
+                SomeIpStringEncoding = utf16le
+            }
+        }
+    }
+
+    method test_utf16be_dynamic_length_string {
+        SomeIpMethodID = 0435
+        SomeIpReliable = false
+
+        in {
+            param {
+                SomeIpStringEncoding = utf16be
+            }
+        }
+        out {
+            reval {
+                SomeIpStringEncoding = utf16be
+            }
+        }
+    }
+
+    method test_utf8_dynamic_length_string {
+        SomeIpMethodID = 0436
+        SomeIpReliable = false
+
+        in {
+            param {
+                SomeIpStringEncoding = utf8
+            }
+        }
+        out {
+            reval {
+                SomeIpStringEncoding = utf8
+            }
+        }
+    }
+
+    method test_utf16le_fixed_length_string {
+        SomeIpMethodID = 0437
+        SomeIpReliable = false
+
+        // SomeIpStringLength = 2 (BOM) + 10 (chars) + 2 (terminator).
+        in {
+            param {
+                SomeIpStringLength = 14
+                SomeIpStringLengthWidth = 0
+                SomeIpStringEncoding = utf16le
+            }
+        }
+        out {
+            reval {
+                SomeIpStringLength = 14
+                SomeIpStringLengthWidth = 0
+                SomeIpStringEncoding = utf16le
+            }
+        }
+    }
+
+    method test_utf16be_fixed_length_string {
+        SomeIpMethodID = 0438
+        SomeIpReliable = false
+
+        // SomeIpStringLength = 2 (BOM) + 10 (chars) + 2 (terminator).
+        in {
+            param {
+                SomeIpStringLength = 14
+                SomeIpStringLengthWidth = 0
+                SomeIpStringEncoding = utf16be
+            }
+        }
+        out {
+            reval {
+                SomeIpStringLength = 14
+                SomeIpStringLengthWidth = 0
+                SomeIpStringEncoding = utf16be
+            }
+        }
+    }
+
+    method test_utf8_fixed_length_string {
+        SomeIpMethodID = 0439
+        SomeIpReliable = false
+
+        // SomeIpStringLength = 3 (BOM) + 5 (chars) + 1 (terminator).
+        in {
+            param {
+                SomeIpStringLength = 9
+                SomeIpStringLengthWidth = 0
+                SomeIpStringEncoding = utf8
+            }
+        }
+        out {
+            reval {
+                SomeIpStringLength = 9
+                SomeIpStringLengthWidth = 0
+                SomeIpStringEncoding = utf8
+            }
+        }
+    }
+
+    method test_fire_and_forget_uint64 {
+        SomeIpMethodID = 0440
+        SomeIpReliable = false
+    }
+    
+    method test_fixed_length_array {
+        SomeIpMethodID = 0441
+        SomeIpReliable = false
+
+        in {
+            param {
+                SomeIpArrayLengthWidth = 0
+                SomeIpArrayMaxLength = 8
+            }
+        }
+        out {
+            reval {
+                SomeIpArrayLengthWidth = 0
+                SomeIpArrayMaxLength = 8
+            }
+        }
+    }
+
+    method test_dynamic_length_1_byte_array {
+        SomeIpMethodID = 0442
+        SomeIpReliable = false
+
+        in {
+            param {
+                SomeIpArrayLengthWidth = 1
+            }
+        }
+        out {
+            reval {
+                SomeIpArrayLengthWidth = 1
+            }
+        }
+    }
+
+    method test_dynamic_length_2_bytes_array {
+        SomeIpMethodID = 0443
+        SomeIpReliable = false
+
+        in {
+            param {
+                SomeIpArrayLengthWidth = 2
+            }
+        }
+        out {
+            reval {
+                SomeIpArrayLengthWidth = 2
+            }
+        }
+    }
+
+    method test_dynamic_length_4_bytes_array {
+        SomeIpMethodID = 0444
+        SomeIpReliable = false
+
+        in {
+            param {
+                SomeIpArrayLengthWidth = 4
+            }
+        }
+        out {
+            reval {
+                SomeIpArrayLengthWidth = 4
+            }
+        }
+    }
+}
+
+define org.genivi.commonapi.someip.deployment for provider as Service {
+    instance test.TestService {
+        InstanceId = "test.TestService"
+        SomeIpInstanceID = 5678
+    }
+}

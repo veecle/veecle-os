@@ -1,0 +1,29 @@
+[package]
+description = "Sends tracing data piped in over a WebSocket connection to `veecle-telemetry-ui`"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-telemetry-server"
+publish = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true, default-features = true, features = ["derive", "env"] }
+env_logger = { workspace = true, features = ["default"] }
+futures-util = { workspace = true }
+log = { workspace = true }
+serde_json = { workspace = true, features = ["std"] }
+tokio = { workspace = true, features = ["full"] }
+tokio-tungstenite = { workspace = true, features = ["default"] }
+veecle-telemetry = { workspace = true, features = ["alloc", "std"] }
+veecle-telemetry-server-protocol = { workspace = true }

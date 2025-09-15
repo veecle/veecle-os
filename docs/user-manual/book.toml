@@ -1,0 +1,11 @@
+[book]
+language = "en"
+title = "User Manual"
+
+[output.html]
+edit-url-template = "https://github.com/veecle/veecle-os/edit/main/docs/user-manual/{path}"
+smart-punctuation = true
+
+[output.html.playground]
+# the code in this book requires the Veecle OS crates that are not available to the playground
+runnable = false

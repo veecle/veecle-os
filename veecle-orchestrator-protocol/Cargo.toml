@@ -1,0 +1,22 @@
+[package]
+description = "Data definitions to communicate with a Veecle OS Orchestrator"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "veecle-orchestrator-protocol"
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[lints]
+workspace = true
+
+[dependencies]
+camino = { workspace = true, features = ["serde1"] }
+serde = { workspace = true, features = ["derive", "std"] }
+uuid = { workspace = true, features = ["serde", "std", "v7"] }

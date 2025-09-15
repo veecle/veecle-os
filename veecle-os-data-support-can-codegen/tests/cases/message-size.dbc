@@ -1,0 +1,9 @@
+VERSION ""
+
+NS_ :
+BS_:
+BU_:
+
+
+BO_ 1 TooLarge: 16 Vector__XXX
+ SG_ Value : 24|16@1+ (1.0,0) [0|0] "" Vector__XXX

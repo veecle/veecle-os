@@ -1,0 +1,14 @@
+{
+    "unicast": "127.0.0.1",
+    "network": "<network_placeholder>",
+    "logging": {
+        "level": "error",
+        "console": "true"
+    },
+    "services": [
+        { "service": "1234", "instance": "5678", "unreliable": "<udp_port_placeholder>" }
+    ],
+    "service-discovery": {
+        "enable": false
+    }
+}

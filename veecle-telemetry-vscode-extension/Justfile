@@ -1,0 +1,4 @@
+# Package the extension
+package-extension:
+    fnm exec pnpm install
+    fnm exec pnpm package
