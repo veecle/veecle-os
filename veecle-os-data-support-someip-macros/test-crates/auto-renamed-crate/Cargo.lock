@@ -126,7 +126,7 @@ checksum = "5a5f39404a5da50712a4c1eecf25e90dd62b613502b7e925fd4e4d19b5c96512"
 
 [[package]]
 name = "veecle-os-data-support-someip"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "bitflags",
  "thiserror",
@@ -135,7 +135,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-data-support-someip-macros"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
