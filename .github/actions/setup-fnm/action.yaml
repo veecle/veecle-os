@@ -9,9 +9,5 @@ runs:
         fnm: true
 
     - shell: bash
-      run: |
-        echo "FNM_DIR=$RUNNER_TEMP/fnm" | tee -a "$GITHUB_ENV"
-
-    - shell: bash
       run: fnm install --corepack-enabled
       working-directory: "${{ inputs.project-directory }}"

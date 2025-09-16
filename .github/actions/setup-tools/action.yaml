@@ -41,43 +41,161 @@ inputs:
 runs:
   using: composite
   steps:
+
+    # Cache and install cargo-about
+    - uses: actions/cache@v4
+      if: inputs.cargo-about == 'true'
+      id: cache-cargo-about
+      with:
+        path: ~/.cargo/bin/cargo-about
+        key: cargo-about-0.7.1-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
+      if: inputs.cargo-about == 'true' && steps.cache-cargo-about.outputs.cache-hit != 'true'
       run: |
-        get() {
-          if [[ "$1" == "true" ]]
-          then
-            local name="$2"
-            local version="$3"
+        cargo install cargo-about --version 0.7.1 --locked
 
-            local target="x86_64-unknown-linux-gnu"
-            local base="https://github.com/cargo-bins/cargo-quickinstall/releases/download"
+    # Cache and install cargo-deny
+    - uses: actions/cache@v4
+      if: inputs.cargo-deny == 'true'
+      id: cache-cargo-deny
+      with:
+        path: ~/.cargo/bin/cargo-deny
+        key: cargo-deny-0.18.4-${{ runner.os }}-${{ runner.arch }}
+    - shell: bash
+      if: inputs.cargo-deny == 'true' && steps.cache-cargo-deny.outputs.cache-hit != 'true'
+      run: |
+        cargo install cargo-deny --version 0.18.4 --locked
 
-            local url="$base/$name-$version/$name-$version-$target.tar.gz"
+    # Cache and install cargo-llvm-cov
+    - uses: actions/cache@v4
+      if: inputs.cargo-llvm-cov == 'true'
+      id: cache-cargo-llvm-cov
+      with:
+        path: ~/.cargo/bin/cargo-llvm-cov
+        key: cargo-llvm-cov-0.6.18-${{ runner.os }}-${{ runner.arch }}
+    - shell: bash
+      if: inputs.cargo-llvm-cov == 'true' && steps.cache-cargo-llvm-cov.outputs.cache-hit != 'true'
+      run: |
+        cargo install cargo-llvm-cov --version 0.6.18 --locked
 
-            curl -LsSf "$url" | tar zxf - -C "$RUNNER_TEMP/tools-bin" ||
-            cargo install "$name" --version "$version" --locked
-          fi
-        }
+    # Cache and install cargo-nextest
+    - uses: actions/cache@v4
+      if: inputs.cargo-nextest == 'true'
+      id: cache-cargo-nextest
+      with:
+        path: ~/.cargo/bin/cargo-nextest
+        key: cargo-nextest-0.9.103-${{ runner.os }}-${{ runner.arch }}
+    - shell: bash
+      if: inputs.cargo-nextest == 'true' && steps.cache-cargo-nextest.outputs.cache-hit != 'true'
+      run: |
+        cargo install cargo-nextest --version 0.9.103 --locked
 
-        mkdir -p "$RUNNER_TEMP/tools-bin"
+    # Cache and install cargo-workspaces
+    - uses: actions/cache@v4
+      if: inputs.cargo-workspaces == 'true'
+      id: cache-cargo-workspaces
+      with:
+        path: |
+          ~/.cargo/bin/cargo-workspaces
+          ~/.cargo/bin/cargo-ws
+        key: cargo-workspaces-0.4.0-${{ runner.os }}-${{ runner.arch }}
+    - shell: bash
+      if: inputs.cargo-workspaces == 'true' && steps.cache-cargo-workspaces.outputs.cache-hit != 'true'
+      run: |
+        cargo install cargo-workspaces --version 0.4.0 --locked
 
-        # Some of these have their own binary releases, but the cargo-quickinstall archives are nicely standardized.
-        #
-        # If you require a package or version that the cargo-quickinstall archives do not contain, then use
-        # cargo-quickinstall to install the package on any system. When cargo-quickinstall cannot fetch a prebuilt
-        # package or has an outdated version, cargo-quickinstall queues a public build.
-        get "${{ inputs.cargo-about }}" cargo-about 0.7.1
-        get "${{ inputs.cargo-deny }}" cargo-deny 0.18.4
-        get "${{ inputs.cargo-llvm-cov }}" cargo-llvm-cov 0.6.18
-        get "${{ inputs.cargo-nextest }}" cargo-nextest 0.9.103
-        get "${{ inputs.cargo-workspaces }}" cargo-workspaces 0.4.0
-        get "${{ inputs.cargo-vet }}" cargo-vet 0.10.1
-        get "${{ inputs.convco }}" convco 0.6.2
-        get "${{ inputs.taplo-cli }}" taplo-cli 0.10.0
-        get "${{ inputs.trunk }}" trunk 0.21.14
-        get "${{ inputs.mdbook }}" mdbook 0.4.52
-        get "${{ inputs.just }}" just 1.42.4
-        get "${{ inputs.fnm }}" fnm 1.38.1
-        get "${{ inputs.wasm-pack }}" wasm-pack 0.13.1
+    # Cache and install cargo-vet
+    - uses: actions/cache@v4
+      if: inputs.cargo-vet == 'true'
+      id: cache-cargo-vet
+      with:
+        path: ~/.cargo/bin/cargo-vet
+        key: cargo-vet-0.10.1-${{ runner.os }}-${{ runner.arch }}
+    - shell: bash
+      if: inputs.cargo-vet == 'true' && steps.cache-cargo-vet.outputs.cache-hit != 'true'
+      run: |
+        cargo install cargo-vet --version 0.10.1 --locked
 
-        echo "PATH=$RUNNER_TEMP/tools-bin:$PATH" | tee -a "$GITHUB_ENV"
+    # Cache and install convco
+    - uses: actions/cache@v4
+      if: inputs.convco == 'true'
+      id: cache-convco
+      with:
+        path: ~/.cargo/bin/convco
+        key: convco-0.6.2-${{ runner.os }}-${{ runner.arch }}
+    - shell: bash
+      if: inputs.convco == 'true' && steps.cache-convco.outputs.cache-hit != 'true'
+      run: |
+        cargo install convco --version 0.6.2 --locked
+
+    # Cache and install taplo-cli
+    - uses: actions/cache@v4
+      if: inputs.taplo-cli == 'true'
+      id: cache-taplo-cli
+      with:
+        path: ~/.cargo/bin/taplo
+        key: taplo-cli-0.10.0-${{ runner.os }}-${{ runner.arch }}
+    - shell: bash
+      if: inputs.taplo-cli == 'true' && steps.cache-taplo-cli.outputs.cache-hit != 'true'
+      run: |
+        cargo install taplo-cli --version 0.10.0 --locked
+
+    # Cache and install trunk
+    - uses: actions/cache@v4
+      if: inputs.trunk == 'true'
+      id: cache-trunk
+      with:
+        path: ~/.cargo/bin/trunk
+        key: trunk-0.21.14-${{ runner.os }}-${{ runner.arch }}
+    - shell: bash
+      if: inputs.trunk == 'true' && steps.cache-trunk.outputs.cache-hit != 'true'
+      run: |
+        cargo install trunk --version 0.21.14 --locked
+
+    # Cache and install mdbook
+    - uses: actions/cache@v4
+      if: inputs.mdbook == 'true'
+      id: cache-mdbook
+      with:
+        path: ~/.cargo/bin/mdbook
+        key: mdbook-0.4.52-${{ runner.os }}-${{ runner.arch }}
+    - shell: bash
+      if: inputs.mdbook == 'true' && steps.cache-mdbook.outputs.cache-hit != 'true'
+      run: |
+        cargo install mdbook --version 0.4.52 --locked
+
+    # Cache and install just
+    - uses: actions/cache@v4
+      if: inputs.just == 'true'
+      id: cache-just
+      with:
+        path: ~/.cargo/bin/just
+        key: just-1.42.4-${{ runner.os }}-${{ runner.arch }}
+    - shell: bash
+      if: inputs.just == 'true' && steps.cache-just.outputs.cache-hit != 'true'
+      run: |
+        cargo install just --version 1.42.4 --locked
+
+    # Cache and install fnm
+    - uses: actions/cache@v4
+      if: inputs.fnm == 'true'
+      id: cache-fnm
+      with:
+        path: ~/.cargo/bin/fnm
+        key: fnm-1.38.1-${{ runner.os }}-${{ runner.arch }}
+    - shell: bash
+      if: inputs.fnm == 'true' && steps.cache-fnm.outputs.cache-hit != 'true'
+      run: |
+        cargo install fnm --version 1.38.1 --locked
+
+    # Cache and install wasm-pack
+    - uses: actions/cache@v4
+      if: inputs.wasm-pack == 'true'
+      id: cache-wasm-pack
+      with:
+        path: ~/.cargo/bin/wasm-pack
+        key: wasm-pack-0.13.1-${{ runner.os }}-${{ runner.arch }}
+    - shell: bash
+      if: inputs.wasm-pack == 'true' && steps.cache-wasm-pack.outputs.cache-hit != 'true'
+      run: |
+        cargo install wasm-pack --version 0.13.1 --locked

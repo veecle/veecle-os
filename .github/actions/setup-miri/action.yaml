@@ -2,7 +2,4 @@ runs:
   using: composite
   steps:
     - shell: bash
-      run: echo "MIRI_SYSROOT=$RUNNER_TEMP/miri-sysroot" | tee -a "$GITHUB_ENV"
-
-    - shell: bash
       run: cargo miri setup
