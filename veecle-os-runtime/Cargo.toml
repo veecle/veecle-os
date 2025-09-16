@@ -9,6 +9,12 @@ repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
 
+[package.metadata.docs.rs]
+all-features = true
+
+default-target = "x86_64-unknown-linux-gnu"
+targets = []
+
 [features]
 default = []
 veecle-telemetry = ["dep:veecle-telemetry"]
