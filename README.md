@@ -20,7 +20,6 @@ After completing the setup instructions, go to [the examples](veecle-os-examples
 <!-- TODO: to be removed/renamed?
 
 nos-ui-vscode-extension
-veecle-os-cli
 
 -->
 

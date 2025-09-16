@@ -13,9 +13,7 @@ members = [
   "veecle-orchestrator-cli",
   "veecle-orchestrator-protocol",
   "veecle-os",
-  "veecle-os-cli",
   "veecle-os-data-support-can",
-  "veecle-os-data-support-can-cli",
   "veecle-os-data-support-can-codegen",
   "veecle-os-data-support-can-macros",
   "veecle-os-data-support-someip",
@@ -101,7 +99,6 @@ log = { version = "0.4.28", default-features = false }
 macro_rules_attribute = { version = "0.2.2", default-features = false }
 nix = { version = "0.30.1", default-features = false }
 ntest_timeout = { version = "0.9.3", default-features = false }
-patharg = { version = "0.4.1", default-features = false }
 pin-cell = { version = "0.2.0", default-features = false }
 pin-project = { version = "1.1.10", default-features = false }
 poll-promise = { version = "0.3.0", default-features = false }
@@ -124,7 +121,6 @@ serde_ini = { version = "0.2.0", default-features = false }
 serde_json = { version = "1.0.143", default-features = false }
 serde_with = { version = "3.14.0", default-features = false }
 serial_test = { version = "3.2.0", default-features = false }
-shlex = { version = "1.3.0", default-features = false }
 signal-hook = { version = "0.3.18", default-features = false }
 socket2 = { version = "0.6.0", default-features = false }
 someip-test-service = { path = "someip-test-service", default-features = false, version = "0.0.1" }
@@ -161,7 +157,6 @@ veecle-orchestrator-cli = { path = "veecle-orchestrator-cli", default-features =
 veecle-orchestrator-protocol = { path = "veecle-orchestrator-protocol", default-features = false, version = "0.0.1" }
 veecle-os = { path = "veecle-os", default-features = false, version = "0.0.1" }
 veecle-os-data-support-can = { path = "veecle-os-data-support-can", default-features = false, version = "0.0.1" }
-veecle-os-data-support-can-cli = { path = "veecle-os-data-support-can-cli", default-features = false, version = "0.0.1" }
 veecle-os-data-support-can-codegen = { path = "veecle-os-data-support-can-codegen", default-features = false, version = "0.0.1" }
 veecle-os-data-support-can-macros = { path = "veecle-os-data-support-can-macros", default-features = false, version = "0.0.1" }
 veecle-os-data-support-someip = { path = "veecle-os-data-support-someip", default-features = false, version = "0.0.1" }

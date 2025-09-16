@@ -1,6 +1,3 @@
-[alias]
-veecle-os = "run --locked --package veecle-os-cli --bin veecle-os --"
-
 [env]
 FREERTOS_CONFIG_INCLUDE_PATH = { value = "", relative = true }
 

@@ -19,7 +19,6 @@ component_management:
         - "veecle-os-data-support-can/src"
     - component_id: "can-support"
       paths:
-        - "veecle-os-data-support-can-cli"
         - "veecle-os-data-support-can-codegen"
         - "veecle-os-data-support-can-macros"
         - "veecle-os-data-support-can/tests"
@@ -38,7 +37,6 @@ component_management:
         - "veecle-telemetry-server-protocol"
         - "veecle-telemetry-vscode-extension"
         - "veecle-os-runtime/tests"
-        - "veecle-os-cli"
     - component_id: "orchestrator-prototype"
       paths:
         - "veecle-ipc"
