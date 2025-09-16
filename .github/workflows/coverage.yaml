@@ -50,6 +50,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: llvm-cov
     steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
       - uses: actions/download-artifact@v5
         with:
           name: coverage
