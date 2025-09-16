@@ -950,7 +950,7 @@ checksum = "77439c1b53d2303b20d9459b1ade71a83c716e3f9c34f3228c00e6f185d6c002"
 
 [[package]]
 name = "veecle-os"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "veecle-os-runtime",
  "veecle-osal-api",
@@ -988,7 +988,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-runtime"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "futures",
  "generic-array",
@@ -1001,7 +1001,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-runtime-macros"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "darling 0.21.3",
  "heck",
@@ -1013,7 +1013,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-osal-api"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "embedded-io-async",
  "futures",
@@ -1022,7 +1022,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-osal-embassy"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "embassy-net",
  "embassy-time",

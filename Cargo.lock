@@ -579,7 +579,7 @@ dependencies = [
 
 [[package]]
 name = "capicxx-someip-sys"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "cmake",
@@ -1947,7 +1947,7 @@ dependencies = [
 
 [[package]]
 name = "generate-markdown-index"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "scraper",
@@ -4091,7 +4091,7 @@ dependencies = [
 
 [[package]]
 name = "someip-test-service"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "ntest_timeout",
@@ -4107,7 +4107,7 @@ dependencies = [
 
 [[package]]
 name = "someip-test-service-macro"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "darling 0.21.3",
  "ntest_timeout",
@@ -4118,7 +4118,7 @@ dependencies = [
 
 [[package]]
 name = "someip-test-service-sys"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "bindgen",
@@ -4131,7 +4131,7 @@ dependencies = [
 
 [[package]]
 name = "someip-test-service-tests"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "ntest_timeout",
  "pretty_assertions",
@@ -4842,7 +4842,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-ipc"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "futures",
@@ -4859,7 +4859,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-ipc-protocol"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "displaydoc",
  "serde",
@@ -4871,7 +4871,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-orchestrator"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "camino",
  "clap",
@@ -4895,7 +4895,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-orchestrator-cli"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "camino",
@@ -4909,7 +4909,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-orchestrator-protocol"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "camino",
  "serde",
@@ -4918,7 +4918,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "veecle-os-data-support-can",
  "veecle-os-data-support-someip",
@@ -4932,7 +4932,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-data-support-can"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "arbitrary",
  "hex",
@@ -4949,7 +4949,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-data-support-can-codegen"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "arbitrary",
@@ -4970,7 +4970,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-data-support-can-macros"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "camino",
  "fs-err",
@@ -4982,7 +4982,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-data-support-someip"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "bitflags 2.9.4",
  "pretty_assertions",
@@ -4992,7 +4992,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-data-support-someip-macros"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -5003,7 +5003,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-runtime"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "futures",
  "futures-test",
@@ -5022,7 +5022,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-runtime-macros"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "darling 0.21.3",
  "heck",
@@ -5038,7 +5038,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-test"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "futures",
  "veecle-os",
@@ -5047,7 +5047,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-osal-api"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "embedded-io-async",
  "futures",
@@ -5061,7 +5061,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-osal-embassy"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "critical-section",
  "embassy-executor",
@@ -5080,7 +5080,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-osal-freertos"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "futures",
  "rtt-target",
@@ -5091,7 +5091,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-osal-std"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "embedded-io",
  "embedded-io-adapters",
@@ -5107,7 +5107,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-osal-std-macros"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "darling 0.21.3",
  "proc-macro-crate",
@@ -5126,7 +5126,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-telemetry"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "hex",
  "indoc",
@@ -5144,7 +5144,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-telemetry-macros"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5154,7 +5154,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-telemetry-server"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -5170,7 +5170,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-telemetry-server-protocol"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "serde",
  "serde_derive",
@@ -5178,7 +5178,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-telemetry-ui"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -5208,7 +5208,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-telemetry-vscode-extension"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "eframe",
  "re_log",
@@ -5983,7 +5983,7 @@ checksum = "052283831dbae3d879dc7f51f3d92703a316ca49f91540417d38591826127814"
 
 [[package]]
 name = "workspace"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "camino",
  "cargo_metadata",

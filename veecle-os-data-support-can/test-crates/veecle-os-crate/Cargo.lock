@@ -413,7 +413,7 @@ checksum = "f63a545481291138910575129486daeaf8ac54aee4387fe7906919f7830c7d9d"
 
 [[package]]
 name = "veecle-os"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "veecle-os-data-support-can",
  "veecle-os-runtime",
@@ -429,7 +429,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-data-support-can"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "serde",
  "tinyvec",
@@ -439,7 +439,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-data-support-can-codegen"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "can-dbc",
@@ -453,7 +453,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-data-support-can-macros"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "camino",
  "fs-err",
@@ -465,7 +465,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-runtime"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "futures",
  "generic-array",
@@ -478,7 +478,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-runtime-macros"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "darling",
  "heck",
@@ -490,7 +490,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-osal-api"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "embedded-io-async",
  "futures",

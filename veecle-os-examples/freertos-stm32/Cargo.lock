@@ -896,7 +896,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "veecle-os-runtime",
  "veecle-osal-api",
@@ -929,7 +929,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-runtime"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "futures",
  "generic-array",
@@ -942,7 +942,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-os-runtime-macros"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "darling",
  "heck",
@@ -954,7 +954,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-osal-api"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "embedded-io-async",
  "futures",
@@ -963,7 +963,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-osal-freertos"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "futures",
  "rtt-target",
@@ -973,7 +973,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-telemetry"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "hex",
  "pin-project",
@@ -986,7 +986,7 @@ dependencies = [
 
 [[package]]
 name = "veecle-telemetry-macros"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
