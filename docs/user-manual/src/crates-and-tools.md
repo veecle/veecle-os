@@ -1,18 +1,5 @@
 # Crates and tools
 
-## Installing the `veecle-os` command-line tool
-
-Run the following command to install the `veecle-os` command-line tool.
-
-<!--
-TODO: this installs the latest nightly we have now.
-This should use some kind of variable substitution to provide the proper command on release branches, and to keep the base nightly version updated.
--->
-
-```
-cargo install veecle-os-cli
-```
-
 ## Installing the `veecle-telemetry-ui` graphical telemetry viewer
 
 Run the following command to install the `veecle-telemetry-ui` graphical telemetry viewer.

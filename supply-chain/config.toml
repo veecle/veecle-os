@@ -45,12 +45,6 @@ criteria = "safe-to-run"
 [policy.veecle-orchestrator-protocol]
 criteria = "safe-to-run"
 
-[policy.veecle-os-cli]
-criteria = "safe-to-run"
-
-[policy.veecle-os-data-support-can-cli]
-criteria = "safe-to-run"
-
 [policy.veecle-os-test]
 criteria = "safe-to-run"
 
@@ -1332,10 +1326,6 @@ criteria = "safe-to-deploy"
 [[exemptions.parking_lot_core]]
 version = "0.9.11"
 criteria = "safe-to-deploy"
-
-[[exemptions.patharg]]
-version = "0.4.1"
-criteria = "safe-to-run"
 
 [[exemptions.percent-encoding]]
 version = "2.3.2"

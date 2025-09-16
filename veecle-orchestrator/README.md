@@ -19,7 +19,7 @@ In one terminal run the orchestrator:
 You can use the `VEECLE_ORCHESTRATOR_LOG` environment variable to control the log level.
 Refer to [`EnvFilter` directives](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives) to learn how to use this variable.
 
-Then in another terminal use the `veecle-os-cli` to interact with it:
+Then in another terminal use the `veecle-orchestrator-cli` to interact with it:
 
 ```console
 > export VEECLE_ORCHESTRATOR_SOCKET=$XDG_RUNTIME_DIR/veecle-orchestrator.socket

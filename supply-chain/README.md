@@ -2,7 +2,7 @@
 
 Currently our configuration reuses the `safe-to-run` and `safe-to-deploy` default policies.
 
-The configuration uses `safe-to-deploy` for code that will run in "production" (e.g. `veecle-os-runtime`) and `safe-to-run` for code that won't (e.g. `veecle-os-cli`).
+The configuration uses `safe-to-deploy` for code that will run in "production" (e.g. `veecle-os-runtime`) and `safe-to-run` for code that won't (e.g. `veecle-telemetry-ui`).
 
 ## Tricks and tips
 
@@ -22,7 +22,7 @@ You can prune any `safe-to-run` crate that appears in the graph for clarity.
 You can also exclude dev-dependencies.
 
 ```console
-$ cargo tree --target all -i windows-sys@0.52.0 -e no-dev --prune veecle-telemetry-ui --prune veecle-telemetry-vscode-extension --prune veecle-os-cli --prune veecle-ipc --prune veecle-orchestrator --prune veecle-telemetry-server --prune veecle-ipc-protocol
+$ cargo tree --target all -i windows-sys@0.52.0 -e no-dev --prune veecle-telemetry-ui --prune veecle-telemetry-vscode-extension --prune veecle-ipc --prune veecle-orchestrator --prune veecle-telemetry-server --prune veecle-ipc-protocol
 windows-sys v0.52.0
 ├── glutin v0.32.3
 │   ├── eframe v0.31.1

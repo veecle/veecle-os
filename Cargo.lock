@@ -3199,16 +3199,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "patharg"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d67efed937875267f39986682045e3430c4da4055785825506837ddb037c771"
-dependencies = [
- "cfg-if",
- "either",
-]
-
-[[package]]
 name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4941,16 +4931,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "veecle-os-cli"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "clap",
- "tokio",
- "veecle-os-data-support-can-cli",
-]
-
-[[package]]
 name = "veecle-os-data-support-can"
 version = "0.0.1"
 dependencies = [
@@ -4965,18 +4945,6 @@ dependencies = [
  "veecle-os-data-support-can-codegen",
  "veecle-os-data-support-can-macros",
  "veecle-os-runtime",
-]
-
-[[package]]
-name = "veecle-os-data-support-can-cli"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "clap",
- "patharg",
- "shlex",
- "syn 2.0.106",
- "veecle-os-data-support-can-codegen",
 ]
 
 [[package]]
