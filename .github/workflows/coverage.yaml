@@ -33,6 +33,8 @@ jobs:
           cargo-llvm-cov: true
           just: true
 
+      - uses: Swatinem/rust-cache@v2
+
       # `someip` tests `cargo run` this binary internally, pre-build it so they don't timeout.
       - run: eval "$(cargo llvm-cov show-env --export-prefix)" && cargo build -p someip-test-service
 
