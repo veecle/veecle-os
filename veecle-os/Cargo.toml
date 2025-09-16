@@ -15,13 +15,13 @@ workspace-checks.miri = false
 
 [features]
 alloc = ["veecle-telemetry?/alloc"]
-osal-freertos = ["dep:veecle-osal-freertos", "veecle-telemetry?/freertos"]
-osal-embassy = ["dep:veecle-osal-embassy"]
-osal-std = ["dep:veecle-osal-std", "veecle-telemetry?/std"]
-telemetry-enable = ["telemetry", "veecle-telemetry/enable"]
-telemetry = ["dep:veecle-telemetry", "veecle-os-runtime/veecle-telemetry"]
 data-support-can = ["dep:veecle-os-data-support-can"]
 data-support-someip = ["dep:veecle-os-data-support-someip"]
+osal-embassy = ["dep:veecle-osal-embassy"]
+osal-freertos = ["dep:veecle-osal-freertos", "veecle-telemetry?/freertos"]
+osal-std = ["dep:veecle-osal-std", "veecle-telemetry?/std"]
+telemetry = ["dep:veecle-telemetry", "veecle-os-runtime/veecle-telemetry"]
+telemetry-enable = ["telemetry", "veecle-telemetry/enable"]
 
 [dependencies]
 veecle-os-data-support-can = { workspace = true, optional = true }

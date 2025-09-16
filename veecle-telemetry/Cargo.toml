@@ -10,10 +10,10 @@ rust-version.workspace = true
 version.workspace = true
 
 [features]
+alloc = ["serde/alloc", "serde_json/alloc"]
+default = []
 # Enable collecting and exporting telemetry data, should only be set in the final binary crate.
 enable = ["veecle-telemetry-macros/enable"]
-default = []
-alloc = ["serde/alloc", "serde_json/alloc"]
 freertos = ["veecle-osal-freertos"]
 std = ["alloc", "rand/thread_rng", "veecle-osal-std"]
 system_time = []

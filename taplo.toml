@@ -6,7 +6,7 @@ column_width = 120
 
 [[rule]]
 include = ["**/Cargo.toml"]
-keys = ["build-dependencies", "dependencies", "dev-dependencies", "package", "workspace.dependencies"]
+keys = ["*-dependencies", "*.*.dependencies", "*.dependencies", "dependencies", "features", "package"]
 
 [rule.formatting]
 reorder_keys = true
