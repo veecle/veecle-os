@@ -48,7 +48,7 @@ pub fn main() -> ! {
 
     Task::new()
         .name(c"alloc example")
-        .stack_size(1024 * 4)
+        .stack_size(1024 * 8)
         .priority(TaskPriority(2))
         .start(|_| {
             veecle_os::osal::freertos::task::block_on_future(veecle_os::runtime::execute! {
