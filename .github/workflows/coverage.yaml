@@ -33,6 +33,10 @@ jobs:
           cargo-llvm-cov: true
           just: true
 
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
       # `someip` tests `cargo run` this binary internally, pre-build it so they don't timeout.
       - run: eval "$(cargo llvm-cov show-env --export-prefix)" && cargo build -p someip-test-service
 
