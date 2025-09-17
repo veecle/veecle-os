@@ -61,6 +61,8 @@ jobs:
           taplo-cli: true
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # `someip` tests `cargo run` this binary internally, pre-build it so they don't timeout.
       - run: cargo build -p someip-test-service
@@ -101,6 +103,8 @@ jobs:
           cargo-nextest: true
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - run: cargo nextest run --package workspace -E 'test(/^veecle-os::(clippy|doc)$/)' --no-fail-fast
 
@@ -122,6 +126,8 @@ jobs:
           taplo-cli: true
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - run: cargo nextest run --package workspace -E 'not test(/^veecle-os::/)' --no-fail-fast
 
