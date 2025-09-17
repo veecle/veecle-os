@@ -37,7 +37,7 @@ members = [
 exclude = ["target"]
 
 [workspace.package]
-version = "0.0.1"
+version = "0.1.0"
 edition = "2024"
 description = "Veecle OS"
 license = "Apache-2.0"
@@ -53,7 +53,7 @@ bindgen = { version = "0.72.1", default-features = false }
 bitflags = { version = "2.9.4", default-features = false }
 camino = { version = "1.1.12", default-features = false }
 can-dbc = { version = "6.0.0", default-features = false }
-capicxx-someip-sys = { path = "capicxx-someip-sys", default-features = false, version = "0.0.1" }
+capicxx-someip-sys = { path = "capicxx-someip-sys", default-features = false, version = "0.1.0" }
 cargo_metadata = { version = "0.22.0", default-features = false }
 cc = { version = "1.2.36", default-features = false }
 clap = { version = "4.5.47", default-features = false }
@@ -123,10 +123,10 @@ serde_with = { version = "3.14.0", default-features = false }
 serial_test = { version = "3.2.0", default-features = false }
 signal-hook = { version = "0.3.18", default-features = false }
 socket2 = { version = "0.6.0", default-features = false }
-someip-test-service = { path = "someip-test-service", default-features = false, version = "0.0.1" }
-someip-test-service-macro = { path = "someip-test-service-macro", default-features = false, version = "0.0.1" }
-someip-test-service-sys = { path = "someip-test-service-sys", default-features = false, version = "0.0.1" }
-someip-test-service-tests = { path = "someip-test-service-tests", default-features = false, version = "0.0.1" }
+someip-test-service = { path = "someip-test-service", default-features = false, version = "0.1.0" }
+someip-test-service-macro = { path = "someip-test-service-macro", default-features = false, version = "0.1.0" }
+someip-test-service-sys = { path = "someip-test-service-sys", default-features = false, version = "0.1.0" }
+someip-test-service-tests = { path = "someip-test-service-tests", default-features = false, version = "0.1.0" }
 static_cell = { version = "2.1.1", default-features = false }
 strum = { version = "0.27.2", default-features = false }
 syn = { version = "2.0", default-features = false }
@@ -152,28 +152,28 @@ unicode-ident = { version = "1.0.19", default-features = false }
 uuid = { version = "1.18.1", default-features = false }
 veecle-freertos-integration = { default-features = false, version = "0.1.1" }
 veecle-freertos-sys = { default-features = false, version = "0.1.1" }
-veecle-ipc-protocol = { path = "veecle-ipc-protocol", default-features = false, version = "0.0.1" }
-veecle-orchestrator-cli = { path = "veecle-orchestrator-cli", default-features = false, version = "0.0.1" }
-veecle-orchestrator-protocol = { path = "veecle-orchestrator-protocol", default-features = false, version = "0.0.1" }
-veecle-os = { path = "veecle-os", default-features = false, version = "0.0.1" }
-veecle-os-data-support-can = { path = "veecle-os-data-support-can", default-features = false, version = "0.0.1" }
-veecle-os-data-support-can-codegen = { path = "veecle-os-data-support-can-codegen", default-features = false, version = "0.0.1" }
-veecle-os-data-support-can-macros = { path = "veecle-os-data-support-can-macros", default-features = false, version = "0.0.1" }
-veecle-os-data-support-someip = { path = "veecle-os-data-support-someip", default-features = false, version = "0.0.1" }
-veecle-os-data-support-someip-macros = { path = "veecle-os-data-support-someip-macros", default-features = false, version = "0.0.1" }
-veecle-os-runtime = { path = "veecle-os-runtime", default-features = false, version = "0.0.1" }
-veecle-os-runtime-macros = { path = "veecle-os-runtime-macros", default-features = false, version = "0.0.1" }
-veecle-os-test = { path = "veecle-os-test", default-features = false, version = "0.0.1" }
-veecle-osal-api = { path = "veecle-osal-api", default-features = false, version = "0.0.1" }
-veecle-osal-embassy = { path = "veecle-osal-embassy", default-features = false, version = "0.0.1" }
-veecle-osal-freertos = { path = "veecle-osal-freertos", default-features = false, version = "0.0.1" }
-veecle-osal-std = { path = "veecle-osal-std", default-features = false, version = "0.0.1" }
-veecle-osal-std-macros = { path = "veecle-osal-std-macros", default-features = false, version = "0.0.1" }
-veecle-telemetry = { path = "veecle-telemetry", default-features = false, version = "0.0.1" }
-veecle-telemetry-macros = { path = "veecle-telemetry-macros", default-features = false, version = "0.0.1" }
-veecle-telemetry-server = { path = "veecle-telemetry-server", default-features = false, version = "0.0.1" }
-veecle-telemetry-server-protocol = { path = "veecle-telemetry-server-protocol", default-features = false, version = "0.0.1" }
-veecle-telemetry-ui = { path = "veecle-telemetry-ui", default-features = false, version = "0.0.1" }
+veecle-ipc-protocol = { path = "veecle-ipc-protocol", default-features = false, version = "0.1.0" }
+veecle-orchestrator-cli = { path = "veecle-orchestrator-cli", default-features = false, version = "0.1.0" }
+veecle-orchestrator-protocol = { path = "veecle-orchestrator-protocol", default-features = false, version = "0.1.0" }
+veecle-os = { path = "veecle-os", default-features = false, version = "0.1.0" }
+veecle-os-data-support-can = { path = "veecle-os-data-support-can", default-features = false, version = "0.1.0" }
+veecle-os-data-support-can-codegen = { path = "veecle-os-data-support-can-codegen", default-features = false, version = "0.1.0" }
+veecle-os-data-support-can-macros = { path = "veecle-os-data-support-can-macros", default-features = false, version = "0.1.0" }
+veecle-os-data-support-someip = { path = "veecle-os-data-support-someip", default-features = false, version = "0.1.0" }
+veecle-os-data-support-someip-macros = { path = "veecle-os-data-support-someip-macros", default-features = false, version = "0.1.0" }
+veecle-os-runtime = { path = "veecle-os-runtime", default-features = false, version = "0.1.0" }
+veecle-os-runtime-macros = { path = "veecle-os-runtime-macros", default-features = false, version = "0.1.0" }
+veecle-os-test = { path = "veecle-os-test", default-features = false, version = "0.1.0" }
+veecle-osal-api = { path = "veecle-osal-api", default-features = false, version = "0.1.0" }
+veecle-osal-embassy = { path = "veecle-osal-embassy", default-features = false, version = "0.1.0" }
+veecle-osal-freertos = { path = "veecle-osal-freertos", default-features = false, version = "0.1.0" }
+veecle-osal-std = { path = "veecle-osal-std", default-features = false, version = "0.1.0" }
+veecle-osal-std-macros = { path = "veecle-osal-std-macros", default-features = false, version = "0.1.0" }
+veecle-telemetry = { path = "veecle-telemetry", default-features = false, version = "0.1.0" }
+veecle-telemetry-macros = { path = "veecle-telemetry-macros", default-features = false, version = "0.1.0" }
+veecle-telemetry-server = { path = "veecle-telemetry-server", default-features = false, version = "0.1.0" }
+veecle-telemetry-server-protocol = { path = "veecle-telemetry-server-protocol", default-features = false, version = "0.1.0" }
+veecle-telemetry-ui = { path = "veecle-telemetry-ui", default-features = false, version = "0.1.0" }
 wakerset = { version = "0.2.5", default-features = false }
 walkdir = { version = "2.5.0", default-features = false }
 wasm-bindgen = { version = "0.2.101", default-features = false }
