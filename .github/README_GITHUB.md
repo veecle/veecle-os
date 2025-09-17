@@ -34,7 +34,7 @@ This directory contains:
 
 ### [`coverage.yaml`](workflows/coverage.yaml)
 
-Runs tests collecting coverage, pushes results to [Codecov](https://app.codecov.io/github/veecle/veecle-os) and the [engineering observability](https://github.com/veecle/infrastructure/tree/main/engineering-observability) platform.
+Runs tests collecting coverage and pushes results to [Codecov](https://app.codecov.io/github/veecle/veecle-os).
 
 ### [`dependabot.yaml`](workflows/dependabot.yaml)
 
