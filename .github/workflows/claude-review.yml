@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     if: |
-      (github.event_name == 'pull_request' && !github.event.pull_request.draft) ||
+      ((github.event_name == 'pull_request' && !github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository) ||
       (github.event_name == 'issue_comment' &&
        github.event.issue.pull_request &&
        contains(github.event.comment.body, '/claude-review') &&
-       github.event.comment.user.type != 'Bot')
+       github.event.comment.user.type != 'Bot'))
 
     permissions:
       contents: read
