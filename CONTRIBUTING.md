@@ -24,7 +24,7 @@ Refer to [the Developer Certificate of Origin GitHub app](https://probot.github.
 
 1. Make your changes following the code quality guidelines below.
    - `cargo test` at the workspace root will check everything necessary, you may want to check just the subsets you're working on for faster feedback.
-2. Commit with [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format (see examples in code quality section below).
+2. Commit with [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format.
 3. Push your branch to your fork and open a Pull Request.
 4. Address feedback from maintainers as needed.
 
