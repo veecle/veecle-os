@@ -1,6 +1,6 @@
 # Veecle OS
 
-Veecle OS is a programming framework that enables developers to write software for low-power embedded devices and high-powered systems alike.
+Veecle OS is a Rust programming framework that enables developers to write software for low-power embedded devices and high-powered systems alike.
 Veecle OS uses features from the Rust programming language to help software developers avoid common complexities.
 
 <!-- TODO:
