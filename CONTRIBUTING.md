@@ -11,7 +11,7 @@ Follow this workflow to ensure smooth review and integration.
    Look for labels like `good first issue` or `help wanted` for beginner-friendly contributions.
 2. Discuss large changes: For significant features or architectural changes, use [GitHub Discussions](https://github.com/veecle/veecle-os/discussions) to discuss the approach with maintainers.
 3. Claim your work: Comment on issues to indicate you're working on them to avoid duplicate effort.
-4. Read our guidelines: Familiarize yourself with the [Code of Conduct](CODE_OF_CONDUCT.md) and this contribution guide.
+4. Read our guidelines: Familiarize yourself with the [Code of Conduct](https://github.com/veecle/veecle-os?tab=coc-ov-file#readme) and this contribution guide.
 
 ### Developer certificate of origin (DCO)
 
