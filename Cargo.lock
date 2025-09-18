@@ -4461,7 +4461,6 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
- "tokio-util",
 ]
 
 [[package]]
@@ -5100,7 +5099,6 @@ dependencies = [
  "rand 0.9.2",
  "socket2",
  "tokio",
- "tokio-stream",
  "veecle-osal-api",
  "veecle-osal-std-macros",
 ]
@@ -5115,11 +5113,8 @@ dependencies = [
  "quote",
  "runtime-macros",
  "syn 2.0.106",
- "tokio",
  "trybuild",
  "veecle-os",
- "veecle-osal-std",
- "veecle-osal-std-macros",
  "veecle-telemetry",
  "walkdir",
 ]

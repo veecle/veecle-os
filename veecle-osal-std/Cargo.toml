@@ -27,7 +27,6 @@ futures = { workspace = true }
 rand = { workspace = true }
 socket2 = { workspace = true, features = ["all"] }
 tokio = { workspace = true, features = ["full"] }
-tokio-stream = { workspace = true, features = ["full"] }
 veecle-osal-api = { workspace = true }
 veecle-osal-std-macros = { workspace = true }
 

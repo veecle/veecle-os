@@ -1821,7 +1821,7 @@ criteria = "safe-to-deploy"
 
 [[exemptions.tokio-stream]]
 version = "0.1.17"
-criteria = "safe-to-deploy"
+criteria = "safe-to-run"
 
 [[exemptions.tokio-tungstenite]]
 version = "0.27.0"
@@ -1829,7 +1829,7 @@ criteria = "safe-to-run"
 
 [[exemptions.tokio-util]]
 version = "0.7.16"
-criteria = "safe-to-deploy"
+criteria = "safe-to-run"
 
 [[exemptions.toml]]
 version = "0.8.23"
