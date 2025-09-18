@@ -36,12 +36,6 @@ test = false
 bench = false
 
 [[bin]]
-name = "basic"
-path = "src/bin/basic.rs"
-test = false
-bench = false
-
-[[bin]]
 name = "queues"
 path = "src/bin/queues.rs"
 test = false

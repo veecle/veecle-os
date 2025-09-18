@@ -25,9 +25,3 @@ name = "time"
 path = "src/bin/time.rs"
 test = false
 bench = false
-
-[[bin]]
-name = "basic"
-path = "src/bin/basic.rs"
-test = false
-bench = false

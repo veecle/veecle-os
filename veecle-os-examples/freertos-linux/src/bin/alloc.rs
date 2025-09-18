@@ -3,6 +3,7 @@ use std::convert::Infallible;
 use veecle_freertos_integration::{FreeRtosAllocator, Task, TaskPriority, vPortGetHeapStats};
 use veecle_os::osal::api::time::{Duration, TimeAbstraction};
 use veecle_os::osal::freertos::time::Time;
+use veecle_os_examples_common::actors::alloc::BoxActor;
 
 // SAFETY: We don't use any non-FreeRTOS threads.
 #[global_allocator]
@@ -14,28 +15,6 @@ async fn alloc_stat_actor() -> Infallible {
         Time::sleep(Duration::from_secs(4)).await.unwrap();
 
         veecle_os::telemetry::debug!("Alloc", stats = format!("{:#?}", vPortGetHeapStats()));
-    }
-}
-
-#[veecle_os::runtime::actor]
-async fn box_actor() -> Infallible {
-    const BOX_COUNT: usize = 5;
-    let mut box_counter = 0;
-    let mut boxes: [Option<Box<u64>>; BOX_COUNT] = [const { None }; BOX_COUNT];
-
-    loop {
-        match boxes.iter_mut().find(|slot| slot.is_none()) {
-            // Allocate a new box.
-            Some(slot) => {
-                *slot = Some(Box::new(box_counter));
-                box_counter += 1;
-            }
-            // Drop all boxes.
-            None => boxes = [const { None }; BOX_COUNT],
-        }
-        veecle_os::telemetry::info!("Boxes", boxes = format!("{:?}", boxes));
-
-        Time::sleep(Duration::from_secs(1)).await.unwrap();
     }
 }
 
@@ -55,7 +34,7 @@ pub fn main() -> ! {
                 store: [],
                 actors: [
                     AllocStatActor,
-                    BoxActor,
+                    BoxActor<veecle_os::osal::freertos::time::Time>,
                 ],
             });
         })
