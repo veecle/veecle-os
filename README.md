@@ -3,14 +3,7 @@
 Veecle OS is a programming framework that enables developers to write software for low-power embedded devices and high-powered systems alike.
 Veecle OS uses features from the Rust programming language to help software developers avoid common complexities.
 
-<!-- TODO:
-
-Refer to:
-
-* [User manual](https://user-manual-2bd.pages.dev/)
-* [Private docs](https://private-docs-3bh.pages.dev/)
-
--->
+Refer to the [user manual](https://veecle.github.io/veecle-os/user-manual/) to learn about Veecle OS usage.
 
 Refer to [CONTRIBUTING](CONTRIBUTING.md) for build instructions and other development material.
 After completing the setup instructions, go to [the examples](veecle-os-examples/) to run some Veecle OS example programs.

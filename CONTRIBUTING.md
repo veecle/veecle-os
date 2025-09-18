@@ -32,13 +32,7 @@ Refer to [the Developer Certificate of Origin GitHub app](https://probot.github.
 
 - **GitHub Discussions**: For questions, ideas, and community support.
 - **Issue comments**: For specific questions on relevant issues.
-
-<!-- TODO:
-
-- **Documentation**: Check the [user manual](https://user-manual-2bd.pages.dev/).
-
--->
-
+- **Documentation**: Check the [user manual](https://veecle.github.io/veecle-os/user-manual/).
 - **Style guide**: Check the [style guide](https://veecle.github.io/style-guide/).
 
 ## Supported Platforms
