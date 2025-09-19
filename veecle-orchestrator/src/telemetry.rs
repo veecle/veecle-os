@@ -1,6 +1,5 @@
 //! Telemetry forwarding for sending telemetry data to `veecle-telemetry-server`.
 
-use std::net::SocketAddr;
 use std::sync::Mutex;
 
 use eyre::WrapErr;
@@ -12,6 +11,8 @@ use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::{error, info, warn};
 use veecle_telemetry::protocol::InstanceMessage;
 use veecle_telemetry::to_static::ToStatic;
+
+use crate::UnresolvedSocketAddr;
 
 #[derive(Debug)]
 struct ExporterState {
@@ -27,11 +28,11 @@ pub struct Exporter {
 
 impl Exporter {
     /// Creates a new telemetry exporter.
-    pub fn new(server_address: SocketAddr) -> eyre::Result<Self> {
+    pub fn new(server_address: UnresolvedSocketAddr) -> eyre::Result<Self> {
         let (sender, receiver) = mpsc::unbounded_channel();
 
         let task = tokio::spawn(async move {
-            telemetry_forwarding_task(server_address, receiver).await;
+            telemetry_forwarding_task(&server_address, receiver).await;
         });
 
         Ok(Self {
@@ -69,10 +70,10 @@ impl Exporter {
 /// If `connection` is empty will attempt to connect to `server_address` to fill it, with exponential
 /// backoff, returning the resulting connection.
 #[tracing::instrument(skip(connection))]
-async fn ensure_connection(
-    server_address: SocketAddr,
-    connection: &mut Option<TcpStream>,
-) -> &mut TcpStream {
+async fn ensure_connection<'a>(
+    server_address: &UnresolvedSocketAddr,
+    connection: &'a mut Option<TcpStream>,
+) -> &'a mut TcpStream {
     if let Some(stream) = connection {
         return stream;
     }
@@ -81,7 +82,7 @@ async fn ensure_connection(
     const MAX_RECONNECT_DELAY: Duration = Duration::from_secs(30);
 
     loop {
-        match TcpStream::connect(server_address).await {
+        match TcpStream::connect(server_address.as_to_socket_addrs()).await {
             Ok(stream) => {
                 info!("Connected to telemetry server");
                 return connection.insert(stream);
@@ -101,7 +102,7 @@ async fn ensure_connection(
 /// Forwards any messages from `receiver` JSONL encoded to the server at `server_address`,
 /// automatically reconnecting as needed.
 async fn telemetry_forwarding_task(
-    server_address: SocketAddr,
+    server_address: &UnresolvedSocketAddr,
     receiver: mpsc::UnboundedReceiver<InstanceMessage<'static>>,
 ) {
     let mut connection: Option<TcpStream> = None;

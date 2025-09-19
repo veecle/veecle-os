@@ -60,6 +60,7 @@ FFIs?
 [fF]ormatters?
 [gG]lobals?
 [hH]ardcoded
+[hH]ostnames?
 [lL]oopback
 [mM]ulticast
 [mM]utex

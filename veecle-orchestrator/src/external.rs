@@ -6,11 +6,11 @@ use veecle_ipc_protocol::EncodedStorable;
 
 #[tracing::instrument(skip(input, output))]
 pub async fn run(
-    address: SocketAddr,
+    address: crate::UnresolvedSocketAddr,
     input: mpsc::Sender<EncodedStorable>,
     mut output: mpsc::Receiver<(SocketAddr, EncodedStorable)>,
 ) -> eyre::Result<()> {
-    let socket = UdpSocket::bind(&address).await?;
+    let socket = UdpSocket::bind(address.as_to_socket_addrs()).await?;
 
     // Arbitrary message size limit also used in `veecle-ipc-protocol`.
     let mut buffer = [0; 2048];
