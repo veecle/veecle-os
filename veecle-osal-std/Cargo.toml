@@ -1,13 +1,13 @@
 [package]
-description = "Veecle OS operating system abstraction layer implementation for `std`"
-edition.workspace = true
-homepage.workspace = true
-license.workspace = true
 name = "veecle-osal-std"
-publish = true
-repository.workspace = true
-rust-version.workspace = true
 version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Veecle OS operating system abstraction layer implementation for `std`"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = true
 
 [package.metadata]
 # This crate uses `#![forbid(unsafe_code)]`.
@@ -15,7 +15,6 @@ workspace-checks.miri = false
 
 [package.metadata.docs.rs]
 all-features = true
-
 default-target = "x86_64-unknown-linux-gnu"
 targets = []
 

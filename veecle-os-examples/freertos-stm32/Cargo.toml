@@ -1,27 +1,36 @@
 [package]
+name = "veecle-os-examples-freertos-stm32"
+version = "0.0.0"
 edition = "2024"
 license = "Apache-2.0"
-name = "veecle-os-examples-freertos-stm32"
 publish = false
-version = "0.0.0"
 
 [workspace]
 
+[[bin]]
+bench = false
+name = "time"
+path = "src/bin/time.rs"
+test = false
+
 [dependencies]
-cortex-m = { version = "0.7.7", default-features = false, features = ["critical-section-single-core"] }
+cortex-m = { version = "0.7.7", default-features = false, features = [
+  "critical-section-single-core",
+] }
 cortex-m-rt = { version = "0.7.5", default-features = false }
 panic-halt = { version = "1.0", default-features = false }
-stm32f7xx-hal = { version = "0.8", default-features = false, features = ["rt", "stm32f767"] }
+stm32f7xx-hal = { version = "0.8", default-features = false, features = [
+  "rt",
+  "stm32f767",
+] }
 veecle-freertos-integration = { version = "0.1.1", default-features = false, features = [
   "link-freertos",
   # SAFETY: we use the same prototype in `FreeRTOSConfig.h` as required by this feature.
   "unsafe-hooks-assert",
 ] }
-veecle-os = { path = "../../veecle-os", default-features = false, features = ["osal-freertos"] }
-veecle-os-examples-common = { path = "../common", default-features = false, features = ["alloc"] }
-
-[[bin]]
-name = "time"
-path = "src/bin/time.rs"
-test = false
-bench = false
+veecle-os = { path = "../../veecle-os", default-features = false, features = [
+  "osal-freertos",
+] }
+veecle-os-examples-common = { path = "../common", default-features = false, features = [
+  "alloc",
+] }

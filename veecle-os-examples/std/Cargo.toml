@@ -1,16 +1,22 @@
 [package]
+name = "veecle-os-examples-std"
+version = "0.0.0"
 edition = "2024"
 license = "Apache-2.0"
-name = "veecle-os-examples-std"
 publish = false
-version = "0.0.0"
 
 [workspace]
 
 [dependencies]
 stats_alloc = { version = "0.1.10", default-features = false }
-veecle-os = { path = "../../veecle-os", default-features = false, features = ["osal-std", "telemetry-enable"] }
-veecle-os-examples-common = { path = "../common", default-features = false, features = ["alloc", "telemetry"] }
+veecle-os = { path = "../../veecle-os", default-features = false, features = [
+  "osal-std",
+  "telemetry-enable",
+] }
+veecle-os-examples-common = { path = "../common", default-features = false, features = [
+  "alloc",
+  "telemetry",
+] }
 
 [dev-dependencies]
 tokio = { version = "1.47.1", features = ["macros", "rt"] }

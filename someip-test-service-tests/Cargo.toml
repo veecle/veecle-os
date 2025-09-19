@@ -1,16 +1,18 @@
 [package]
-description = "Tests against external SOME/IP service"
-edition.workspace = true
-homepage.workspace = true
-license.workspace = true
 name = "someip-test-service-tests"
-publish = false
-repository.workspace = true
-rust-version.workspace = true
 version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Tests against external SOME/IP service"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = false
 
-[lints]
-workspace = true
+[package.metadata]
+# Miri is having issues with the tempfile crate
+# because it uses "open", which is unsupported.
+workspace-checks.miri = false
 
 [dev-dependencies]
 ntest_timeout = { workspace = true }
@@ -19,7 +21,5 @@ someip-test-service = { workspace = true }
 someip-test-service-macro = { workspace = true }
 veecle-os-data-support-someip = { workspace = true }
 
-[package.metadata]
-# Miri is having issues with the tempfile crate
-# because it uses "open", which is unsupported.
-workspace-checks.miri = false
+[lints]
+workspace = true
