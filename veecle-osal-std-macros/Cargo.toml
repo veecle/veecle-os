@@ -43,10 +43,7 @@ syn = { workspace = true, features = [
 
 [dev-dependencies]
 runtime-macros = { workspace = true }
-tokio = { workspace = true, features = ["full"] }
 trybuild = { workspace = true }
 veecle-os = { workspace = true, features = ["osal-std"] }
-veecle-osal-std = { workspace = true }
-veecle-osal-std-macros = { workspace = true }
 veecle-telemetry = { workspace = true, features = ["enable", "std"] }
 walkdir = { workspace = true }
