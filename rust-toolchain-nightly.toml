@@ -1,4 +1,15 @@
 [toolchain]
 channel = "nightly-2025-08-14"
-components = ["clippy", "llvm-tools-preview", "miri", "rust-analyzer", "rust-src", "rustfmt"]
-targets = ["thumbv7em-none-eabihf", "wasm32-unknown-unknown", "x86_64-unknown-linux-gnu"]
+components = [
+  "clippy",
+  "llvm-tools-preview",
+  "miri",
+  "rust-analyzer",
+  "rust-src",
+  "rustfmt",
+]
+targets = [
+  "thumbv7em-none-eabihf",
+  "wasm32-unknown-unknown",
+  "x86_64-unknown-linux-gnu",
+]

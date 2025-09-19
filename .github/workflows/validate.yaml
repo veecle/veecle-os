@@ -58,7 +58,7 @@ jobs:
           cargo-deny: true
           cargo-nextest: true
           cargo-vet: true
-          taplo-cli: true
+          tombi: true
 
       - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0
         with:
@@ -123,7 +123,7 @@ jobs:
           cargo-deny: true
           cargo-nextest: true
           cargo-vet: true
-          taplo-cli: true
+          tombi: true
 
       - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0
         with:

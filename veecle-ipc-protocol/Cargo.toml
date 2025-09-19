@@ -1,13 +1,13 @@
 [package]
-description = "Defines the shared protocol used to communicate between runtime instances and the `veecle-orchestrator`"
-edition.workspace = true
-homepage.workspace = true
-license.workspace = true
 name = "veecle-ipc-protocol"
-publish = false
-repository.workspace = true
-rust-version.workspace = true
 version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Defines the shared protocol used to communicate between runtime instances and the `veecle-orchestrator`"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = false
 
 [package.metadata]
 # This crate uses `#![forbid(unsafe_code)]`.

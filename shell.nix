@@ -33,7 +33,7 @@ in pkgs.mkShell {
     pkg-config
     pnpm
     rust-toolchain
-    taplo
+    tombi
     vale
     wasm-pack
   ] ++ (lib.lists.optional stdenv.hostPlatform.isLinux cargo-llvm-cov); # Only available on Linux systems.

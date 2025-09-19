@@ -1,9 +1,9 @@
 [package]
+name = "veecle-os-crate"
+version = "0.1.0"
 edition = "2024"
 license = "Apache-2.0"
-name = "veecle-os-crate"
 publish = false
-version = "0.1.0"
 
 [workspace]
 
