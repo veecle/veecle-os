@@ -407,12 +407,20 @@ fn main() -> std::process::ExitCode {
     let global_trials = if cfg!(coverage) {
         vec![]
     } else {
-        vec![Trial::test("veecle_os::taplo", move || {
-            Command::new("taplo")
-                .args(["fmt", "--check", "--diff", "--colors=always"])
-                .current_dir(manifest_dir)
-                .run_as_test(capture)
-        })]
+        vec![
+            Trial::test("veecle_os::tombi::fmt", move || {
+                Command::new("tombi")
+                    .args(["format", "--check"])
+                    .current_dir(manifest_dir)
+                    .run_as_test(capture)
+            }),
+            Trial::test("veecle_os::tombi::lint", move || {
+                Command::new("tombi")
+                    .args(["lint"])
+                    .current_dir(manifest_dir)
+                    .run_as_test(capture)
+            }),
+        ]
     };
 
     // Trials that run on the root workspace.
