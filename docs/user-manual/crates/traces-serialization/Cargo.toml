@@ -1,15 +1,18 @@
 [package]
+name = "traces-serialization"
+version = "0.0.0"
 edition = "2024"
 license = "Apache-2.0"
-name = "traces-serialization"
 publish = false
-version = "0.0.0"
 
 [workspace]
 
 [dependencies]
 assert_cmd = "2.0.17"
-veecle-os = { path = "../../../../veecle-os", default-features = false, features = ["osal-std", "telemetry-enable"] }
+veecle-os = { path = "../../../../veecle-os", default-features = false, features = [
+  "osal-std",
+  "telemetry-enable",
+] }
 
 [dev-dependencies]
 assert_cmd = "2.0.17"

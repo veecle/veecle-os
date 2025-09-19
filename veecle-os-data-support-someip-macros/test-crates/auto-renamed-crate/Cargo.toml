@@ -1,11 +1,11 @@
 [package]
+name = "auto-renamed-crate"
+version = "0.1.0"
 edition = "2024"
 license = "Apache-2.0"
-name = "auto-renamed-crate"
 publish = false
-version = "0.1.0"
 
 [workspace]
 
 [dependencies]
-my-veecle-os-data-support-someip = { package = "veecle-os-data-support-someip", path = "../../../veecle-os-data-support-someip" }
+my-veecle-os-data-support-someip = { path = "../../../veecle-os-data-support-someip", package = "veecle-os-data-support-someip" }

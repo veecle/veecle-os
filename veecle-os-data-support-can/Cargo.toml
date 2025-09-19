@@ -1,19 +1,26 @@
 [package]
-description = "Support for working with CAN messages within Veecle OS"
-edition.workspace = true
-homepage.workspace = true
-license.workspace = true
 name = "veecle-os-data-support-can"
-publish = true
-repository.workspace = true
-rust-version.workspace = true
 version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Support for working with CAN messages within Veecle OS"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = true
 
-[lints]
-workspace = true
+[package.metadata]
+# This crate will never involve any unsafe code.
+workspace-checks.miri = false
 
-[features]
-arbitrary = ["dep:arbitrary", "veecle-os-data-support-can-macros/arbitrary"]
+[package.metadata.docs.rs]
+all-features = true
+default-target = "x86_64-unknown-linux-gnu"
+targets = []
+
+[[test]]
+harness = false
+name = "serialization"
 
 [dependencies]
 arbitrary = { workspace = true, optional = true }
@@ -30,16 +37,8 @@ syn = { workspace = true, features = ["parsing"] }
 test-case = { workspace = true }
 veecle-os-data-support-can-codegen = { workspace = true }
 
-[[test]]
-harness = false
-name = "serialization"
+[features]
+arbitrary = ["dep:arbitrary", "veecle-os-data-support-can-macros/arbitrary"]
 
-[package.metadata]
-# This crate will never involve any unsafe code.
-workspace-checks.miri = false
-
-[package.metadata.docs.rs]
-all-features = true
-
-default-target = "x86_64-unknown-linux-gnu"
-targets = []
+[lints]
+workspace = true

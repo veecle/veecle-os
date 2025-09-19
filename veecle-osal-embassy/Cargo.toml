@@ -1,13 +1,13 @@
 [package]
-description = "Veecle OS operating system abstraction layer implementation for Embassy"
-edition.workspace = true
-homepage.workspace = true
-license.workspace = true
 name = "veecle-osal-embassy"
-publish = true
-repository.workspace = true
-rust-version.workspace = true
 version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Veecle OS operating system abstraction layer implementation for Embassy"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = true
 
 [package.metadata]
 # This crate uses `#![forbid(unsafe_code)]`.
@@ -15,7 +15,6 @@ workspace-checks.miri = false
 
 [package.metadata.docs.rs]
 all-features = true
-
 default-target = "x86_64-unknown-linux-gnu"
 targets = []
 
@@ -27,7 +26,13 @@ targets = []
 # We could just live with the crate not being able to be built stand-alone,
 # but that conflicts with our CI as being able to build the library is required for things like clippy.
 # Tracked in DEV-654.
-embassy-net = { workspace = true, features = ["medium-ethernet", "proto-ipv4", "proto-ipv6", "tcp", "udp"] }
+embassy-net = { workspace = true, features = [
+  "medium-ethernet",
+  "proto-ipv4",
+  "proto-ipv6",
+  "tcp",
+  "udp",
+] }
 embassy-time = { workspace = true }
 embedded-hal-async = { workspace = true }
 embedded-io = { workspace = true }
@@ -38,10 +43,16 @@ veecle-osal-api = { workspace = true }
 
 [dev-dependencies]
 critical-section = { workspace = true, features = ["std"] }
-embassy-executor = { workspace = true, features = ["arch-std", "executor-thread"] }
+embassy-executor = { workspace = true, features = [
+  "arch-std",
+  "executor-thread",
+] }
 embassy-net = { workspace = true, features = ["medium-ip"] }
 embassy-net-driver = { workspace = true }
-embassy-time = { workspace = true, features = ["generic-queue-32", "mock-driver"] }
+embassy-time = { workspace = true, features = [
+  "generic-queue-32",
+  "mock-driver",
+] }
 heapless = { workspace = true }
 static_cell = { workspace = true }
 veecle-osal-api = { workspace = true, features = ["test-suites"] }

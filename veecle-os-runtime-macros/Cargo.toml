@@ -1,13 +1,13 @@
 [package]
-description = "Macros for `veecle-os-runtime`"
-edition.workspace = true
-homepage.workspace = true
-license.workspace = true
 name = "veecle-os-runtime-macros"
-publish = true
-repository.workspace = true
-rust-version.workspace = true
 version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Macros for `veecle-os-runtime`"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = true
 
 [package.metadata]
 # Miri cannot test proc-macros.
@@ -15,12 +15,8 @@ workspace-checks.miri = false
 
 [package.metadata.docs.rs]
 all-features = true
-
 default-target = "x86_64-unknown-linux-gnu"
 targets = []
-
-[lints]
-workspace = true
 
 [lib]
 proc-macro = true
@@ -48,3 +44,6 @@ runtime-macros = { workspace = true }
 trybuild = { workspace = true }
 veecle-os-runtime = { workspace = true }
 walkdir = { workspace = true }
+
+[lints]
+workspace = true
