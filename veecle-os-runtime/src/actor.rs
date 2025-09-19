@@ -2,56 +2,6 @@
 use core::convert::Infallible;
 use core::pin::Pin;
 
-/// Generates an [`Actor`] from a function.
-///
-///
-/// ```rust
-/// use veecle_os_runtime::{Reader, Writer};
-/// # use std::convert::Infallible;
-/// # use veecle_os_runtime::Storable;
-/// #
-/// # #[derive(Debug, PartialEq, Clone, Default, Storable)]
-/// # pub struct Sensor(pub u8);
-///
-/// #[veecle_os_runtime::actor]
-/// async fn macro_test_actor(
-///     _sensor_reader: Reader<'_, Sensor>,
-///     _sensor_writer: Writer<'_, Sensor>,
-///     #[init_context] _my_init_context: u32,
-/// ) -> Infallible {
-///     loop {
-///         // Do things.
-///     }
-/// }
-/// ```
-///
-/// # Attribute Arguments
-///
-/// ## `crate`
-///
-/// If necessary the path to [`veecle-os-runtime`][crate] can be overridden by passing a `crate = ::some::path` argument.
-///
-/// ```rust
-/// extern crate veecle_os_runtime as my_veecle_os_runtime;
-///
-/// use my_veecle_os_runtime::{Reader, Writer};
-/// # use std::convert::Infallible;
-/// # use my_veecle_os_runtime::Storable;
-/// #
-/// # #[derive(Debug, PartialEq, Clone, Default, Storable)]
-/// # pub struct Sensor(pub u8);
-///
-/// #[my_veecle_os_runtime::actor(crate = my_veecle_os_runtime)]
-/// async fn macro_test_actor(
-///     _sensor_reader: Reader<'_, Sensor>,
-///     _sensor_writer: Writer<'_, Sensor>,
-///     #[init_context] _my_init_context: u32,
-/// ) -> Infallible {
-///     loop {
-///         // Do things.
-///     }
-/// }
-/// ```
 #[doc(inline)]
 pub use veecle_os_runtime_macros::actor;
 
