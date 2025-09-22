@@ -2,7 +2,6 @@
 
 #![forbid(unsafe_code)]
 
-use std::net::SocketAddr;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
@@ -10,6 +9,8 @@ use clap::Parser;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
+
+use veecle_orchestrator::UnresolvedSocketAddr;
 
 use self::conductor::Conductor;
 use self::distributor::Distributor;
@@ -29,10 +30,10 @@ struct Arguments {
     control_socket: Utf8PathBuf,
 
     #[arg(long)]
-    ipc_socket: SocketAddr,
+    ipc_socket: UnresolvedSocketAddr,
 
     #[arg(long, env = "VEECLE_TELEMETRY_SOCKET")]
-    telemetry_socket: Option<SocketAddr>,
+    telemetry_socket: Option<UnresolvedSocketAddr>,
 }
 
 // 16 arbitrarily chosen for channel sizing because it looks nice.
