@@ -8,4 +8,4 @@ publish = false
 [workspace]
 
 [dependencies]
-my-veecle-os-data-support-someip = { path = "../../../veecle-os-data-support-someip", package = "veecle-os-data-support-someip" }
+my-veecle-os-data-support-someip = { package = "veecle-os-data-support-someip", path = "../../../veecle-os-data-support-someip" }

@@ -29,13 +29,13 @@
         rust-overlay.overlays.default
         (final: prev: {
           tombi = pkgs-unstable.tombi.overrideAttrs (oldAttrs: rec {
-            version = "0.6.10";
+            version = "0.6.11";
             name = "${oldAttrs.pname}-${version}";
             src = final.fetchFromGitHub {
               owner = "tombi-toml";
               repo = "tombi";
               tag = "v${version}";
-              hash = "sha256-d3wB5aLv0xTh2n3ESBN6hKjR2qlbOXJs4/4DYyJGn7c=";
+              hash = "sha256-xYjIvklPuWeCdWmcKW1FinOsvcz1+x/tNnYUshq/AcU=";
             };
             cargoDeps = final.rustPlatform.fetchCargoVendor {
               inherit src name;

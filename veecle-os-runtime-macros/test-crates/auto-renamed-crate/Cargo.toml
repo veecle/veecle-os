@@ -8,4 +8,4 @@ publish = false
 [workspace]
 
 [dependencies]
-my-veecle-os-runtime = { path = "../../../veecle-os-runtime", package = "veecle-os-runtime" }
+my-veecle-os-runtime = { package = "veecle-os-runtime", path = "../../../veecle-os-runtime" }

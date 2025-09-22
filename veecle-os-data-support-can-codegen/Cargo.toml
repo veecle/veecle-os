@@ -45,12 +45,12 @@ colored = { workspace = true }
 datatest-stable = { workspace = true }
 # We override the package name so that the tests can test that we only refer to it via the passed path.
 # This also means we can't use `workspace = true` because of cargo limitations.
-my-arbitrary = { version = "1.4.2", features = ["derive"], package = "arbitrary" }
-my-serde = { version = "1.0.219", default-features = false, features = [
+my-arbitrary = { package = "arbitrary", version = "1.4.2", features = ["derive"] }
+my-serde = { package = "serde", version = "1.0.219", default-features = false, features = [
   "derive",
-], package = "serde" }
-my-veecle-os-data-support-can = { path = "../veecle-os-data-support-can", package = "veecle-os-data-support-can" }
-my-veecle-os-runtime = { path = "../veecle-os-runtime", package = "veecle-os-runtime" }
+] }
+my-veecle-os-data-support-can = { package = "veecle-os-data-support-can", path = "../veecle-os-data-support-can" }
+my-veecle-os-runtime = { package = "veecle-os-runtime", path = "../veecle-os-runtime" }
 pretty_assertions = { workspace = true, features = ["std"] }
 
 [lints]

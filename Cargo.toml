@@ -1,7 +1,3 @@
-# TODO(https://github.com/tombi-toml/tombi/issues/1024):
-#   `workspace.lints.rust.unexpected_cfgs` does not allow "check-cfg" key
-#:tombi schema.strict = false
-
 [workspace]
 resolver = "3"
 members = [
@@ -183,9 +179,9 @@ undocumented_unsafe_blocks = "warn"
 [workspace.lints.rust]
 missing_debug_implementations = "warn"
 missing_docs = "warn"
-unexpected_cfgs = { check-cfg = [
+unexpected_cfgs = { level = "warn", check-cfg = [
   "cfg(coverage,coverage_nightly)",
-], level = "warn" }
+] }
 unsafe_attr_outside_unsafe = "deny"
 unsafe_op_in_unsafe_fn = "deny"
 

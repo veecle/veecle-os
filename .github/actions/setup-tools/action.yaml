@@ -134,11 +134,11 @@ runs:
       id: cache-tombi
       with:
         path: ~/.cargo/bin/tombi
-        key: tombi-0.6.10-${{ runner.os }}-${{ runner.arch }}
+        key: tombi-0.6.11-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
       if: inputs.tombi == 'true' && steps.cache-tombi.outputs.cache-hit != 'true'
       run: |
-        cargo install tombi-cli --git https://github.com/tombi-toml/tombi --tag v0.6.10 --locked
+        cargo install tombi-cli --git https://github.com/tombi-toml/tombi --tag v0.6.11 --locked
 
     # Cache and install trunk
     - uses: actions/cache@v4

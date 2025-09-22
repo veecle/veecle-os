@@ -8,8 +8,8 @@ publish = false
 [workspace]
 
 [dependencies]
-my-veecle-osal-std = { path = "../../../veecle-osal-std", package = "veecle-osal-std" }
-my-veecle-telemetry = { path = "../../../veecle-telemetry", features = [
+my-veecle-osal-std = { package = "veecle-osal-std", path = "../../../veecle-osal-std" }
+my-veecle-telemetry = { package = "veecle-telemetry", path = "../../../veecle-telemetry", features = [
   "enable",
   "std",
-], package = "veecle-telemetry" }
+] }

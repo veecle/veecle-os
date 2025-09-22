@@ -117,7 +117,8 @@ Tools required to run checks:
 * [cargo-nextest](https://nexte.st/) as a test runner.
   For example, install with `cargo install --locked cargo-nextest`.
 * [`tombi`](https://github.com/tombi-toml/tombi) for TOML formatting and linting.
-  For example, install with `cargo install tombi-cli --git https://github.com/tombi-toml/tombi --tag v0.6.10 --locked`.
+  For example, install with `cargo install tombi-cli --git https://github.com/tombi-toml/tombi --tag v0.6.11 --locked`.
+  (The version is very important to keep in sync with CI as it affects sort order when formatting).
 * [`cargo vet`](https://github.com/mozilla/cargo-vet) to vet dependencies.
   For example, install with `cargo install --locked cargo-vet`.
 
