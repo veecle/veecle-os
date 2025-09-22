@@ -30,7 +30,7 @@ struct Arguments {
     control_socket: Utf8PathBuf,
 
     #[arg(long)]
-    ipc_socket: UnresolvedSocketAddr,
+    ipc_socket: Option<UnresolvedSocketAddr>,
 
     #[arg(long, env = "VEECLE_TELEMETRY_SOCKET")]
     telemetry_socket: Option<UnresolvedSocketAddr>,
@@ -59,23 +59,31 @@ async fn main() -> eyre::Result<()> {
             .with(tracing_error::ErrorLayer::default()),
     )?;
 
-    let (external_output_tx, external_output_rx) =
-        tokio::sync::mpsc::channel(ARBITRARY_CHANNEL_BUFFER);
-
     let exporter = if let Some(address) = args.telemetry_socket {
         Some(Arc::new(Exporter::new(address)?))
     } else {
         None
     };
 
-    let distributor = Arc::new(Distributor::new(external_output_tx));
+    let (distributor, external) = if let Some(ipc_socket) = args.ipc_socket {
+        let (external_output_tx, external_output_rx) =
+            tokio::sync::mpsc::channel(ARBITRARY_CHANNEL_BUFFER);
+
+        let distributor = Arc::new(Distributor::new(Some(external_output_tx)));
+
+        let external = Some(tokio::spawn(external::run(
+            ipc_socket,
+            distributor.sender(),
+            external_output_rx,
+        )));
+
+        (distributor, external)
+    } else {
+        (Arc::new(Distributor::new(None)), None)
+    };
+
     let conductor = Arc::new(Conductor::new(distributor.clone(), exporter.clone())?);
 
-    let external = tokio::spawn(external::run(
-        args.ipc_socket,
-        distributor.sender(),
-        external_output_rx,
-    ));
     let api = tokio::spawn(api::run(
         args.control_socket,
         distributor.clone(),
@@ -94,7 +102,9 @@ async fn main() -> eyre::Result<()> {
         }
     }
 
-    external.abort();
+    if let Some(external) = external {
+        external.abort();
+    }
     api.abort();
 
     conductor.shutdown().await;

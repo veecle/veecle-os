@@ -42,7 +42,7 @@ impl std::fmt::Debug for Distributor {
 
 impl Distributor {
     /// Creates a new `Distributor` with no predefined links.
-    pub fn new(external_output_tx: mpsc::Sender<(SocketAddr, EncodedStorable)>) -> Self {
+    pub fn new(external_output_tx: Option<mpsc::Sender<(SocketAddr, EncodedStorable)>>) -> Self {
         let (input_tx, input_rx) =
             mpsc::channel::<EncodedStorable>(crate::ARBITRARY_CHANNEL_BUFFER);
         let (command_tx, command_rx) = mpsc::channel(crate::ARBITRARY_CHANNEL_BUFFER);
@@ -121,7 +121,7 @@ struct Inner {
     command_rx: mpsc::Receiver<Command>,
 
     /// Output messages to any remote instance.
-    external_output_tx: mpsc::Sender<(SocketAddr, EncodedStorable)>,
+    external_output_tx: Option<mpsc::Sender<(SocketAddr, EncodedStorable)>>,
 
     /// The links, for a specific data type, to a list of target instances.
     links: BTreeMap<String, Vec<LinkTarget>>,
@@ -134,7 +134,7 @@ impl Inner {
     fn new(
         input_rx: mpsc::Receiver<EncodedStorable>,
         command_rx: mpsc::Receiver<Command>,
-        external_output_tx: mpsc::Sender<(SocketAddr, EncodedStorable)>,
+        external_output_tx: Option<mpsc::Sender<(SocketAddr, EncodedStorable)>>,
     ) -> Self {
         Self {
             input_rx,
@@ -156,15 +156,19 @@ impl Inner {
             match target {
                 LinkTarget::Local(id) => {
                     let Some(sender) = self.instance_txs.get(id) else {
+                        // Should be unreachable as this is checked in `add_link`.
                         tracing::warn!(%type_name, %id, "no instance");
                         continue;
                     };
                     sender.send(storable.clone()).await?;
                 }
                 &LinkTarget::Remote(address) => {
-                    self.external_output_tx
-                        .send((address, storable.clone()))
-                        .await?;
+                    let Some(sender) = self.external_output_tx.as_ref() else {
+                        // Should be unreachable as this is checked in `add_link`.
+                        tracing::warn!("no external output socket configured");
+                        continue;
+                    };
+                    sender.send((address, storable.clone())).await?;
                 }
             }
         }
@@ -183,11 +187,19 @@ impl Inner {
     }
 
     fn add_link(&mut self, type_name: String, target: LinkTarget) -> eyre::Result<()> {
-        if let LinkTarget::Local(id) = &target {
-            eyre::ensure!(
-                self.instance_txs.contains_key(id),
-                "instance id {target} was not registered"
-            );
+        match &target {
+            LinkTarget::Local(id) => {
+                eyre::ensure!(
+                    self.instance_txs.contains_key(id),
+                    "instance id {target} was not registered"
+                );
+            }
+            LinkTarget::Remote(_) => {
+                eyre::ensure!(
+                    self.external_output_tx.is_some(),
+                    "no external output socket configured"
+                );
+            }
         }
 
         self.links.entry(type_name).or_default().push(target);
