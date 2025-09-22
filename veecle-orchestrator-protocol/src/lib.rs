@@ -88,13 +88,6 @@ pub enum Request {
     /// Responds with <code>[Response]<()></code>.
     Stop(InstanceId),
 
-    /// Return stdout from the instance with the passed id.
-    ///
-    /// Responds with <code>[Response]<()></code>, then line-buffered lines from the instance's stdout until the
-    /// instance is removed.  When the instance is removed the connection will close, another `Request` cannot be sent
-    /// on the same connection.
-    Stdout(InstanceId),
-
     /// Link IPC for a data type identified by `type_name` to `to`.
     ///
     /// The same `type_name` can have multiple destinations, the data will be cloned to all.
@@ -153,7 +146,6 @@ impl Request {
             Self::Remove(_) => "Remove",
             Self::Start(_) => "Start",
             Self::Stop(_) => "Stop",
-            Self::Stdout(_) => "Stdout",
             Self::Link { .. } => "Link",
             Self::Info => "Info",
         }

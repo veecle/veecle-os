@@ -59,12 +59,6 @@ enum Runtime {
     /// Stop the runtime instance with the passed id.
     Stop { id: InstanceId },
 
-    /// Show the output from the runtime instance with the passed id.
-    ///
-    /// Only gets output from now, but stays connected while the instance is stopped, so you can run `stdout` in one
-    /// terminal then `start` from another if you want output from the start.
-    Stdout { id: InstanceId },
-
     /// List known runtime instances.
     List,
 }
@@ -144,18 +138,6 @@ impl Arguments {
             Command::Runtime(Runtime::Stop { id }) => {
                 let () = send(&mut stream, Request::Stop(id))?;
                 println!("stopped instance {id}");
-            }
-            Command::Runtime(Runtime::Stdout { id }) => {
-                let () = send(&mut stream, Request::Stdout(id))?;
-
-                println!("connected to stdout for instance {id}");
-
-                let mut lines = stream.lines();
-                let mut stdout = std::io::stdout().lock();
-                while let Some(line) = lines.next().transpose().context("receiving stdout line")? {
-                    stdout.write_all(line.as_bytes())?;
-                    stdout.write_all(b"\n")?;
-                }
             }
             Command::Runtime(Runtime::List) => {
                 let info: Info = send(&mut stream, Request::Info)?;
