@@ -60,39 +60,6 @@ async fn handle_request(
             conductor.stop(id).await.wrap_err("stopping instance")?;
             encode(())?
         }
-        Request::Stdout(id) => {
-            let mut stdout = conductor.stdout(id)?;
-            let response = encode(())?;
-            return Ok((
-                response,
-                Some(Box::new(|mut stream| {
-                    Box::pin(async move {
-                        loop {
-                            let line = match stdout.recv().await {
-                                Ok(line) => line,
-                                Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
-                                Err(tokio::sync::broadcast::error::RecvError::Lagged(amount)) => {
-                                    tracing::trace!(?amount, "stdout client lagged");
-                                    continue;
-                                }
-                            };
-                            if let Err(error) = stream.send(line).await {
-                                if let tokio_util::codec::LinesCodecError::Io(error) = &error
-                                    && error.kind() == std::io::ErrorKind::BrokenPipe
-                                {
-                                    // Client disconnected at some point since the last write.
-                                    break;
-                                }
-                                return Err(
-                                    eyre::Report::new(error).wrap_err("sending stdout line")
-                                );
-                            }
-                        }
-                        Ok(())
-                    })
-                })),
-            ));
-        }
         Request::Link { type_name, to } => {
             distributor
                 .link(type_name, to)

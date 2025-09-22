@@ -1,6 +1,5 @@
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeMap, HashMap};
-use std::pin::pin;
 use std::process::{ExitStatus, Stdio};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -10,7 +9,6 @@ use eyre::WrapErr;
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
 use tempfile::TempDir;
-use tokio::io::AsyncBufReadExt;
 use tokio::process::{Child, Command};
 use tokio::sync::mpsc;
 use tokio::time::timeout;
@@ -29,7 +27,6 @@ use crate::telemetry::Exporter;
 struct RuntimeInstance {
     binary: Utf8PathBuf,
     process: Option<Child>,
-    stdout_tx: tokio::sync::broadcast::Sender<String>,
     _ipc_task: tokio::task::JoinHandle<eyre::Result<()>>,
     socket_path: Utf8PathBuf,
 }
@@ -92,7 +89,6 @@ impl RuntimeInstance {
         Ok(Self {
             binary,
             process: None,
-            stdout_tx: tokio::sync::broadcast::channel(crate::ARBITRARY_CHANNEL_BUFFER).0,
             _ipc_task: ipc_task,
             socket_path,
         })
@@ -196,32 +192,14 @@ impl Conductor {
         }
 
         let binary = &instance.binary;
-        // TODO: <https://veecle.atlassian.net/browse/DEV-269> decide how to handle stdio streams
-        let mut process = Command::new(binary)
+        let process = Command::new(binary)
             .stdin(Stdio::null())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .env("VEECLE_IPC_SOCKET", &instance.socket_path)
             .spawn()
             .wrap_err_with(|| format!("starting runtime process '{binary}'"))?;
 
-        let stdout = process.stdout.take().unwrap();
-        let stderr = process.stderr.take().unwrap();
-        let stdout_tx = instance.stdout_tx.clone();
-        tokio::spawn(async move {
-            let mut stdout = tokio::io::BufReader::new(stdout).lines();
-            let mut stderr = tokio::io::BufReader::new(stderr).lines();
-            loop {
-                let (line, _) =
-                    futures::future::select(pin!(stdout.next_line()), pin!(stderr.next_line()))
-                        .await
-                        .factor_first();
-                let Ok(Some(line)) = line else { continue };
-                // This only fails if there are currently no receivers, we don't care about that
-                // and just discard the line.
-                let _ = stdout_tx.send(line);
-            }
-        });
         instance.process = Some(process);
 
         Ok(())
@@ -251,21 +229,6 @@ impl Conductor {
         tracing::info!("child stop exit status {status:?}");
 
         Ok(())
-    }
-
-    /// Subscribes to any future lines written to the instance's stdout.
-    #[tracing::instrument(skip(self))]
-    pub(crate) fn stdout(
-        &self,
-        id: InstanceId,
-    ) -> eyre::Result<tokio::sync::broadcast::Receiver<String>> {
-        let mut runtimes = self.runtimes.lock().unwrap();
-
-        let Some(instance) = runtimes.get_mut(&id) else {
-            eyre::bail!("instance id {id} was not registered");
-        };
-
-        Ok(instance.stdout_tx.subscribe())
     }
 
     /// Returns info about the current state.
