@@ -7,6 +7,7 @@ on:
       - main
   pull_request:
   workflow_dispatch:
+  merge_group:
 
 # Cancel jobs for previous commits in the same branch.
 # On main `head_ref` is not available and `run_id` is always unique.
