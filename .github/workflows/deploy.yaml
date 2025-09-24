@@ -257,3 +257,16 @@ jobs:
           "
         env:
           GH_TOKEN: ${{ github.token }}
+
+  # Ensures all deployments are built. Used to require a single step to pass instead of multiple.
+  build-deployments:
+    runs-on: ubuntu-latest
+    needs:
+      - build-private-docs
+      - build-user-manual
+      - build-veecle-telemetry-ui-wasm
+      - build-veecle-telemetry-ui-vscode
+    if: always()
+    steps:
+      - run: exit 1
+        if: ${{ always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}
