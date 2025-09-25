@@ -38,7 +38,7 @@ use tokio_util::codec::Framed;
 /// time, but maybe reconnecting if the instance is stopped and restarted).
 /// Any messages arriving on `ipc_rx` will be encoded and sent to the instance.
 /// Any `Storable` messages arriving from the instance will be decoded and forwarded to `ipc_tx`.
-#[tracing::instrument(skip_all, fields(%id))]
+#[tracing::instrument(skip_all, fields(%id), ret)]
 async fn handle_instance_ipc(
     id: InstanceId,
     socket: UnixListener,
@@ -46,17 +46,28 @@ async fn handle_instance_ipc(
     mut ipc_rx: mpsc::Receiver<EncodedStorable>,
     exporter: Option<Arc<Exporter>>,
 ) -> eyre::Result<()> {
+    tracing::info!("starting");
     loop {
         let mut stream = Framed::new(socket.accept().await?, veecle_ipc_protocol::Codec::new());
         loop {
             tokio::select! {
                 storable = ipc_rx.recv() => {
-                    let Some(storable) = storable else { break };
+                    let Some(storable) = storable else {
+                        tracing::info!("storable channel closed");
+                        break
+                    };
+                    tracing::info!(type_name = &*storable.type_name, "received storable for instance");
+                    tracing::debug!(storable = ?storable);
                     let message = veecle_ipc_protocol::Message::Storable(storable);
                     stream.send(&message).await?;
                 }
                 message = stream.next() => {
-                    let Some(message) = message.transpose()? else { break };
+                    tracing::info!("received message from instance");
+                    tracing::debug!(message = ?message);
+                    let Some(message) = message.transpose()? else {
+                        tracing::info!("ipc stream closed");
+                        break
+                    };
                     match message {
                         veecle_ipc_protocol::Message::Storable(storable) => {
                             ipc_tx.send(storable).await?;
@@ -194,8 +205,8 @@ impl Conductor {
         let binary = &instance.binary;
         let process = Command::new(binary)
             .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
             .env("VEECLE_IPC_SOCKET", &instance.socket_path)
             .spawn()
             .wrap_err_with(|| format!("starting runtime process '{binary}'"))?;

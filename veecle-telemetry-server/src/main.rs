@@ -263,8 +263,10 @@ async fn handle_telemetry_socket(
 
         let store = store.clone();
         tokio::spawn(async move {
-            if let Err(error) = handle_telemetry_connection(stream, store).await {
-                error!("Telemetry connection failed: {error:?}");
+            if let Err(error) = handle_telemetry_connection(stream, store, peer_addr).await {
+                error!("Telemetry connection with {peer_addr} failed: {error:?}");
+            } else {
+                info!("Telemetry connection with {peer_addr} closed");
             }
         });
     }
@@ -276,10 +278,13 @@ async fn handle_telemetry_socket(
 async fn handle_telemetry_connection(
     stream: TcpStream,
     store: Arc<TracingLineStore>,
+    peer_addr: std::net::SocketAddr,
 ) -> anyhow::Result<()> {
     let mut lines = BufReader::new(stream).lines();
 
     while let Some(line) = lines.next_line().await.context("reading telemetry line")? {
+        info!("New telemetry line from: {peer_addr}");
+        log::debug!("{line}");
         // Store the encoded line directly without deserializing
         store.push_line(line);
     }

@@ -121,6 +121,7 @@ async fn telemetry_forwarding_task(
             pending_line = lines.next().await;
         }
         let Some(line) = pending_line.take() else {
+            info!("receiver closed, shutting down");
             break;
         };
 
@@ -130,5 +131,12 @@ async fn telemetry_forwarding_task(
             connection = None;
             pending_line = Some(line);
         }
+        tracing::debug!("sent message");
     }
+
+    if let Some(stream) = &mut connection && let Err(error) = stream.shutdown().await {
+        warn!("Failed to flush, connection lost: {error}");
+    }
+
+    tracing::info!("telemetry stream shutdown");
 }

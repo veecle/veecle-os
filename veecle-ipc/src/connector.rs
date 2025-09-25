@@ -48,6 +48,7 @@ impl Connector {
                         message = output_rx.recv() => {
                             let Some(message) = message else { break };
                             stream.send(&message).await?;
+                            stream.flush().await?;
                         }
                         message = stream.next() => {
                             let Some(message) = message else { break };
