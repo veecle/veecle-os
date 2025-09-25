@@ -1,0 +1,16 @@
+# Copyright (c) ONNX Project Contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Mostly copied from https://github.com/onnx/onnx/blob/d2813e19cd9f0394f4b66fb392f0a09f231af77f/.github/workflows/dco_merge_group.yml.
+# See https://github.com/veecle/veecle-os/issues/38 for details.
+
+name: DCO
+on:
+  merge_group:
+
+jobs:
+  DCO:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "dummy DCO workflow (it won't run any check) to be triggered by merge_group to enable merge queues"
