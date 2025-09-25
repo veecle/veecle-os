@@ -116,8 +116,9 @@ Tools required to run checks:
   For example, install with `cargo install --locked cargo-deny`.
 * [cargo-nextest](https://nexte.st/) as a test runner.
   For example, install with `cargo install --locked cargo-nextest`.
-* [taplo-cli](https://taplo.tamasfe.dev/cli/installation/cargo.html) for TOML formatting.
-  For example, install with `cargo install --locked taplo-cli`.
+* [`tombi`](https://github.com/tombi-toml/tombi) for TOML formatting and linting.
+  For example, install with `cargo install tombi-cli --git https://github.com/tombi-toml/tombi --locked --rev df223791d79a45ee5e32ef6535103f23d5609e11 # --tag v0.6.11`.
+  (The version is very important to keep in sync with CI as it affects sort order when formatting).
 * [`cargo vet`](https://github.com/mozilla/cargo-vet) to vet dependencies.
   For example, install with `cargo install --locked cargo-vet`.
 

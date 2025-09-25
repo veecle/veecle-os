@@ -1,13 +1,13 @@
 [package]
-description = "Generates Veecle OS code from a CAN-DBC file"
-edition.workspace = true
-homepage.workspace = true
-license.workspace = true
 name = "veecle-os-data-support-can-codegen"
-publish = true
-repository.workspace = true
-rust-version.workspace = true
 version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Generates Veecle OS code from a CAN-DBC file"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = true
 
 [package.metadata]
 # This crate's tests are filesystem based.
@@ -15,12 +15,12 @@ workspace-checks.miri = false
 
 [package.metadata.docs.rs]
 all-features = true
-
 default-target = "x86_64-unknown-linux-gnu"
 targets = []
 
-[lints]
-workspace = true
+[[test]]
+harness = false
+name = "generate"
 
 [dependencies]
 anyhow = { workspace = true }
@@ -43,14 +43,15 @@ unicode-ident = { workspace = true }
 [dev-dependencies]
 colored = { workspace = true }
 datatest-stable = { workspace = true }
-pretty_assertions = { workspace = true, features = ["std"] }
 # We override the package name so that the tests can test that we only refer to it via the passed path.
 # This also means we can't use `workspace = true` because of cargo limitations.
 my-arbitrary = { package = "arbitrary", version = "1.4.2", features = ["derive"] }
-my-serde = { package = "serde", version = "1.0.219", default-features = false, features = ["derive"] }
+my-serde = { package = "serde", version = "1.0.219", default-features = false, features = [
+  "derive",
+] }
 my-veecle-os-data-support-can = { package = "veecle-os-data-support-can", path = "../veecle-os-data-support-can" }
 my-veecle-os-runtime = { package = "veecle-os-runtime", path = "../veecle-os-runtime" }
+pretty_assertions = { workspace = true, features = ["std"] }
 
-[[test]]
-name = "generate"
-harness = false
+[lints]
+workspace = true

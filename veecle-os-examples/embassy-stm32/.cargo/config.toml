@@ -5,7 +5,7 @@ target = "thumbv7em-none-eabihf"
 runner = ["probe-rs", "run"]
 rustflags = [
   # Use the linker script provided by cortex-m-rt crate.
-  "-C", "link-arg=-Tlink.x",
+  "-Clink-arg=-Tlink.x",
 ]
 
 [env]

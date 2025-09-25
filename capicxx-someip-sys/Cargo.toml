@@ -1,22 +1,22 @@
 [package]
-description = "SOME/IP subset of the CommonAPI C++ SOME/IP Framework as a set of pure C/C++ libraries"
+name = "capicxx-someip-sys"
+version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
+description = "SOME/IP subset of the CommonAPI C++ SOME/IP Framework as a set of pure C/C++ libraries"
 homepage.workspace = true
+repository.workspace = true
 license.workspace = true
 links = "capicxx-someip"
-name = "capicxx-someip-sys"
 publish = false
-repository.workspace = true
-rust-version.workspace = true
-version.workspace = true
 
 [package.metadata]
 # The tests involve FFI which miri cannot execute.
 workspace-checks.miri = false
 
-[lints]
-workspace = true
-
 [build-dependencies]
 anyhow = { workspace = true }
 cmake = { workspace = true }
+
+[lints]
+workspace = true

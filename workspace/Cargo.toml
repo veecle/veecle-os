@@ -1,13 +1,13 @@
 [package]
-description = "Internal workspace tests"
-edition.workspace = true
-homepage.workspace = true
-license.workspace = true
 name = "workspace"
-publish = false
-repository.workspace = true
-rust-version.workspace = true
 version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Internal workspace tests"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = false
 
 [package.metadata]
 # We don't want to recursively test this (and it is purely a test helper crate).
@@ -16,14 +16,11 @@ workspace-checks.miri = false
 [lib]
 test = false
 
-[lints]
-workspace = true
+[[test]]
+harness = false
+name = "checks"
 
 [dependencies]
-
-[[test]]
-name = "checks"
-harness = false
 
 [dev-dependencies]
 camino = { workspace = true, features = ["serde"] }
@@ -37,3 +34,6 @@ camino = { workspace = true, features = ["serde"] }
 cargo_metadata = { workspace = true }
 serde_json = { workspace = true }
 walkdir = { workspace = true }
+
+[lints]
+workspace = true

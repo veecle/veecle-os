@@ -1,19 +1,19 @@
 [package]
+name = "veecle-os-examples-common"
+version = "0.0.0"
 edition = "2024"
 license = "Apache-2.0"
-name = "veecle-os-examples-common"
 publish = false
-version = "0.0.0"
 
 [workspace]
-
-[features]
-# Enables features that require `alloc`.
-alloc = ["veecle-os/alloc"]
-telemetry = ["alloc", "veecle-os/telemetry"]
 
 [dependencies]
 embedded-io-async = { version = "0.6.1", default-features = false }
 futures = { version = "0.3.31", default-features = false }
 serde = { version = "1.0.219", default-features = false, features = ["derive"] }
 veecle-os = { path = "../../veecle-os", default-features = false }
+
+[features]
+# Enables features that require `alloc`.
+alloc = ["veecle-os/alloc"]
+telemetry = ["alloc", "veecle-os/telemetry"]

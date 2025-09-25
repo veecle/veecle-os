@@ -1,5 +1,14 @@
 [licenses]
-allow = ["0BSD", "Apache-2.0", "BSD-3-Clause", "BSL-1.0", "ISC", "MIT", "MPL-2.0", "Unicode-3.0"]
+allow = [
+  "0BSD",
+  "Apache-2.0",
+  "BSD-3-Clause",
+  "BSL-1.0",
+  "ISC",
+  "MIT",
+  "MPL-2.0",
+  "Unicode-3.0",
+]
 
 [[licenses.exceptions]]
 crate = "epaint_default_fonts"

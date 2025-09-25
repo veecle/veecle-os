@@ -1,12 +1,15 @@
 [package]
+name = "auto-renamed-crate"
+version = "0.1.0"
 edition = "2024"
 license = "Apache-2.0"
-name = "auto-renamed-crate"
 publish = false
-version = "0.1.0"
 
 [workspace]
 
 [dependencies]
 my-veecle-osal-std = { package = "veecle-osal-std", path = "../../../veecle-osal-std" }
-my-veecle-telemetry = { package = "veecle-telemetry", path = "../../../veecle-telemetry", features = ["enable", "std"] }
+my-veecle-telemetry = { package = "veecle-telemetry", path = "../../../veecle-telemetry", features = [
+  "enable",
+  "std",
+] }

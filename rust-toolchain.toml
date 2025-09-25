@@ -1,4 +1,14 @@
 [toolchain]
 channel = "1.89"
-components = ["clippy", "llvm-tools-preview", "rust-analyzer", "rust-src", "rustfmt"]
-targets = ["thumbv7em-none-eabihf", "wasm32-unknown-unknown", "x86_64-unknown-linux-gnu"]
+components = [
+  "clippy",
+  "llvm-tools-preview",
+  "rust-analyzer",
+  "rust-src",
+  "rustfmt",
+]
+targets = [
+  "thumbv7em-none-eabihf",
+  "wasm32-unknown-unknown",
+  "x86_64-unknown-linux-gnu",
+]

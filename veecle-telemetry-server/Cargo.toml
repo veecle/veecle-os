@@ -1,13 +1,13 @@
 [package]
-description = "Sends tracing data piped in over a WebSocket connection to `veecle-telemetry-ui`"
-edition.workspace = true
-homepage.workspace = true
-license.workspace = true
 name = "veecle-telemetry-server"
-publish = true
-repository.workspace = true
-rust-version.workspace = true
 version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Sends tracing data piped in over a WebSocket connection to `veecle-telemetry-ui`"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = true
 
 [package.metadata]
 # This crate uses `#![forbid(unsafe_code)]`.
@@ -15,12 +15,8 @@ workspace-checks.miri = false
 
 [package.metadata.docs.rs]
 all-features = true
-
 default-target = "x86_64-unknown-linux-gnu"
 targets = []
-
-[lints]
-workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
@@ -33,3 +29,6 @@ tokio = { workspace = true, features = ["full"] }
 tokio-tungstenite = { workspace = true, features = ["default"] }
 veecle-telemetry = { workspace = true, features = ["alloc", "std"] }
 veecle-telemetry-server-protocol = { workspace = true }
+
+[lints]
+workspace = true

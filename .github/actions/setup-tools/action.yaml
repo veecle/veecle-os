@@ -20,8 +20,8 @@ inputs:
   convco:
     description: convco
     default: "false"
-  taplo-cli:
-    description: taplo-cli
+  tombi:
+    description: tombi
     default: "false"
   trunk:
     description: trunk
@@ -128,17 +128,17 @@ runs:
       run: |
         cargo install convco --version 0.6.2 --locked
 
-    # Cache and install taplo-cli
+    # Cache and install tombi
     - uses: actions/cache@v4
-      if: inputs.taplo-cli == 'true'
-      id: cache-taplo-cli
+      if: inputs.tombi == 'true'
+      id: cache-tombi
       with:
-        path: ~/.cargo/bin/taplo
-        key: taplo-cli-0.10.0-${{ runner.os }}-${{ runner.arch }}
+        path: ~/.cargo/bin/tombi
+        key: tombi-0.6.11-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
-      if: inputs.taplo-cli == 'true' && steps.cache-taplo-cli.outputs.cache-hit != 'true'
+      if: inputs.tombi == 'true' && steps.cache-tombi.outputs.cache-hit != 'true'
       run: |
-        cargo install taplo-cli --version 0.10.0 --locked
+        cargo install tombi-cli --git https://github.com/tombi-toml/tombi --locked --rev df223791d79a45ee5e32ef6535103f23d5609e11 # --tag v0.6.11
 
     # Cache and install trunk
     - uses: actions/cache@v4

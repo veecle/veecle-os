@@ -1,13 +1,13 @@
 [package]
-description = "Veecle OS telemetry UI"
-edition.workspace = true
-homepage.workspace = true
-license.workspace = true
 name = "veecle-telemetry-ui"
-publish = true
-repository.workspace = true
-rust-version.workspace = true
 version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Veecle OS telemetry UI"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = true
 
 [package.metadata]
 # This crate uses `#![forbid(unsafe_code)]`.
@@ -15,12 +15,8 @@ workspace-checks.miri = false
 
 [package.metadata.docs.rs]
 all-features = true
-
 default-target = "x86_64-unknown-linux-gnu"
 targets = []
-
-[lints]
-workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
@@ -33,9 +29,9 @@ eframe = { workspace = true, default-features = false, features = [
   "x11",
 ] }
 egui = { workspace = true, default-features = false }
+egui_extras = { workspace = true, default-features = false, features = ["serde"] }
 egui-notify = { workspace = true }
 egui-remixicon = { workspace = true }
-egui_extras = { workspace = true, default-features = false, features = ["serde"] }
 ewebsock = { workspace = true }
 indexmap = { workspace = true, features = ["std"] }
 log = { workspace = true }
@@ -46,6 +42,12 @@ serde_json = { workspace = true, features = ["std"] }
 veecle-telemetry = { workspace = true, features = ["alloc"] }
 veecle-telemetry-server-protocol = { workspace = true }
 
+[dev-dependencies]
+rand = { workspace = true, features = ["thread_rng"] }
+veecle-os-runtime = { workspace = true, features = ["veecle-telemetry"] }
+veecle-osal-std = { workspace = true }
+veecle-telemetry = { workspace = true, features = ["enable", "std"] }
+
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger = { workspace = true, features = ["default"] }
 
@@ -55,8 +57,5 @@ wasm-bindgen-futures = { workspace = true }
 web-sys = { workspace = true }
 web-time = { workspace = true }
 
-[dev-dependencies]
-rand = { workspace = true, features = ["thread_rng"] }
-veecle-os-runtime = { workspace = true, features = ["veecle-telemetry"] }
-veecle-osal-std = { workspace = true }
-veecle-telemetry = { workspace = true, features = ["enable", "std"] }
+[lints]
+workspace = true

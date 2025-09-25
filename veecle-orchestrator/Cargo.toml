@@ -1,13 +1,13 @@
 [package]
-description = "Veecle OS Orchestrator"
-edition.workspace = true
-homepage.workspace = true
-license.workspace = true
 name = "veecle-orchestrator"
-publish = false
-repository.workspace = true
-rust-version.workspace = true
 version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Veecle OS Orchestrator"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = false
 
 [package.metadata]
 # This crate uses `#![forbid(unsafe_code)]`.
@@ -29,7 +29,11 @@ tokio-stream = { workspace = true, features = ["net"] }
 tokio-util = { workspace = true, features = ["codec"] }
 tracing = { workspace = true, features = ["attributes", "std"] }
 tracing-error = { workspace = true }
-tracing-subscriber = { workspace = true, features = ["ansi", "env-filter", "std"] }
+tracing-subscriber = { workspace = true, features = [
+  "ansi",
+  "env-filter",
+  "std",
+] }
 veecle-ipc-protocol = { workspace = true }
 veecle-orchestrator-protocol = { workspace = true }
 veecle-telemetry = { workspace = true, features = ["alloc", "std"] }
