@@ -5,8 +5,8 @@
   "version": "0.0.1",
   "engines": {
     "node": "^22.13.1",
-    "pnpm": "9.12.1",
-    "vscode": "^1.97.0"
+    "pnpm": "9.15.9",
+    "vscode": "^1.104.0"
   },
   "devEngines": {
     "runtime": {
@@ -15,14 +15,18 @@
       "onFail": "download"
     }
   },
-  "categories": ["Other"],
+  "categories": [
+    "Other"
+  ],
   "activationEvents": [
     "onWebviewPanel:veecleTelemetry.app",
     "onWebviewPanel:veecleTelemetry.preview",
     "onWebviewPanel:veecleTelemetry.editorPreview"
   ],
   "imports": {
-    "#wasm": ["./wasm/index.js"],
+    "#wasm": [
+      "./wasm/index.js"
+    ],
     "#*": [
       "./src/*",
       "./src/*.ts",
@@ -108,27 +112,27 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@rspack/cli": "^1.2.6",
-    "@rspack/core": "^1.2.6",
+    "@rspack/cli": "^1.5.6",
+    "@rspack/core": "^1.5.6",
     "@types/assert": "^1.5.11",
     "@types/mocha": "^10.0.10",
-    "@types/node": "20.x",
-    "@types/vscode": "^1.97.0",
+    "@types/node": "^20.19.17",
+    "@types/vscode": "^1.104.0",
     "@types/vscode-webview": "^1.57.5",
     "@types/webpack-env": "^1.18.8",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1",
-    "@vscode/test-web": "^0.0.66",
-    "@vscode/vsce": "^3.3.1",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/test-web": "^0.0.73",
+    "@vscode/vsce": "^3.6.1",
     "@wasm-tool/wasm-pack-plugin": "^1.7.0",
     "assert": "^2.1.0",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.25.10",
     "esbuild-register": "^3.6.0",
-    "mocha": "^11.1.0",
+    "mocha": "^11.7.2",
     "process": "^0.11.10",
-    "typescript": "^5.7.3",
+    "typescript": "^5.9.2",
     "vscode-uri": "^3.1.0",
     "webpack-merge": "^6.0.1"
   },
-  "packageManager": "pnpm@9.12.1+sha512.e5a7e52a4183a02d5931057f7a0dbff9d5e9ce3161e33fa68ae392125b79282a8a8a470a51dfc8a0ed86221442eb2fb57019b0990ed24fab519bf0e1bc5ccfc4"
+  "packageManager": "pnpm@9.15.9+sha512.68046141893c66fad01c079231128e9afb89ef87e2691d69e4d40eee228988295fd4682181bae55b58418c3a253bde65a505ec7c5f9403ece5cc3cd37dcf2531"
 }
