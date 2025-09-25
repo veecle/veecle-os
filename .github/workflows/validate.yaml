@@ -42,7 +42,9 @@ jobs:
           convco: true
 
       - name: Check conventional commits
-        run: convco check "origin/${GITHUB_BASE_REF}.."
+        # We require squash-merge, which means only one commit will be added per PR.
+        # We cannot check the complete history as it contains a commit that doesn't follow conventional commits.
+        run: convco check -n 1
 
   validate-rust:
     runs-on: ubuntu-latest
