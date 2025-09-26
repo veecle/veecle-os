@@ -1,23 +1,23 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use camino::Utf8PathBuf;
 use eyre::WrapErr;
 use futures::future::BoxFuture;
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
 use serde::Serialize;
-use tokio::net::UnixStream;
 use tokio_util::codec::{Framed, LinesCodec};
 use tracing::Instrument;
+use veecle_net_utils::{AsyncSocketStream, UnresolvedMultiSocketAddress};
 use veecle_orchestrator_protocol::{Info, Request, Response};
 
 use crate::conductor::Conductor;
 use crate::distributor::Distributor;
-use crate::listener::UnixListener;
 
-type Responder =
-    Box<dyn FnOnce(Framed<UnixStream, LinesCodec>) -> BoxFuture<'static, eyre::Result<()>> + Send>;
+type Responder = Box<
+    dyn FnOnce(Framed<AsyncSocketStream, LinesCodec>) -> BoxFuture<'static, eyre::Result<()>>
+        + Send,
+>;
 
 /// Handles a single API request, returning an encoded response and optionally a closure that will take over the stream
 /// after sending the initial response.
@@ -78,7 +78,7 @@ async fn handle_request(
 
 /// Handles all API requests from a single client.
 async fn handle_client(
-    stream: UnixStream,
+    stream: AsyncSocketStream,
     distributor: &Distributor,
     conductor: &Conductor,
 ) -> eyre::Result<()> {
@@ -117,19 +117,19 @@ async fn handle_client(
     Ok(())
 }
 
-/// Serves the API defined in [`veecle_orchestrator_protocol`] on the specified path.
-#[tracing::instrument(skip(conductor))]
+/// Serves the API defined in [`veecle_orchestrator_protocol`] on the specified socket address.
+#[tracing::instrument(skip_all, fields(%address))]
 pub async fn run(
-    socket: Utf8PathBuf,
+    address: UnresolvedMultiSocketAddress,
     distributor: Arc<Distributor>,
     conductor: Arc<Conductor>,
 ) -> eyre::Result<()> {
-    let listener = UnixListener::bind(socket)?;
+    let listener = address.bind_async().await.wrap_err("binding socket")?;
     let mut connection_ids = 0..u64::MAX;
 
     tracing::info!("listening");
     loop {
-        let stream = listener.accept().await?;
+        let (stream, client_address) = listener.accept().await.wrap_err("accepting connection")?;
         let connection_id = connection_ids.next().unwrap();
         let distributor = distributor.clone();
         let conductor = conductor.clone();
@@ -139,9 +139,12 @@ pub async fn run(
                     tracing::error!(?error, "handling client failed");
                 }
             }
-            .instrument(
-                tracing::info_span!(parent: None, "connection", connection.id = connection_id),
-            ),
+            .instrument(tracing::info_span!(
+                parent: None,
+                "api_connection",
+                connection.id = connection_id,
+                connection.client = %client_address,
+            )),
         );
     }
 }

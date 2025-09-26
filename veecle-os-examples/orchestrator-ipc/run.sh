@@ -68,11 +68,12 @@ build() {
 unset VEECLE_ORCHESTRATOR_SOCKET
 
 # Make some known ids/paths/addresses to use.
-CONTROL1="$(mktemp -u -p "$XDG_RUNTIME_DIR" veecle-orchestrator.example.XXXXXX.socket)"
-CONTROL2="$(mktemp -u -p "$XDG_RUNTIME_DIR" veecle-orchestrator.example.XXXXXX.socket)"
 
 # Use a non-standard localhost IP to avoid conflicts with other local services.
 EXAMPLE_IP=127.0.0.26
+
+CONTROL1=$EXAMPLE_IP:7607
+CONTROL2="$(mktemp -u -p "$XDG_RUNTIME_DIR" veecle-orchestrator.example.XXXXXX.socket)"
 
 IPC1=$EXAMPLE_IP:2661
 IPC2=$EXAMPLE_IP:2662

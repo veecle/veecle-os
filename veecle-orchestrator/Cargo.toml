@@ -35,6 +35,9 @@ tracing-subscriber = { workspace = true, features = [
   "std",
 ] }
 veecle-ipc-protocol = { workspace = true }
+veecle-net-utils = { path = "../veecle-net-utils", version = "0.1.0", default-features = false, features = [
+  "tokio",
+] }
 veecle-orchestrator-protocol = { workspace = true }
 veecle-telemetry = { workspace = true, features = ["alloc", "std"] }
 

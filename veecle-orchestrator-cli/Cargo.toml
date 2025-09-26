@@ -21,6 +21,7 @@ comfy-table = { workspace = true, features = ["tty"] }
 itertools = { workspace = true, features = ["use_std"] }
 serde = { workspace = true, features = ["derive", "std"] }
 serde_json = { workspace = true, features = ["std"] }
+veecle-net-utils = { path = "../veecle-net-utils", version = "0.1.0", default-features = false }
 veecle-orchestrator-protocol = { workspace = true }
 
 [lints]

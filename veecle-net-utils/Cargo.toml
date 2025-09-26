@@ -1,0 +1,32 @@
+[package]
+name = "veecle-net-utils"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Networking utilities for Veecle Services"
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = false
+
+[package.metadata]
+# This crate uses `#![forbid(unsafe_code)]`.
+workspace-checks.miri = false
+
+[dependencies]
+camino = { workspace = true, features = ["serde1"] }
+serde = { workspace = true, features = ["derive", "std"] }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["io-util", "net"], optional = true }
+tracing = { workspace = true, optional = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+tokio = { workspace = true, features = ["io-util", "macros", "net", "rt"] }
+
+[features]
+default = []
+tokio = ["dep:tokio", "tracing"]
+
+[lints]
+workspace = true

@@ -3,13 +3,13 @@
 #![forbid(unsafe_code)]
 
 use std::io::{BufRead, BufReader, Write};
-use std::os::unix::net::UnixStream;
 
 use anyhow::Context;
 use camino::Utf8PathBuf;
 use comfy_table::{Cell, Color, Table};
 use itertools::Itertools;
 use serde::de::DeserializeOwned;
+use veecle_net_utils::{BlockingSocketStream, UnresolvedMultiSocketAddress};
 use veecle_orchestrator_protocol::{Info, Instance, InstanceId, LinkTarget, Request, Response};
 
 /// Veecle OS Orchestrator CLI interface
@@ -18,9 +18,9 @@ use veecle_orchestrator_protocol::{Info, Instance, InstanceId, LinkTarget, Reque
 #[derive(clap::Parser, Debug)]
 #[command(disable_help_subcommand = true)]
 pub struct Arguments {
-    /// The path to the control socket, can be set via environment for easy sharing between the orchestrator and CLI.
+    /// The socket address to connect to (Unix path or TCP host:port), can be set via environment for easy sharing between the orchestrator and CLI.
     #[arg(long, env = "VEECLE_ORCHESTRATOR_SOCKET")]
-    socket: Utf8PathBuf,
+    socket: UnresolvedMultiSocketAddress,
 
     #[command(subcommand)]
     command: Command,
@@ -81,9 +81,9 @@ enum Link {
     List,
 }
 
-/// Connects to the Veecle OS Orchestrator control `socket` and sends the `request`, expecting to get back a response wrapping
+/// Connects to the Veecle OS Orchestrator control socket and sends the `request`, expecting to get back a response wrapping
 /// a `T` value that will be deserialized.
-fn send<T>(stream: &mut BufReader<UnixStream>, request: Request) -> anyhow::Result<T>
+fn send<T>(stream: &mut BufReader<BlockingSocketStream>, request: Request) -> anyhow::Result<T>
 where
     T: DeserializeOwned + 'static,
 {
@@ -114,7 +114,9 @@ impl Arguments {
     /// Runs the command.
     pub fn run(self) -> anyhow::Result<()> {
         let mut stream = BufReader::new(
-            UnixStream::connect(&self.socket).context("connecting to orchestrator socket")?,
+            self.socket
+                .connect_blocking()
+                .context("connecting to orchestrator socket")?,
         );
 
         match self.command {
