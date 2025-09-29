@@ -22,6 +22,7 @@ libc = { workspace = true }
 nix = { workspace = true, features = ["signal"] }
 serde = { workspace = true }
 serde_json = { workspace = true, features = ["std"] }
+sha2 = { workspace = true }
 tempfile = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }

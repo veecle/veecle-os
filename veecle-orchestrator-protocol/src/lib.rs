@@ -15,17 +15,8 @@ use std::str::FromStr;
 
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use uuid::Uuid;
-
-/// Information required to add a runtime instance to the Veecle OS Orchestrator.
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Instance {
-    /// The id that will be used to interact with this instance later.
-    pub id: InstanceId,
-
-    /// The path to the binary that defines the instance.
-    pub path: Utf8PathBuf,
-}
 
 /// Identifies a runtime instance that has been added to a Veecle OS Orchestrator.
 ///
@@ -71,7 +62,31 @@ pub enum Request {
     /// Add a new runtime instance with the passed information.
     ///
     /// Responds with <code>[Response]<()></code>.
-    Add(Instance),
+    Add {
+        /// The id that will be used to interact with this instance later.
+        id: InstanceId,
+
+        /// The path to the binary that defines the instance.
+        path: Utf8PathBuf,
+    },
+
+    /// Add a new runtime instance with binary data sent after this command.
+    ///
+    /// The server should respond with <code>[Response]<()></code>, then the binary data of exactly
+    /// `length` bytes should be sent, then the server should again respond with
+    /// <code>[Response]<()></code>.
+    ///
+    /// The data will be validated against the provided SHA-256 `hash`.
+    AddWithBinary {
+        /// The id that will be used to interact with this instance later.
+        id: InstanceId,
+
+        /// The expected length of the binary data in bytes.
+        length: usize,
+
+        /// The SHA-256 hash of the expected binary data for validation.
+        hash: [u8; 32],
+    },
 
     /// Remove the runtime instance with the passed id.
     ///
@@ -142,12 +157,24 @@ impl Request {
     pub fn variant_name(&self) -> &'static str {
         match self {
             Self::Version => "Version",
-            Self::Add(_) => "Add",
+            Self::Add { .. } => "Add",
+            Self::AddWithBinary { .. } => "AddWithBinary",
             Self::Remove(_) => "Remove",
             Self::Start(_) => "Start",
             Self::Stop(_) => "Stop",
             Self::Link { .. } => "Link",
             Self::Info => "Info",
+        }
+    }
+
+    /// Creates a new `AddWithBinary` request from binary data.
+    ///
+    /// Automatically calculates the length and SHA-256 hash of the provided data.
+    pub fn add_with_binary(id: InstanceId, data: &[u8]) -> Self {
+        Self::AddWithBinary {
+            id,
+            length: data.len(),
+            hash: Sha256::digest(data).into(),
         }
     }
 }
