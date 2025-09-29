@@ -50,11 +50,8 @@
 /// ```
 #[macro_export]
 macro_rules! span {
-    ($name:literal) => {
-        $crate::Span::new($name, &[])
-    };
-    ($name:literal, $($attributes:tt)+) => {
-        $crate::Span::new($name, $crate::attributes!($($attributes)+))
+    ($name:literal $(, $($attributes:tt)*)?) => {
+        $crate::Span::new($name, $crate::attributes!($($($attributes)*)?))
     };
 }
 
@@ -71,11 +68,8 @@ macro_rules! span {
 /// ```
 #[macro_export]
 macro_rules! root_span {
-    ($name:literal) => {
-        $crate::Span::root($name, $crate::id::SpanContext::generate(), &[])
-    };
-    ($name:literal, $($attributes:tt)+) => {
-        $crate::Span::root($name, $crate::id::SpanContext::generate(), $crate::attributes!($($attributes)+))
+    ($name:literal $(, $($attributes:tt)*)?) => {
+        $crate::Span::root($name, $crate::id::SpanContext::generate(), $crate::attributes!($($($attributes)*)?))
     };
 }
 
@@ -103,11 +97,8 @@ macro_rules! root_span {
 /// ```
 #[macro_export]
 macro_rules! event {
-    ($name:literal) => {
-        $crate::CurrentSpan::add_event($name, &[])
-    };
-    ($name:literal, $($attributes:tt)+) => {
-        $crate::CurrentSpan::add_event($name, $crate::attributes!($($attributes)+))
+    ($name:literal $(, $($attributes:tt)*)?) => {
+        $crate::CurrentSpan::add_event($name, $crate::attributes!($($($attributes)*)?))
     };
 }
 
@@ -137,12 +128,8 @@ macro_rules! event {
 /// ```
 #[macro_export]
 macro_rules! log {
-    ($severity:expr, $body:literal) => {
-        $crate::log::log($severity, $body, &[])
-    };
-
-    ($severity:expr, $body:literal, $($attributes:tt)+) => {
-        $crate::log::log($severity, $body, $crate::attributes!($($attributes)+))
+    ($severity:expr, $body:literal $(, $($attributes:tt)*)?) => {
+        $crate::log::log($severity, $body, $crate::attributes!($($($attributes)*)?))
     };
 }
 
@@ -170,11 +157,8 @@ macro_rules! log {
 /// ```
 #[macro_export]
 macro_rules! trace {
-    ($body:literal) => {
-        $crate::log!($crate::protocol::Severity::Trace, $body);
-    };
-    ($body:literal, $($attribute:tt)+) => {
-        $crate::log!($crate::protocol::Severity::Trace, $body, $($attribute)+);
+    ($($args:tt)*) => {
+        $crate::log!($crate::protocol::Severity::Trace, $($args)*);
     };
 }
 
@@ -202,11 +186,8 @@ macro_rules! trace {
 /// ```
 #[macro_export]
 macro_rules! debug {
-    ($body:literal) => {
-        $crate::log!($crate::protocol::Severity::Debug, $body);
-    };
-    ($body:literal, $($attribute:tt)+) => {
-        $crate::log!($crate::protocol::Severity::Debug, $body, $($attribute)+);
+    ($($args:tt)*) => {
+        $crate::log!($crate::protocol::Severity::Debug, $($args)*);
     };
 }
 
@@ -239,11 +220,8 @@ macro_rules! debug {
 /// ```
 #[macro_export]
 macro_rules! info {
-    ($body:literal) => {
-        $crate::log!($crate::protocol::Severity::Info, $body);
-    };
-    ($body:literal, $($attribute:tt)+) => {
-        $crate::log!($crate::protocol::Severity::Info, $body, $($attribute)+);
+    ($($args:tt)*) => {
+        $crate::log!($crate::protocol::Severity::Info, $($args)*);
     };
 }
 
@@ -276,11 +254,8 @@ macro_rules! info {
 /// ```
 #[macro_export]
 macro_rules! warn {
-    ($body:literal) => {
-        $crate::log!($crate::protocol::Severity::Warn, $body);
-    };
-    ($body:literal, $($attribute:tt)+) => {
-        $crate::log!($crate::protocol::Severity::Warn, $body, $($attribute)+);
+    ($($args:tt)*) => {
+        $crate::log!($crate::protocol::Severity::Warn, $($args)*);
     };
 }
 
@@ -313,11 +288,8 @@ macro_rules! warn {
 /// ```
 #[macro_export]
 macro_rules! error {
-    ($body:literal) => {
-        $crate::log!($crate::protocol::Severity::Error, $body);
-    };
-    ($body:literal, $($attribute:tt)+) => {
-        $crate::log!($crate::protocol::Severity::Error, $body, $($attribute)+);
+    ($($args:tt)*) => {
+        $crate::log!($crate::protocol::Severity::Error, $($args)*);
     };
 }
 
@@ -350,11 +322,8 @@ macro_rules! error {
 /// ```
 #[macro_export]
 macro_rules! fatal {
-    ($body:literal) => {
-        $crate::log!($crate::protocol::Severity::Fatal, $body);
-    };
-    ($body:literal, $($attribute:tt)+) => {
-        $crate::log!($crate::protocol::Severity::Fatal, $body, $($attribute)+);
+    ($($args:tt)*) => {
+        $crate::log!($crate::protocol::Severity::Fatal, $($args)*);
     };
 }
 
@@ -417,56 +386,43 @@ macro_rules! fatal {
 /// ```
 #[macro_export]
 macro_rules! attributes {
-    // base case
-    (@ { $(,)* $($val:expr),* $(,)* }, $(,)*) => {
-        &[ $($val),* ]
+    ({ $($kvs:tt)* }) => {
+        $crate::attributes_inner!(@ { }, { $($kvs)* })
+    };
+    ($($kvs:tt)*) => {
+        $crate::attributes_inner!(@ { }, { $($kvs)* })
+    };
+}
+
+/// The actual implementation of `attributes!`, separated out to avoid accidentally recursing into
+/// the `$($tt)*` case from the inner cases.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! attributes_inner {
+    // Base case, remaining tokens is empty.
+    (@ { $($val:expr,)* }, { } ) => {
+        &[ $($val,)* ]
     };
 
-    // recursive
-    (@ { $(,)* $($out:expr),* }, $($key:ident).+, $($rest:tt)+) => {
-        $crate::attributes!(
-            @ { $($out),*, $crate::attribute!($($key).+) },
-            $($rest)*
+    // Recursive cases, take one key-value pair, add it to the output, and recurse on the remaining
+    // tokens.
+    (@ { $($out:expr,)* }, { $($key:ident).+ $(, $($rest:tt)*)? }) => {
+        $crate::attributes_inner!(
+            @ { $($out,)* $crate::attribute!($($key).+), },
+            { $($($rest)*)? }
         )
     };
-    (@ { $(,)* $($out:expr),* }, $($key:ident)+ = $value:expr, $($rest:tt)+) => {
-        $crate::attributes!(
-            @ { $($out),*, $crate::attribute!($($key).+ = $value) },
-            $($rest)*
+    (@ { $($out:expr,)* }, { $key:ident = $value:expr $(, $($rest:tt)*)? }) => {
+        $crate::attributes_inner!(
+            @ { $($out,)* $crate::attribute!($key = $value), },
+            { $($($rest)*)? }
         )
     };
-    (@ { $(,)* $($out:expr),* }, $key:literal = $value:expr, $($rest:tt)+) => {
-        $crate::attributes!(
-            @ { $($out),*, $crate::attribute!($key = $value) },
-            $($rest)*
+    (@ { $($out:expr,)* }, { $key:literal = $value:expr $(, $($rest:tt)*)? }) => {
+        $crate::attributes_inner!(
+            @ { $($out,)* $crate::attribute!($key = $value), },
+            { $($($rest)*)? }
         )
-    };
-
-    (@ { $(,)* $($out:expr),* }, $($key:ident).+) => {
-        $crate::attributes!(
-            @ { $($out),*, $crate::attribute!($($key).+) },
-        )
-    };
-    (@ { $(,)* $($out:expr),* }, $($key:ident)+ = $value:expr) => {
-        $crate::attributes!(
-            @ { $($out),*, $crate::attribute!($($key).+ = $value) },
-        )
-    };
-    (@ { $(,)* $($out:expr),* }, $key:literal = $value:expr) => {
-        $crate::attributes!(
-            @ { $($out),*, $crate::attribute!($key = $value) },
-        )
-    };
-
-    // entry
-    ({ $($kvs:tt)+ }) => {
-        $crate::attributes!(@ { }, $($kvs)+)
-    };
-    ($($kvs:tt)+) => {
-        $crate::attributes!(@ { }, $($kvs)+)
-    };
-    ($(,)?) => {
-        &[]
     };
 }
 

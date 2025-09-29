@@ -404,3 +404,44 @@ fn log_attribute_syntax_variations() {
         "}
     );
 }
+
+#[test]
+#[serial]
+fn test_trailing_comma_support() {
+    let exporter = set_exporter();
+    {
+        veecle_telemetry::trace!("empty log");
+        veecle_telemetry::trace!("empty log",);
+
+        veecle_telemetry::info!("single attr", value = 1i64);
+        veecle_telemetry::info!("single attr", value = 1i64,);
+
+        veecle_telemetry::debug!("multiple attrs", key1 = "val1", key2 = 42);
+        veecle_telemetry::debug!("multiple attrs", key1 = "val1", key2 = 42,);
+
+        let identifier = "test";
+        veecle_telemetry::warn!("mixed syntax", identifier, "literal" = true);
+        veecle_telemetry::warn!("mixed syntax", identifier, "literal" = true,);
+
+        let _attrs = veecle_telemetry::attributes!(direct_key = "direct_value");
+        let _attrs = veecle_telemetry::attributes!(direct_key = "direct_value",);
+
+        let _span = veecle_telemetry::span!("test span", span_attr = "value");
+        let _span = veecle_telemetry::span!("test span", span_attr = "value",);
+
+        let _root_span = veecle_telemetry::root_span!("root span", root_attr = 123);
+        let _root_span = veecle_telemetry::root_span!("root span", root_attr = 123,);
+
+        veecle_telemetry::event!("test event", event_attr = true);
+        veecle_telemetry::event!("test event", event_attr = true,);
+
+        let _empty_span = veecle_telemetry::span!("empty span");
+        let _empty_span = veecle_telemetry::span!("empty span",);
+
+        veecle_telemetry::event!("empty event");
+        veecle_telemetry::event!("empty event",);
+    }
+
+    let messages = exporter.take_messages();
+    assert_eq!(messages.len(), 12);
+}
