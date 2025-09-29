@@ -7,7 +7,9 @@ updates:
       interval: "weekly"
   - package-ecosystem: "cargo"
     directories:
-      - "**/*"
+      - "veecle-os-examples/**/*"
+      - "docs/**/*"
+      - "/"
     schedule:
       interval: "weekly"
     groups:
