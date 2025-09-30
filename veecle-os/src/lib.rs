@@ -2,7 +2,7 @@
 
 #![forbid(unsafe_code)]
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 #[doc(inline)]
 pub use veecle_os_runtime as runtime;
