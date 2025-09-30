@@ -68,6 +68,8 @@ FFIs?
 [mM]ultithreading
 [pP]rofilers?
 [rR]ebase[ds]?
+[rR]ecurse
+[rR]ecursing
 [rR]untimes?
 [sS]erializers?
 [sS]tdin
