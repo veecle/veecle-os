@@ -1,5 +1,9 @@
 # Next
 
+## Veecle OS
+
+* Fixed `veecle_os::telemetry::instrument` macro to automatically resolve correct crate paths for the facade.
+
 ## Veecle Telemetry VSCode Extension
 
 * **breaking** Removed.
