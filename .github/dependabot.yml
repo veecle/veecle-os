@@ -17,3 +17,7 @@ updates:
         dependency-type: "production"
       dev-dependencies:
         dependency-type: "development"
+    ignore:
+      # Embassy doesn't support heapless versions >=0.9.0.
+      - dependency-name: "heapless"
+        versions: [">=0.9.0"]
