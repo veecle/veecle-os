@@ -21,6 +21,7 @@ struct Arguments {
     name: Option<LitStr>,
     short_name: bool,
     properties: Vec<Property>,
+    veecle_telemetry_crate: Option<syn::Path>,
     span: Span,
 }
 
@@ -47,6 +48,7 @@ impl Parse for Arguments {
         let mut name = None;
         let mut short_name = false;
         let mut properties = Vec::<Property>::new();
+        let mut veecle_telemetry_crate = None;
         let mut seen = HashMap::new();
 
         while !input.is_empty() {
@@ -79,6 +81,10 @@ impl Parse for Arguments {
                         properties.push(property);
                     }
                 }
+                "crate" => {
+                    let crate_path: syn::Path = input.parse()?;
+                    veecle_telemetry_crate = Some(crate_path);
+                }
                 _ => return Err(Error::new(Span::call_site(), "unexpected identifier")),
             }
             if !input.is_empty() {
@@ -90,6 +96,7 @@ impl Parse for Arguments {
             name,
             short_name,
             properties,
+            veecle_telemetry_crate,
             span: input.span(),
         })
     }
@@ -182,6 +189,16 @@ pub fn instrument(
     let arguments = parse_macro_input!(arguments as Arguments);
     let input = parse_macro_input!(item as ItemFn);
 
+    let veecle_telemetry_crate = arguments
+        .veecle_telemetry_crate
+        .clone()
+        .map(Ok)
+        .unwrap_or_else(veecle_telemetry_path);
+    let veecle_telemetry_crate = match veecle_telemetry_crate {
+        Ok(path) => path,
+        Err(error) => return error.to_compile_error().into(),
+    };
+
     let function_name = &input.sig.ident;
 
     // Check for async_trait-like patterns in the block, and instrument the future instead of the wrapper.
@@ -190,6 +207,7 @@ pub fn instrument(
         &input.block,
         input.sig.asyncness.is_some(),
         &arguments,
+        &veecle_telemetry_crate,
     ) {
         Ok(body) => body,
         Err(error) => return error.to_compile_error().into(),
@@ -231,6 +249,7 @@ fn generate_name(
     function_name: &Ident,
     arguments: &Arguments,
     async_closure: bool,
+    veecle_telemetry_crate: &syn::Path,
 ) -> syn::Result<proc_macro2::TokenStream> {
     let span = function_name.span();
     if let Some(name) = &arguments.name {
@@ -255,12 +274,15 @@ fn generate_name(
         ))
     } else {
         Ok(quote_spanned!(span=>
-            veecle_telemetry::macro_helpers::strip_closure_suffix(core::any::type_name_of_val(&|| {}), #async_closure)
+            #veecle_telemetry_crate::macro_helpers::strip_closure_suffix(core::any::type_name_of_val(&|| {}), #async_closure)
         ))
     }
 }
 
-fn generate_properties(arguments: &Arguments) -> proc_macro2::TokenStream {
+fn generate_properties(
+    arguments: &Arguments,
+    veecle_telemetry_crate: &syn::Path,
+) -> proc_macro2::TokenStream {
     if arguments.properties.is_empty() {
         return quote::quote!(&[]);
     }
@@ -271,7 +293,7 @@ fn generate_properties(arguments: &Arguments) -> proc_macro2::TokenStream {
         .iter()
         .map(|Property { key, value, span }| {
             quote_spanned!(*span=>
-                veecle_telemetry::value::KeyValue::new(#key, #value)
+                #veecle_telemetry_crate::value::KeyValue::new(#key, #value)
             )
         });
     let properties = Punctuated::<_, Token![,]>::from_iter(properties);
@@ -286,24 +308,58 @@ fn generate_block(
     block: &Block,
     async_context: bool,
     arguments: &Arguments,
+    veecle_telemetry_crate: &syn::Path,
 ) -> syn::Result<proc_macro2::TokenStream> {
-    let name = generate_name(func_name, arguments, async_context)?;
-    let properties = generate_properties(arguments);
+    let name = generate_name(func_name, arguments, async_context, veecle_telemetry_crate)?;
+    let properties = generate_properties(arguments, veecle_telemetry_crate);
 
     // Generate the instrumented function body.
     // If the function is an `async fn`, this will wrap it in an async block.
     // Otherwise, this will enter the span and then perform the rest of the body.
     if async_context {
         Ok(quote!(
-            veecle_telemetry::future::FutureExt::with_span(
+            #veecle_telemetry_crate::future::FutureExt::with_span(
                 async move { #block },
-                veecle_telemetry::Span::new(#name, #properties),
+                #veecle_telemetry_crate::Span::new(#name, #properties),
             ).await
         ))
     } else {
         Ok(quote!(
-            let __guard__= veecle_telemetry::Span::new(#name, #properties).entered();
+            let __guard__= #veecle_telemetry_crate::Span::new(#name, #properties).entered();
             #block
         ))
     }
+}
+
+/// Returns a path to the `veecle_telemetry` crate for use when macro users don't set it explicitly.
+fn veecle_telemetry_path() -> syn::Result<syn::Path> {
+    proc_macro_crate::crate_name("veecle-telemetry")
+        .map(|found| match found {
+            proc_macro_crate::FoundCrate::Itself => {
+                // The only place we use `veecle-telemetry` within "itself" is doc-tests, where it needs to be an external
+                // path anyway.
+                syn::parse_quote!(::veecle_telemetry)
+            }
+            proc_macro_crate::FoundCrate::Name(name) => {
+                let ident = syn::Ident::new(&name, proc_macro2::Span::call_site());
+                syn::parse_quote!(::#ident)
+            }
+        })
+        .or_else(|_| {
+            proc_macro_crate::crate_name("veecle-os").map(|found| match found {
+                proc_macro_crate::FoundCrate::Itself => {
+                    todo!("unused currently, not sure what behavior will be wanted")
+                }
+                proc_macro_crate::FoundCrate::Name(name) => {
+                    let ident = syn::Ident::new(&name, proc_macro2::Span::call_site());
+                    syn::parse_quote!(::#ident::telemetry)
+                }
+            })
+        })
+        .map_err(|_| {
+            syn::Error::new(
+                proc_macro2::Span::call_site(),
+                "could not find either veecle-telemetry or veecle-os crates",
+            )
+        })
 }
