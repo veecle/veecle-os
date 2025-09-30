@@ -23,7 +23,7 @@ stm32f7xx-hal = { version = "0.8", default-features = false, features = [
   "rt",
   "stm32f767",
 ] }
-veecle-freertos-integration = { version = "0.1.1", default-features = false, features = [
+veecle-freertos-integration = { version = "0.1.2", default-features = false, features = [
   "link-freertos",
   # SAFETY: we use the same prototype in `FreeRTOSConfig.h` as required by this feature.
   "unsafe-hooks-assert",
