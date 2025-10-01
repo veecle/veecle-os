@@ -313,7 +313,7 @@ impl<'a> Parse<'a> for EncodedString<'a> {
             let mut slice = reader.remaining_slice();
 
             // Odd-length UTF-16 strings: ignore last byte.
-            if slice.len() % 2 != 0 {
+            if !slice.len().is_multiple_of(2) {
                 slice = &slice[..slice.len() - 1];
             }
 
@@ -336,7 +336,7 @@ impl<'a> Parse<'a> for EncodedString<'a> {
             let mut slice = reader.remaining_slice();
 
             // Odd-length UTF-16 strings: ignore last byte.
-            if slice.len() % 2 != 0 {
+            if !slice.len().is_multiple_of(2) {
                 slice = &slice[..slice.len() - 1];
             }
 
