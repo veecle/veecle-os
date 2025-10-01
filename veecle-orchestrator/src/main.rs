@@ -4,13 +4,11 @@
 
 use std::sync::Arc;
 
-use camino::Utf8PathBuf;
 use clap::Parser;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
-
-use veecle_orchestrator::UnresolvedSocketAddr;
+use veecle_net_utils::{UnresolvedMultiSocketAddress, UnresolvedSocketAddress};
 
 use self::conductor::Conductor;
 use self::distributor::Distributor;
@@ -21,19 +19,18 @@ mod conductor;
 mod distributor;
 mod external;
 mod eyre_tracing_error;
-mod listener;
 mod telemetry;
 
 #[derive(Parser)]
 struct Arguments {
     #[arg(long, env = "VEECLE_ORCHESTRATOR_SOCKET")]
-    control_socket: Utf8PathBuf,
+    control_socket: UnresolvedMultiSocketAddress,
 
     #[arg(long)]
-    ipc_socket: Option<UnresolvedSocketAddr>,
+    ipc_socket: Option<UnresolvedSocketAddress>,
 
     #[arg(long, env = "VEECLE_TELEMETRY_SOCKET")]
-    telemetry_socket: Option<UnresolvedSocketAddr>,
+    telemetry_socket: Option<UnresolvedSocketAddress>,
 }
 
 // 16 arbitrarily chosen for channel sizing because it looks nice.

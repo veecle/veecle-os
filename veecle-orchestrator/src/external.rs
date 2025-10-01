@@ -3,10 +3,11 @@ use std::net::SocketAddr;
 use tokio::net::UdpSocket;
 use tokio::sync::mpsc;
 use veecle_ipc_protocol::EncodedStorable;
+use veecle_net_utils::UnresolvedSocketAddress;
 
-#[tracing::instrument(skip(input, output))]
+#[tracing::instrument(skip_all, fields(%address))]
 pub async fn run(
-    address: crate::UnresolvedSocketAddr,
+    address: UnresolvedSocketAddress,
     input: mpsc::Sender<EncodedStorable>,
     mut output: mpsc::Receiver<(SocketAddr, EncodedStorable)>,
 ) -> eyre::Result<()> {

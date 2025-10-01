@@ -16,8 +16,8 @@ use veecle_ipc_protocol::EncodedStorable;
 use veecle_orchestrator_protocol::{Instance, InstanceId, RuntimeInfo};
 
 use crate::distributor::Distributor;
-use crate::listener::UnixListener;
 use crate::telemetry::Exporter;
+use veecle_net_utils::AsyncUnixListener;
 
 /// An instance of a runtime process registered on the [`Conductor`].
 ///
@@ -41,13 +41,14 @@ use tokio_util::codec::Framed;
 #[tracing::instrument(skip_all, fields(%id))]
 async fn handle_instance_ipc(
     id: InstanceId,
-    socket: UnixListener,
+    socket: AsyncUnixListener,
     ipc_tx: mpsc::Sender<EncodedStorable>,
     mut ipc_rx: mpsc::Receiver<EncodedStorable>,
     exporter: Option<Arc<Exporter>>,
 ) -> eyre::Result<()> {
     loop {
-        let mut stream = Framed::new(socket.accept().await?, veecle_ipc_protocol::Codec::new());
+        let (stream, _address) = socket.accept().await?;
+        let mut stream = Framed::new(stream, veecle_ipc_protocol::Codec::new());
         loop {
             tokio::select! {
                 storable = ipc_rx.recv() => {
@@ -83,7 +84,7 @@ impl RuntimeInstance {
         ipc_rx: mpsc::Receiver<EncodedStorable>,
         exporter: Option<Arc<Exporter>>,
     ) -> eyre::Result<Self> {
-        let socket = UnixListener::bind(&socket_path)?;
+        let socket = AsyncUnixListener::bind(&socket_path)?;
         let ipc_task = tokio::spawn(handle_instance_ipc(id, socket, ipc_tx, ipc_rx, exporter));
 
         Ok(Self {

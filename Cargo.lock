@@ -4892,6 +4892,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "veecle-net-utils"
+version = "0.1.0"
+dependencies = [
+ "camino",
+ "serde",
+ "tempfile",
+ "thiserror 2.0.16",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "veecle-orchestrator"
 version = "0.1.0"
 dependencies = [
@@ -4912,6 +4924,7 @@ dependencies = [
  "tracing-error",
  "tracing-subscriber",
  "veecle-ipc-protocol",
+ "veecle-net-utils",
  "veecle-orchestrator-protocol",
  "veecle-telemetry",
 ]
@@ -4927,6 +4940,7 @@ dependencies = [
  "itertools 0.14.0",
  "serde",
  "serde_json",
+ "veecle-net-utils",
  "veecle-orchestrator-protocol",
 ]
 

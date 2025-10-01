@@ -9,6 +9,7 @@ members = [
   "someip-test-service-tests",
   "veecle-ipc",
   "veecle-ipc-protocol",
+  "veecle-net-utils",
   "veecle-orchestrator",
   "veecle-orchestrator-cli",
   "veecle-orchestrator-protocol",
