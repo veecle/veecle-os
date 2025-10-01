@@ -100,7 +100,7 @@ async fn handle_stdin(store: Arc<TracingLineStore>) -> anyhow::Result<()> {
     while let Some(line) = reader.next_line().await.context("reading from stdin")? {
         let total_lines = store.push_line(line);
 
-        if total_lines % 10 == 0 || last_log.elapsed() >= Duration::from_millis(100) {
+        if total_lines.is_multiple_of(10) || last_log.elapsed() >= Duration::from_millis(100) {
             print!("\rProcessed {total_lines} lines.\r");
             last_log = Instant::now();
         }

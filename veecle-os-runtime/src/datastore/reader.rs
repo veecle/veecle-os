@@ -1,7 +1,7 @@
 use core::cell::Ref;
 use core::fmt::Debug;
 use core::marker::PhantomData;
-use core::pin::{Pin, pin};
+use core::pin::Pin;
 
 use pin_project::pin_project;
 
