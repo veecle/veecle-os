@@ -8,16 +8,48 @@ use camino::{Utf8Path, Utf8PathBuf};
 use eyre::WrapErr;
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
-use tempfile::TempDir;
+use tempfile::{TempDir, TempPath};
 use tokio::process::{Child, Command};
 use tokio::sync::mpsc;
 use tokio::time::timeout;
 use veecle_ipc_protocol::EncodedStorable;
-use veecle_orchestrator_protocol::{Instance, InstanceId, RuntimeInfo};
+use veecle_orchestrator_protocol::{InstanceId, RuntimeInfo};
 
 use crate::distributor::Distributor;
 use crate::telemetry::Exporter;
 use veecle_net_utils::AsyncUnixListener;
+
+/// Represents the source of a runtime binary.
+#[derive(Debug)]
+pub enum BinarySource {
+    /// A regular file path.
+    Path(Utf8PathBuf),
+    /// A temporary file path that will be cleaned up when dropped.
+    Temporary(TempPath),
+}
+
+impl BinarySource {
+    /// Gets the path to the binary file.
+    pub fn path(&self) -> &Utf8Path {
+        match self {
+            Self::Path(path) => path,
+            Self::Temporary(temp_path) => Utf8Path::from_path(temp_path.as_ref())
+                .expect("temporary file path should be valid UTF-8"),
+        }
+    }
+}
+
+impl From<Utf8PathBuf> for BinarySource {
+    fn from(path: Utf8PathBuf) -> Self {
+        Self::Path(path)
+    }
+}
+
+impl From<TempPath> for BinarySource {
+    fn from(temp_path: TempPath) -> Self {
+        Self::Temporary(temp_path)
+    }
+}
 
 /// An instance of a runtime process registered on the [`Conductor`].
 ///
@@ -25,7 +57,7 @@ use veecle_net_utils::AsyncUnixListener;
 /// running process.
 #[derive(Debug)]
 struct RuntimeInstance {
-    binary: Utf8PathBuf,
+    binary: BinarySource,
     process: Option<Child>,
     _ipc_task: tokio::task::JoinHandle<eyre::Result<()>>,
     socket_path: Utf8PathBuf,
@@ -79,7 +111,7 @@ impl RuntimeInstance {
     fn new(
         id: InstanceId,
         socket_path: Utf8PathBuf,
-        binary: Utf8PathBuf,
+        binary: BinarySource,
         ipc_tx: mpsc::Sender<EncodedStorable>,
         ipc_rx: mpsc::Receiver<EncodedStorable>,
         exporter: Option<Arc<Exporter>>,
@@ -131,11 +163,9 @@ impl Conductor {
         Utf8Path::from_path(self.ipc_socket_dir.path()).expect("checked in constructor")
     }
 
-    /// Adds a new runtime instance with the passed information.
+    /// Adds a new runtime instance with the specified binary source.
     #[tracing::instrument(skip(self))]
-    pub(crate) async fn add(&self, instance: Instance) -> eyre::Result<()> {
-        let Instance { id, path } = instance;
-
+    pub(crate) async fn add(&self, id: InstanceId, binary: BinarySource) -> eyre::Result<()> {
         if self.runtimes.lock().unwrap().get(&id).is_some() {
             eyre::bail!("instance id {id} already registered");
         }
@@ -150,7 +180,7 @@ impl Conductor {
                 entry.insert(RuntimeInstance::new(
                     id,
                     socket,
-                    path,
+                    binary,
                     ipc_tx,
                     ipc_rx,
                     self.exporter.clone(),
@@ -192,7 +222,7 @@ impl Conductor {
             eyre::bail!("instance id {id} is already running");
         }
 
-        let binary = &instance.binary;
+        let binary = instance.binary.path();
         let process = Command::new(binary)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
@@ -243,7 +273,7 @@ impl Conductor {
                     id,
                     RuntimeInfo {
                         running: instance.process.is_some(),
-                        binary: instance.binary.clone(),
+                        binary: instance.binary.path().to_path_buf(),
                     },
                 )
             })

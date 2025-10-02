@@ -1,4 +1,6 @@
 use std::fmt::Debug;
+use std::ops::ControlFlow;
+use std::os::unix::fs::PermissionsExt;
 use std::sync::Arc;
 
 use eyre::WrapErr;
@@ -6,6 +8,10 @@ use futures::future::BoxFuture;
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
 use serde::Serialize;
+use sha2::{Digest, Sha256};
+use tempfile::{Builder, TempPath};
+use tokio::fs::File;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_util::codec::{Framed, LinesCodec};
 use tracing::Instrument;
 use veecle_net_utils::{AsyncSocketStream, UnresolvedMultiSocketAddress};
@@ -15,9 +21,78 @@ use crate::conductor::Conductor;
 use crate::distributor::Distributor;
 
 type Responder = Box<
-    dyn FnOnce(Framed<AsyncSocketStream, LinesCodec>) -> BoxFuture<'static, eyre::Result<()>>
-        + Send,
+    dyn FnOnce(
+            Framed<AsyncSocketStream, LinesCodec>,
+        ) -> BoxFuture<
+            'static,
+            eyre::Result<ControlFlow<(), (Framed<AsyncSocketStream, LinesCodec>, String)>>,
+        > + Send,
 >;
+
+/// Reads and verifies the binary data accompanying a [`Request::AddWithBinary`] message.
+///
+/// Creates a new temporary file to contain the data, reads `length` bytes to it from the given
+/// stream, and validates the received data matches the hash. Then sets the permissions on the file
+/// so that it will be executable and returns a [`TempPath`] for it so that it will be cleaned up
+/// when no longer needed.
+async fn read_binary_to_temp_file(
+    stream: &mut AsyncSocketStream,
+    length: usize,
+    hash: [u8; 32],
+) -> eyre::Result<TempPath> {
+    let mut file = tokio::task::spawn_blocking(|| {
+        Builder::new()
+            .prefix("veecle-runtime-")
+            .suffix(".bin")
+            .make(|path| std::fs::File::create(path).map(File::from))
+            .wrap_err("creating temporary file")
+    })
+    .await??;
+
+    let mut hasher = Sha256::new();
+    let mut remaining = length;
+    let mut buffer = [0u8; 8192];
+
+    while remaining > 0 {
+        let chunk_size = buffer.len().min(remaining);
+
+        let bytes_read = stream
+            .read(&mut buffer[..chunk_size])
+            .await
+            .wrap_err("reading binary data from stream")?;
+
+        if bytes_read == 0 {
+            eyre::bail!("connection closed before receiving all binary data");
+        }
+
+        let chunk = &buffer[..bytes_read];
+        hasher.update(chunk);
+        file.as_file_mut()
+            .write_all(chunk)
+            .await
+            .wrap_err("writing binary data to temporary file")?;
+
+        remaining -= bytes_read;
+    }
+
+    let computed_hash: [u8; 32] = hasher.finalize().into();
+    if computed_hash != hash {
+        eyre::bail!("binary data hash verification failed");
+    }
+
+    file.as_file_mut()
+        .sync_all()
+        .await
+        .wrap_err("syncing temporary file")?;
+
+    let path = file.into_temp_path();
+
+    // `0o755` is equivalent to `u=rwx,go=rx`; the owner can read, write and execute, all others
+    // can only read and execute. This is necessary so we can run the written binary.
+    tokio::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).await?;
+
+    Ok(path)
+}
 
 /// Handles a single API request, returning an encoded response and optionally a closure that will take over the stream
 /// after sending the initial response.
@@ -25,7 +100,7 @@ type Responder = Box<
 async fn handle_request(
     request: &str,
     distributor: &Distributor,
-    conductor: &Conductor,
+    conductor: &Arc<Conductor>,
 ) -> eyre::Result<(String, Option<Responder>)> {
     tracing::debug!(request.unparsed = %request);
 
@@ -44,9 +119,44 @@ async fn handle_request(
 
     let response = match request {
         Request::Version => encode(env!("CARGO_PKG_VERSION"))?,
-        Request::Add(instance) => {
-            conductor.add(instance).await.wrap_err("adding instance")?;
+        Request::Add { id, path } => {
+            conductor
+                .add(id, path.into())
+                .await
+                .wrap_err("adding instance")?;
             encode(())?
+        }
+        Request::AddWithBinary { id, length, hash } => {
+            let conductor = Arc::clone(conductor);
+
+            let responder: Responder = Box::new(move |mut stream| {
+                Box::pin(async move {
+                    // Technically the `.get_mut()` here doesn't include the `Framed` read buffer.
+                    // But this is ok because:
+                    //  * the client sends the request line
+                    //  * we send the initial response line
+                    //  * the client sends the binary data
+                    // As long as the client waits to receive the response line we shouldn't have
+                    // received any of the binary data into the read buffer.
+                    match read_binary_to_temp_file(stream.get_mut(), length, hash).await {
+                        Ok(path) => {
+                            conductor
+                                .add(id, path.into())
+                                .await
+                                .wrap_err("adding binary instance")?;
+                            Ok(ControlFlow::Continue((stream, encode(())?)))
+                        }
+                        Err(error) => {
+                            tracing::warn!(?error, "error reading binary data");
+                            let response = serde_json::to_string(&Response::<()>::err(&*error))
+                                .wrap_err("encoding error response")?;
+                            Ok(ControlFlow::Continue((stream, response)))
+                        }
+                    }
+                })
+            });
+
+            return Ok((encode(())?, Some(responder)));
         }
         Request::Remove(id) => {
             conductor.remove(id).wrap_err("removing instance")?;
@@ -80,7 +190,7 @@ async fn handle_request(
 async fn handle_client(
     stream: AsyncSocketStream,
     distributor: &Distributor,
-    conductor: &Conductor,
+    conductor: &Arc<Conductor>,
 ) -> eyre::Result<()> {
     let mut stream = Framed::new(stream, LinesCodec::new());
 
@@ -96,8 +206,18 @@ async fn handle_client(
             Ok((response, responder)) => {
                 stream.send(response).await.wrap_err("sending response")?;
                 if let Some(responder) = responder {
-                    responder(stream).await?;
-                    break;
+                    stream = match responder(stream).await.context("in responder")? {
+                        ControlFlow::Continue((mut stream, response)) => {
+                            stream
+                                .send(response)
+                                .await
+                                .wrap_err("sending post-operation response")?;
+                            stream
+                        }
+                        ControlFlow::Break(()) => {
+                            break;
+                        }
+                    }
                 }
             }
             Err(error) => {

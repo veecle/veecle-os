@@ -10,7 +10,7 @@ use comfy_table::{Cell, Color, Table};
 use itertools::Itertools;
 use serde::de::DeserializeOwned;
 use veecle_net_utils::{BlockingSocketStream, UnresolvedMultiSocketAddress};
-use veecle_orchestrator_protocol::{Info, Instance, InstanceId, LinkTarget, Request, Response};
+use veecle_orchestrator_protocol::{Info, InstanceId, LinkTarget, Request, Response};
 
 /// Veecle OS Orchestrator CLI interface
 ///
@@ -48,6 +48,10 @@ enum Runtime {
         /// Force a specific instance id, otherwise a new one will be generated.
         #[arg(long)]
         id: Option<InstanceId>,
+
+        /// Send the binary file content instead of just the path (useful for remote orchestrators).
+        #[arg(long)]
+        copy: bool,
     },
 
     /// Remove the runtime instance with the passed id.
@@ -81,8 +85,23 @@ enum Link {
     List,
 }
 
-/// Connects to the Veecle OS Orchestrator control socket and sends the `request`, expecting to get back a response wrapping
-/// a `T` value that will be deserialized.
+/// Reads, deserializes and checks [`Response::Err`] for a <code>[Response]\<T></code> from `stream`.
+fn receive<T>(stream: &mut BufReader<BlockingSocketStream>) -> anyhow::Result<T>
+where
+    T: DeserializeOwned + 'static,
+{
+    let response = stream
+        .lines()
+        .next()
+        .context("receiving response")?
+        .context("receiving response")?;
+    let response: Response<T> = serde_json::from_str(&response).context("parsing response")?;
+
+    Ok(response.into_result()?)
+}
+
+/// Serializes and sends `request` then reads, deserializes and checks a <code>[Response]\<T></code>
+/// to/from `stream`.
 fn send<T>(stream: &mut BufReader<BlockingSocketStream>, request: Request) -> anyhow::Result<T>
 where
     T: DeserializeOwned + 'static,
@@ -100,14 +119,26 @@ where
         .write_all(b"\n")
         .context("sending request")?;
 
-    let response = stream
-        .lines()
-        .next()
-        .context("receiving response")?
-        .context("receiving response")?;
-    let response: Response<T> = serde_json::from_str(&response).context("parsing response")?;
+    receive(stream)
+}
 
-    Ok(response.into_result()?)
+/// Sends a [`Request::AddWithBinary`] followed by the binary data.
+fn send_add_with_binary(
+    stream: &mut BufReader<BlockingSocketStream>,
+    id: InstanceId,
+    data: &[u8],
+) -> anyhow::Result<()> {
+    let () = send(stream, Request::add_with_binary(id, data))
+        .context("sending AddWithBinary request, receiving initial response")?;
+
+    stream
+        .get_mut()
+        .write_all(data)
+        .context("sending binary data")?;
+
+    let () = receive(stream).context("receiving final response")?;
+
+    Ok(())
 }
 
 impl Arguments {
@@ -124,10 +155,17 @@ impl Arguments {
                 let version: String = send(&mut stream, Request::Version)?;
                 println!("server version: {version}");
             }
-            Command::Runtime(Runtime::Add { path, id }) => {
+            Command::Runtime(Runtime::Add { path, id, copy }) => {
                 let id = id.unwrap_or_else(InstanceId::new);
-                let () = send(&mut stream, Request::Add(Instance { path, id }))?;
-                println!("added instance {id}");
+                if copy {
+                    let data = std::fs::read(&path)
+                        .with_context(|| format!("reading binary file '{path}'"))?;
+                    send_add_with_binary(&mut stream, id, &data)?;
+                    println!("added instance {id} (sent {} bytes)", data.len());
+                } else {
+                    let () = send(&mut stream, Request::Add { path, id })?;
+                    println!("added instance {id}");
+                }
             }
             Command::Runtime(Runtime::Remove { id }) => {
                 let () = send(&mut stream, Request::Remove(id))?;

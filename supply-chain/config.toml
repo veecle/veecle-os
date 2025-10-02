@@ -1647,6 +1647,10 @@ criteria = "safe-to-run"
 version = "0.10.6"
 criteria = "safe-to-run"
 
+[[exemptions.sha2]]
+version = "0.10.9"
+criteria = "safe-to-run"
+
 [[exemptions.sharded-slab]]
 version = "0.1.7"
 criteria = "safe-to-run"
