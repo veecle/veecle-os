@@ -33,6 +33,7 @@ veecle-os-runtime = { workspace = true }
 hex = { workspace = true, features = ["alloc"] }
 libtest-mimic = { workspace = true }
 pretty_assertions = { workspace = true, features = ["std"] }
+serde_json = { workspace = true, features = ["std"] }
 syn = { workspace = true, features = ["parsing"] }
 test-case = { workspace = true }
 veecle-os-data-support-can-codegen = { workspace = true }

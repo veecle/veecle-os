@@ -129,7 +129,7 @@ impl From<ExtendedId> for Id {
 
 /// All `Id` values are <0x2000_0000 so we have the top three bits spare, this type packs the discriminant into the top
 /// bit and removes alignment to minimize the storage space required.
-#[derive(Clone, Copy, PartialEq, Eq, Debug, serde::Serialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, serde::Serialize, serde::Deserialize)]
 #[repr(Rust, packed)]
 pub struct PackedId(u32);
 
@@ -182,5 +182,13 @@ mod tests {
             assert_eq!(extended_id.to_raw(), u32::from(extended_id));
             assert_eq!(id, extended_id.to_raw());
         }
+    }
+
+    #[test]
+    fn test_deserialize_packed_id() {
+        let id = PackedId::from(Id::from(ExtendedId::new_unwrap(0x1234_5678)));
+        let serialized = serde_json::to_string(&id).unwrap();
+        let deserialized: PackedId = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(id, deserialized);
     }
 }

@@ -4898,7 +4898,7 @@ dependencies = [
  "camino",
  "serde",
  "tempfile",
- "thiserror 2.0.16",
+ "thiserror 2.0.17",
  "tokio",
  "tracing",
 ]
@@ -4976,6 +4976,7 @@ dependencies = [
  "libtest-mimic",
  "pretty_assertions",
  "serde",
+ "serde_json",
  "syn 2.0.106",
  "test-case",
  "tinyvec",

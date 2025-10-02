@@ -3,7 +3,7 @@ use tinyvec::ArrayVec;
 use crate::id::{Id, PackedId};
 
 /// A frame of CAN data, useful for passing received frames between Veecle OS actors before they get deserialized.
-#[derive(Clone, Copy, serde::Serialize)]
+#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct Frame {
     /// The `id` is stored packed to save space, with `PackedId` a `Frame` is 14 bytes, without it, it is 20 bytes.
     id: PackedId,
@@ -91,31 +91,47 @@ impl core::fmt::Debug for Frame {
     }
 }
 
-/// More of an example of the output format than a real test, but as a test to force updating it.
-#[test]
-fn test_debug() {
-    fn to_debug(value: impl core::fmt::Debug) -> std::string::String {
-        std::format!("{value:?}")
+#[cfg(test)]
+mod tests {
+    use crate::Frame;
+
+    #[test]
+    fn test_deserialize_frame() {
+        let json = r#"{
+            "id": 0,
+            "data": [1, 2, 3, 4]
+        }"#;
+        let frame: Frame = serde_json::from_str(json).unwrap();
+        assert_eq!(frame.id(), crate::StandardId::new(0).unwrap().into());
+        assert_eq!(frame.data(), &[1, 2, 3, 4]);
     }
 
-    assert_eq!(
-        to_debug(Frame::new(crate::StandardId::new(0).unwrap(), [])),
-        "Frame { id: Standard(0x0), data: '' }"
-    );
+    /// More of an example of the output format than a real test, but as a test to force updating it.
+    #[test]
+    fn test_debug() {
+        fn to_debug(value: impl core::fmt::Debug) -> std::string::String {
+            std::format!("{value:?}")
+        }
 
-    assert_eq!(
-        to_debug(Frame::new(
-            crate::ExtendedId::new(0x153EAB12).unwrap(),
-            [0x04, 0xA2, 0xC2, 0xED, 0xCA, 0xE3, 0x88, 0x74]
-        )),
-        "Frame { id: Extended(0x153eab12), data: '04a2c2edcae38874' }"
-    );
+        assert_eq!(
+            to_debug(Frame::new(crate::StandardId::new(0).unwrap(), [])),
+            "Frame { id: Standard(0x0), data: '' }"
+        );
 
-    assert_eq!(
-        to_debug(Frame::new(
-            crate::ExtendedId::new(0x1B56C72D).unwrap(),
-            [0x40, 0x71, 0xEF, 0x61]
-        )),
-        "Frame { id: Extended(0x1b56c72d), data: '4071ef61' }"
-    );
+        assert_eq!(
+            to_debug(Frame::new(
+                crate::ExtendedId::new(0x153EAB12).unwrap(),
+                [0x04, 0xA2, 0xC2, 0xED, 0xCA, 0xE3, 0x88, 0x74]
+            )),
+            "Frame { id: Extended(0x153eab12), data: '04a2c2edcae38874' }"
+        );
+
+        assert_eq!(
+            to_debug(Frame::new(
+                crate::ExtendedId::new(0x1B56C72D).unwrap(),
+                [0x40, 0x71, 0xEF, 0x61]
+            )),
+            "Frame { id: Extended(0x1b56c72d), data: '4071ef61' }"
+        );
+    }
 }
