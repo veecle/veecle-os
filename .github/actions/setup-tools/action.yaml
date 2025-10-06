@@ -32,9 +32,6 @@ inputs:
   just:
     description: just
     default: "false"
-  fnm:
-    description: fnm
-    default: "false"
   wasm-pack:
     description: wasm-pack
     default: "false"
@@ -175,18 +172,6 @@ runs:
       if: inputs.just == 'true' && steps.cache-just.outputs.cache-hit != 'true'
       run: |
         cargo install just --version 1.42.4 --locked
-
-    # Cache and install fnm
-    - uses: actions/cache@v4
-      if: inputs.fnm == 'true'
-      id: cache-fnm
-      with:
-        path: ~/.cargo/bin/fnm
-        key: fnm-1.38.1-${{ runner.os }}-${{ runner.arch }}
-    - shell: bash
-      if: inputs.fnm == 'true' && steps.cache-fnm.outputs.cache-hit != 'true'
-      run: |
-        cargo install fnm --version 1.38.1 --locked
 
     # Cache and install wasm-pack
     - uses: actions/cache@v4

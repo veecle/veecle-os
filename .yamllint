@@ -5,8 +5,6 @@ extends: default
 ignore:
   - FreeRTOS-Kernel/
   - external/
-  - pnpm-lock.yaml
-  - node-modules/
   - target/
 
 rules:

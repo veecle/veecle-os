@@ -11,12 +11,6 @@ After completing the setup instructions, go to [the examples](veecle-os-examples
 
 ## Repository structure
 
-<!-- TODO: to be removed/renamed?
-
-nos-ui-vscode-extension
-
--->
-
 * [`docs`](docs/): source for the documentation.
 * [`veecle-os`](veecle-os/): the main Veecle OS facade, exposing various components such as the runtime and OSAL.
 * [`veecle-os-examples`](veecle-os-examples/): example code that uses Veecle OS.

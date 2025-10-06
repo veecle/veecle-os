@@ -1,8 +1,0 @@
-!.vscode/
-
-dist
-node_modules
-wasm
-.vscode-test/
-.vscode-test-web/
-*.vsix

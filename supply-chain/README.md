@@ -22,7 +22,7 @@ You can prune any `safe-to-run` crate that appears in the graph for clarity.
 You can also exclude dev-dependencies.
 
 ```console
-$ cargo tree --target all -i windows-sys@0.52.0 -e no-dev --prune veecle-telemetry-ui --prune veecle-telemetry-vscode-extension --prune veecle-ipc --prune veecle-orchestrator --prune veecle-telemetry-server --prune veecle-ipc-protocol
+$ cargo tree --target all -i windows-sys@0.52.0 -e no-dev --prune veecle-telemetry-ui --prune veecle-ipc --prune veecle-orchestrator --prune veecle-telemetry-server --prune veecle-ipc-protocol
 windows-sys v0.52.0
 ├── glutin v0.32.3
 │   ├── eframe v0.31.1

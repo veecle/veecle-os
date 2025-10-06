@@ -16,7 +16,6 @@ find . \( \
      -o -path ./external/submodules/vsomeip -prune \
      -o -path ./external/submodules/capicxx-someip-runtime -prune \
      -o -name target -prune \
-     -o -name node_modules -prune \
      \) \
      -o \( -name '*.md' -or -name '*.rs' \) \
      -print | xargs vale "$@"

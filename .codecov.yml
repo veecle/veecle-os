@@ -35,7 +35,6 @@ component_management:
         - "veecle-telemetry-ui"
         - "veecle-telemetry-server"
         - "veecle-telemetry-server-protocol"
-        - "veecle-telemetry-vscode-extension"
         - "veecle-os-runtime/tests"
     - component_id: "orchestrator-prototype"
       paths:
