@@ -60,7 +60,7 @@ embassy-stm32 = { version = "0.4.0", default-features = false, features = [
 embassy-time = { version = "0.5.0", default-features = false, features = [
   "generic-queue-32",
 ] }
-embedded-io-async = { version = "0.6.1", default-features = false }
+embedded-io-async = { version = "0.7.0", default-features = false }
 heapless = { version = "0.8.0", default-features = false }
 panic-halt = { version = "1.0.0", default-features = false }
 static_cell = { version = "2.1.1", default-features = false }
