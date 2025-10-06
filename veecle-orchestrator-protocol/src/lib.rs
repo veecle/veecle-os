@@ -119,6 +119,11 @@ pub enum Request {
     ///
     /// Response with <code>[Response]<[Info]></code>
     Info,
+
+    /// Stop all active runtimes and clear all orchestrator state.
+    ///
+    /// Responds with <code>[Response]<()></code>.
+    Clear,
 }
 
 /// A local or remote instance for an IPC link target.
@@ -164,6 +169,7 @@ impl Request {
             Self::Stop(_) => "Stop",
             Self::Link { .. } => "Link",
             Self::Info => "Info",
+            Self::Clear => "Clear",
         }
     }
 

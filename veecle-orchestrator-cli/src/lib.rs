@@ -36,6 +36,9 @@ enum Command {
 
     #[command(subcommand)]
     Link(Link),
+
+    /// Stop all active runtimes and clear all orchestrator state.
+    Clear,
 }
 
 /// Manage runtimes registered on the orchestrator.
@@ -224,6 +227,10 @@ impl Arguments {
                                 .map(|(ty, to)| { [ty.to_string(), to.iter().join("\n")] })
                         )
                 );
+            }
+            Command::Clear => {
+                let () = send(&mut stream, Request::Clear)?;
+                println!("cleared orchestrator state");
             }
         }
         Ok(())
