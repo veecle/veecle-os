@@ -41,6 +41,4 @@ Alternatively, if `x.trace.jsonl` contains serialized traces, then you can use t
 veecle-telemetry-ui x.trace.jsonl
 ```
 
-<!-- TODO: Until DEV-231 is ready, the VS Code extension cannot be used without the Veecle OS repo, and thus should not be publicly documented. -->
-
 <!-- TODO: Should we document `veecle-telemetry-server/`? -->

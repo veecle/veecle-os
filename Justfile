@@ -82,13 +82,11 @@ build-submodule-doc:
 
 build-release-archive: build-user-manual coverage build-submodule-doc
     just veecle-telemetry-ui/build-wasm
-    just veecle-telemetry-vscode-extension/package-extension
     rm -rf target/release-archive
     mkdir -p target/release-archive
     cp -a docs/user-manual/book/ target/release-archive/user-manual
     cp -a target/llvm-cov/html/ target/release-archive/coverage
     cp -a veecle-telemetry-ui/dist/ target/release-archive/veecle-telemetry-ui
-    cp -a veecle-telemetry-vscode-extension/veecle-telemetry-ui.vsix target/release-archive/
     cp target/submodules.md target/release-archive/
     cp CHANGELOG.md target/release-archive/
     rustdoc docs/index.md --output target/release-archive/

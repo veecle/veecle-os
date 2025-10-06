@@ -29,9 +29,7 @@ in pkgs.mkShell {
     just
     mdbook
     ninja
-    nodejs_22
     pkg-config
-    pnpm
     rust-toolchain
     tombi
     vale

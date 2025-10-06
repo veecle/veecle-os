@@ -148,9 +148,6 @@ jobs:
           trunk: true
           cargo-nextest: true
           cargo-llvm-cov: true
-      - uses: ./.github/actions/setup-fnm
-        with:
-          project-directory: veecle-telemetry-vscode-extension
 
       - run: just build-release-archive
 

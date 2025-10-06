@@ -19,11 +19,9 @@ CMake
 Codecov
 Dependabot
 egui
-fnm
 mdBook
 Miri
 Neovim
-pnpm
 pkg-config
 RTT
 rustdoc

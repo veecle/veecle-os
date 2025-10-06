@@ -32,7 +32,6 @@ members = [
   "veecle-telemetry-server",
   "veecle-telemetry-server-protocol",
   "veecle-telemetry-ui",
-  "veecle-telemetry-vscode-extension",
   "workspace",
 ]
 exclude = ["target"]
@@ -138,7 +137,6 @@ tracing = { version = "0.1.41", default-features = false }
 tracing-error = { version = "0.2.1", default-features = false }
 tracing-subscriber = { version = "0.3.20", default-features = false }
 trybuild = { version = "1.0.110", default-features = false }
-tsify = { version = "0.5.5", default-features = false }
 typenum = { version = "1.18.0", default-features = false }
 unicode-ident = { version = "1.0.19", default-features = false }
 uuid = { version = "1.18.1", default-features = false }

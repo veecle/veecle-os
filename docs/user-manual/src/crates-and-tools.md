@@ -7,9 +7,3 @@ Run the following command to install the `veecle-telemetry-ui` graphical telemet
 ```
 cargo install veecle-telemetry-ui
 ```
-
-## Installing the `veecle-telemetry-ui` Visual Studio Code extension
-
-Download the VSIX package file from <https://veecle.github.io/veecle-os/veecle-telemetry-ui.vsix>.
-
-In Visual Studio Code, invoke the "Extensions: Install from VSIX" command and select the downloaded VSIX package.
