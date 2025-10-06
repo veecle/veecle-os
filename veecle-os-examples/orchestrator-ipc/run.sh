@@ -109,7 +109,7 @@ echo 'Configuring runtimes on orchestrators'
 echo
 
 run "$CLI" --socket "$CONTROL1" runtime add "$PING" --id $PING_ID
-run "$CLI" --socket "$CONTROL2" runtime add "$PONG" --id $PONG_ID
+run "$CLI" --socket "$CONTROL2" runtime add "$PONG" --id $PONG_ID --copy
 run "$CLI" --socket "$CONTROL1" runtime add "$TRACE" --id $TRACE_ID
 
 mod=veecle_os_examples_common::actors::ping_pong
