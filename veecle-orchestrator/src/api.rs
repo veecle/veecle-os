@@ -15,7 +15,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_util::codec::{Framed, LinesCodec};
 use tracing::Instrument;
 use veecle_net_utils::{AsyncSocketStream, UnresolvedMultiSocketAddress};
-use veecle_orchestrator_protocol::{Info, Request, Response};
+use veecle_orchestrator_protocol::{Info, InstanceId, Request, Response};
 
 use crate::conductor::Conductor;
 use crate::distributor::Distributor;
@@ -29,12 +29,32 @@ type Responder = Box<
         > + Send,
 >;
 
-/// Reads and verifies the binary data accompanying a [`Request::AddWithBinary`] message.
+/// Handles a [`Request::AddWithBinary`] message.
 ///
-/// Creates a new temporary file to contain the data, reads `length` bytes to it from the given
-/// stream, and validates the received data matches the hash. Then sets the permissions on the file
-/// so that it will be executable and returns a [`TempPath`] for it so that it will be cleaned up
-/// when no longer needed.
+/// Reads and verifies the binary data from the stream, then adds the instance to the conductor.
+async fn handle_add_with_binary(
+    stream: &mut AsyncSocketStream,
+    conductor: Arc<Conductor>,
+    id: InstanceId,
+    length: usize,
+    hash: [u8; 32],
+) -> eyre::Result<()> {
+    let path = read_binary_to_temp_file(stream, length, hash)
+        .await
+        .wrap_err("reading binary data")?;
+
+    conductor
+        .add(id, path.into())
+        .await
+        .wrap_err("adding binary instance")?;
+
+    Ok(())
+}
+
+/// Reads and verifies binary data from a stream into a temporary executable file.
+///
+/// Creates a new temporary file, reads `length` bytes from the stream, validates the SHA-256 hash,
+/// sets executable permissions, and returns a [`TempPath`] that will clean up the file when dropped.
 async fn read_binary_to_temp_file(
     stream: &mut AsyncSocketStream,
     length: usize,
@@ -138,16 +158,12 @@ async fn handle_request(
                     //  * the client sends the binary data
                     // As long as the client waits to receive the response line we shouldn't have
                     // received any of the binary data into the read buffer.
-                    match read_binary_to_temp_file(stream.get_mut(), length, hash).await {
-                        Ok(path) => {
-                            conductor
-                                .add(id, path.into())
-                                .await
-                                .wrap_err("adding binary instance")?;
-                            Ok(ControlFlow::Continue((stream, encode(())?)))
-                        }
+                    match handle_add_with_binary(stream.get_mut(), conductor, id, length, hash)
+                        .await
+                    {
+                        Ok(()) => Ok(ControlFlow::Continue((stream, encode(())?))),
                         Err(error) => {
-                            tracing::warn!(?error, "error reading binary data");
+                            tracing::warn!(?error);
                             let response = serde_json::to_string(&Response::<()>::err(&*error))
                                 .wrap_err("encoding error response")?;
                             Ok(ControlFlow::Continue((stream, response)))
