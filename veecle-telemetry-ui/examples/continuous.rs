@@ -9,8 +9,7 @@ use std::convert::Infallible;
 
 use veecle_os_runtime::{Reader, Writer};
 use veecle_osal_std::time::{Duration, Time, TimeAbstraction};
-use veecle_telemetry::collector::ConsoleJsonExporter;
-use veecle_telemetry::protocol::ExecutionId;
+use veecle_telemetry::collector::{ConsoleJsonExporter, ProcessId};
 
 use crate::common::{ConcreteTraceActor, Ping, Pong, PongActor, ping_loop};
 
@@ -34,8 +33,8 @@ async fn ping_actor(
 
 #[veecle_osal_std::main]
 async fn main() {
-    let execution_id = ExecutionId::random(&mut rand::rng());
-    veecle_telemetry::collector::set_exporter(execution_id, &ConsoleJsonExporter)
+    let process_id = ProcessId::random(&mut rand::rng());
+    veecle_telemetry::collector::set_exporter(process_id, &ConsoleJsonExporter)
         .expect("exporter was not set yet");
 
     veecle_os_runtime::execute! {

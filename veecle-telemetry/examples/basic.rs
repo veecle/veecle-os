@@ -1,12 +1,11 @@
 #![expect(missing_docs, reason = "example")]
 
-use veecle_telemetry::collector::ConsoleJsonExporter;
-use veecle_telemetry::protocol::ExecutionId;
+use veecle_telemetry::collector::{ConsoleJsonExporter, ProcessId};
 use veecle_telemetry::{Span, SpanContext};
 
 fn main() {
-    let execution_id = ExecutionId::random(&mut rand::rng());
-    veecle_telemetry::collector::set_exporter(execution_id, &ConsoleJsonExporter)
+    let process_id = ProcessId::random(&mut rand::rng());
+    veecle_telemetry::collector::set_exporter(process_id, &ConsoleJsonExporter)
         .expect("exporter was not set yet");
 
     let _span = Span::root("main", SpanContext::generate(), &[]).entered();

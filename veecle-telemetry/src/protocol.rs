@@ -25,12 +25,11 @@
 
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
-use core::ops::Deref;
 
 use serde::{Deserialize, Serialize};
 
 use crate::SpanContext;
-use crate::id::{SpanId, TraceId};
+pub use crate::id::{ProcessId, SpanId, TraceId};
 #[cfg(feature = "alloc")]
 use crate::to_static::ToStatic;
 use crate::types::{ListType, StringType, list_from_slice};
@@ -56,44 +55,55 @@ impl ToStatic for AttributeListType<'_> {
     }
 }
 
-/// An Id uniquely identifying an execution.
-///
-/// An [`ExecutionId`] should never be re-used as it's used to collect metadata about the execution and to generate
-/// [`TraceId`]s which need to be globally unique.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Default, Serialize, Deserialize)]
-pub struct ExecutionId(u128);
+/// A process-unique id identifying a thread within a process.
+#[derive(
+    Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Default, Serialize, Deserialize,
+)]
+pub struct ThreadId(u64);
 
-impl ExecutionId {
-    /// Uses a random generator to generate the [`ExecutionId`].
-    pub fn random(rng: &mut impl rand::Rng) -> Self {
-        Self(rng.random())
-    }
-
-    /// Creates an [`ExecutionId`] from a raw value, extra care needs to be taken that this is not a constant value or
-    /// re-used in any way.
-    ///
-    /// When possible prefer using [`ExecutionId::random`].
-    pub const fn from_raw(raw: u128) -> Self {
+impl ThreadId {
+    /// Creates a [`ThreadId`] from a raw value, extra care needs to be taken that this is not a constant value or
+    /// re-used within this process in any way.
+    pub const fn from_raw(raw: u64) -> Self {
         Self(raw)
     }
-}
 
-impl Deref for ExecutionId {
-    type Target = u128;
+    /// Creates a [`ThreadId`] for the current thread, using OS specific means to acquire it.
+    pub fn current() -> Self {
+        #[allow(unreachable_code)]
+        Self::from_raw({
+            #[cfg(feature = "std")]
+            {
+                use veecle_osal_std::thread::{Thread, ThreadAbstraction};
+                Thread::current_thread_id()
+            }
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
+            #[cfg(not(feature = "std"))]
+            {
+                panic!("not yet supported")
+            }
+        })
     }
 }
 
-/// A telemetry message associated with a specific execution.
+/// A globally-unique id identifying a thread of execution.
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Default, Serialize, Deserialize)]
+pub struct ExecutionId {
+    /// The globally-unique id for the process this thread is within.
+    pub process: ProcessId,
+
+    /// The process-unique id for this thread within the process.
+    pub thread: ThreadId,
+}
+
+/// A telemetry message associated with a specific execution thread.
 ///
 /// This structure wraps a telemetry message with its execution context,
 /// allowing messages from different executions to be properly correlated.
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "alloc", derive(Deserialize))]
 pub struct InstanceMessage<'a> {
-    /// The execution ID this message belongs to
+    /// The execution id this message belongs to
     pub execution: ExecutionId,
 
     /// The telemetry message content
@@ -192,9 +202,9 @@ pub struct LogMessage<'a> {
     #[serde(borrow)]
     pub attributes: AttributeListType<'a>,
 
-    /// Optional trace ID for correlation with traces
+    /// Optional trace id for correlation with traces
     pub trace_id: Option<TraceId>,
-    /// Optional span ID for correlation with traces
+    /// Optional span id for correlation with traces
     pub span_id: Option<SpanId>,
 }
 
@@ -275,9 +285,9 @@ impl ToStatic for TracingMessage<'_> {
 pub struct SpanCreateMessage<'a> {
     /// The trace this span belongs to
     pub trace_id: TraceId,
-    /// The unique identifier for this span
+    /// The unique identifier (within the associated process) for this span.
     pub span_id: SpanId,
-    /// The parent span ID, if this is a child span
+    /// The parent span id, if this is a child span
     pub parent_span_id: Option<SpanId>,
 
     /// The name of the span
@@ -495,7 +505,10 @@ mod tests {
         let tracing_message = TracingMessage::AddEvent(span_event);
         let telemetry_message = TelemetryMessage::Tracing(tracing_message);
         let instance_message = InstanceMessage {
-            execution: ExecutionId(999),
+            execution: ExecutionId {
+                process: ProcessId::from_raw(999),
+                thread: ThreadId::from_raw(111),
+            },
             message: telemetry_message,
         };
 
