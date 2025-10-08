@@ -20,7 +20,7 @@ async fn alloc_stat_actor() -> Infallible {
 
 pub fn main() -> ! {
     veecle_os::telemetry::collector::set_exporter(
-        veecle_os::telemetry::protocol::ExecutionId::random(&mut rand::rng()),
+        veecle_os::telemetry::collector::ProcessId::random(&mut rand::rng()),
         &veecle_os::telemetry::collector::ConsoleJsonExporter,
     )
     .unwrap();
