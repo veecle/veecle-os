@@ -39,13 +39,14 @@ pub use json_exporter::ConsoleJsonExporter;
 pub use test_exporter::TestExporter;
 
 use crate::TraceId;
-#[cfg(feature = "enable")]
-use crate::protocol::ExecutionId;
 use crate::protocol::InstanceMessage;
+#[cfg(feature = "enable")]
+pub use crate::protocol::ProcessId;
 #[cfg(feature = "enable")]
 use crate::protocol::{
     LogMessage, SpanAddEventMessage, SpanAddLinkMessage, SpanCloseMessage, SpanCreateMessage,
-    SpanEnterMessage, SpanExitMessage, SpanSetAttributeMessage, TelemetryMessage, TracingMessage,
+    SpanEnterMessage, SpanExitMessage, SpanSetAttributeMessage, TelemetryMessage, ThreadId,
+    TracingMessage,
 };
 
 /// Trait for exporting telemetry data to external systems.
@@ -94,7 +95,7 @@ pub struct Collector {
 #[cfg(feature = "enable")]
 #[derive(Debug)]
 struct CollectorInner {
-    execution_id: ExecutionId,
+    process_id: ProcessId,
 
     exporter: &'static (dyn Export + Sync),
 
@@ -116,7 +117,7 @@ impl Export for NopExporter {
 #[cfg(feature = "enable")]
 static mut GLOBAL_COLLECTOR: Collector = Collector {
     inner: CollectorInner {
-        execution_id: ExecutionId::from_raw(0),
+        process_id: ProcessId::from_raw(0),
         exporter: &NO_EXPORTER,
 
         trace_id_prefix: 0,
@@ -126,7 +127,7 @@ static mut GLOBAL_COLLECTOR: Collector = Collector {
 static NO_COLLECTOR: Collector = Collector {
     #[cfg(feature = "enable")]
     inner: CollectorInner {
-        execution_id: ExecutionId::from_raw(0),
+        process_id: ProcessId::from_raw(0),
         exporter: &NO_EXPORTER,
 
         trace_id_prefix: 0,
@@ -150,13 +151,13 @@ const INITIALIZING: usize = 1;
 #[cfg(feature = "enable")]
 const INITIALIZED: usize = 2;
 
-/// Initializes the collector with the given Exporter and [`ExecutionId`].
+/// Initializes the collector with the given Exporter and [`ProcessId`].
 ///
-/// An [`ExecutionId`] should never be re-used as it's used to collect metadata about the execution and to generate
+/// A [`ProcessId`] should never be re-used as it's used to collect metadata about the execution and to generate
 /// [`TraceId`]s which need to be globally unique.
 #[cfg(feature = "enable")]
 pub fn set_exporter(
-    execution_id: ExecutionId,
+    process_id: ProcessId,
     exporter: &'static (dyn Export + Sync),
 ) -> Result<(), SetExporterError> {
     if GLOBAL_INIT
@@ -169,7 +170,7 @@ pub fn set_exporter(
         .is_ok()
     {
         // SAFETY: this is guarded by the atomic
-        unsafe { GLOBAL_COLLECTOR = Collector::new(execution_id, exporter) }
+        unsafe { GLOBAL_COLLECTOR = Collector::new(process_id, exporter) }
         GLOBAL_INIT.store(INITIALIZED, Ordering::Release);
 
         Ok(())
@@ -227,14 +228,13 @@ impl error::Error for SetExporterError {}
 
 impl Collector {
     #[cfg(feature = "enable")]
-    fn new(execution_id: ExecutionId, exporter: &'static (dyn Export + Sync)) -> Self {
-        let execution_id_raw = *execution_id;
-        let trace_id_prefix = (execution_id_raw >> 64) as u64;
-        let initial_counter_value = execution_id_raw as u64;
+    fn new(process_id: ProcessId, exporter: &'static (dyn Export + Sync)) -> Self {
+        let trace_id_prefix = (process_id.to_raw() >> 64) as u64;
+        let initial_counter_value = process_id.to_raw() as u64;
 
         Self {
             inner: CollectorInner {
-                execution_id,
+                process_id,
                 exporter,
                 trace_id_prefix,
                 trace_id_counter: AtomicU64::new(initial_counter_value),
@@ -273,7 +273,8 @@ impl Collector {
     /// ```rust
     /// use veecle_telemetry::collector::get_collector;
     /// use veecle_telemetry::protocol::{
-    ///     ExecutionId,
+    ///     ThreadId,
+    ///     ProcessId,
     ///     InstanceMessage,
     ///     TelemetryMessage,
     ///     TimeSyncMessage,
@@ -281,7 +282,7 @@ impl Collector {
     ///
     /// let collector = get_collector();
     /// let message = InstanceMessage {
-    ///     execution: ExecutionId::from_raw(1),
+    ///     thread: ThreadId::from_raw(ProcessId::from_raw(1), 1),
     ///     message: TelemetryMessage::TimeSync(TimeSyncMessage {
     ///         local_timestamp: 0,
     ///         since_epoch: 0,
@@ -332,7 +333,7 @@ impl Collector {
     #[inline]
     pub(crate) fn log_message(&self, log: LogMessage<'_>) {
         self.inner.exporter.export(InstanceMessage {
-            execution: self.inner.execution_id,
+            thread: ThreadId::current(self.inner.process_id),
             message: TelemetryMessage::Log(log),
         });
     }
@@ -340,7 +341,7 @@ impl Collector {
     #[inline]
     fn tracing_message(&self, message: TracingMessage<'_>) {
         self.inner.exporter.export(InstanceMessage {
-            execution: self.inner.execution_id,
+            thread: ThreadId::current(self.inner.process_id),
             message: TelemetryMessage::Tracing(message),
         });
     }

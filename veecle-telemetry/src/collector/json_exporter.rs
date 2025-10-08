@@ -6,11 +6,10 @@ use crate::protocol::InstanceMessage;
 /// # Examples
 ///
 /// ```rust
-/// use veecle_telemetry::collector::{ConsoleJsonExporter, set_exporter};
-/// use veecle_telemetry::protocol::ExecutionId;
+/// use veecle_telemetry::collector::{ConsoleJsonExporter, set_exporter, ProcessId};
 ///
-/// let execution_id = ExecutionId::random(&mut rand::rng());
-/// set_exporter(execution_id, &ConsoleJsonExporter).unwrap();
+/// let process_id = ProcessId::random(&mut rand::rng());
+/// set_exporter(process_id, &ConsoleJsonExporter).unwrap();
 /// ```
 #[derive(Debug)]
 pub struct ConsoleJsonExporter;

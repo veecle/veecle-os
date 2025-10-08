@@ -12,11 +12,11 @@
 //! - **Tracing Messages** - Distributed tracing with spans, events, and links
 //! - **Time Sync Messages** - Time synchronization between systems
 //!
-//! # Execution Tracking
+//! # Thread Tracking
 //!
-//! Each message is associated with an [`ExecutionId`] that uniquely identifies
-//! the execution context.
-//! This allows telemetry data from multiple executions to be correlated and analyzed separately.
+//! Each message is associated with an [`ThreadId`] that uniquely identifies
+//! the thread it came from (globally unique across all processes).
+//! This allows telemetry data from multiple threads to be correlated and analyzed separately.
 //!
 //! # Serialization
 //!
@@ -25,12 +25,11 @@
 
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
-use core::ops::Deref;
 
 use serde::{Deserialize, Serialize};
 
 use crate::SpanContext;
-use crate::id::{SpanId, TraceId};
+pub use crate::id::{ProcessId, SpanId, TraceId};
 #[cfg(feature = "alloc")]
 use crate::to_static::ToStatic;
 use crate::types::{ListType, StringType, list_from_slice};
@@ -56,45 +55,61 @@ impl ToStatic for AttributeListType<'_> {
     }
 }
 
-/// An Id uniquely identifying an execution.
+/// A globally-unique id identifying a thread within a specific process.
 ///
-/// An [`ExecutionId`] should never be re-used as it's used to collect metadata about the execution and to generate
-/// [`TraceId`]s which need to be globally unique.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Default, Serialize, Deserialize)]
-pub struct ExecutionId(u128);
+/// The primary purpose of this id is to allow the consumer of telemetry messages to associate
+/// spans with the callstack they came from to reconstruct parent-child relationships. On a normal
+/// operating system this is the thread, on other systems it should be whatever is the closest
+/// equivalent, e.g. for FreeRTOS it would be a task. On a single threaded bare-metal system it
+/// would be a constant as there is only the one callstack.
+#[derive(
+    Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Default, Serialize, Deserialize,
+)]
+pub struct ThreadId {
+    /// The globally-unique id for the process this thread is within.
+    pub process: ProcessId,
 
-impl ExecutionId {
-    /// Uses a random generator to generate the [`ExecutionId`].
-    pub fn random(rng: &mut impl rand::Rng) -> Self {
-        Self(rng.random())
-    }
+    /// The process-unique id for this thread within the process.
+    raw: u64,
+}
 
-    /// Creates an [`ExecutionId`] from a raw value, extra care needs to be taken that this is not a constant value or
-    /// re-used in any way.
+impl ThreadId {
+    /// Creates a [`ThreadId`] from a raw value.
     ///
-    /// When possible prefer using [`ExecutionId::random`].
-    pub const fn from_raw(raw: u128) -> Self {
-        Self(raw)
+    /// Extra care needs to be taken that this is not a constant value or re-used within this
+    /// process in any way.
+    pub const fn from_raw(process: ProcessId, raw: u64) -> Self {
+        Self { process, raw }
+    }
+
+    /// Creates a [`ThreadId`] for the current thread, using OS specific means to acquire it.
+    #[cfg(feature = "enable")]
+    pub(crate) fn current(process: ProcessId) -> Self {
+        #[cfg_attr(not(feature = "std"), expect(unreachable_code))]
+        Self::from_raw(process, {
+            #[cfg(feature = "std")]
+            {
+                use veecle_osal_std::thread::{Thread, ThreadAbstraction};
+                Thread::current_thread_id()
+            }
+
+            #[cfg(not(feature = "std"))]
+            {
+                panic!("not yet supported")
+            }
+        })
     }
 }
 
-impl Deref for ExecutionId {
-    type Target = u128;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-/// A telemetry message associated with a specific execution.
+/// A telemetry message associated with a specific execution thread.
 ///
 /// This structure wraps a telemetry message with its execution context,
 /// allowing messages from different executions to be properly correlated.
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "alloc", derive(Deserialize))]
 pub struct InstanceMessage<'a> {
-    /// The execution ID this message belongs to
-    pub execution: ExecutionId,
+    /// The thread this message belongs to
+    pub thread: ThreadId,
 
     /// The telemetry message content
     #[serde(borrow)]
@@ -107,7 +122,7 @@ impl ToStatic for InstanceMessage<'_> {
 
     fn to_static(&self) -> Self::Static {
         InstanceMessage {
-            execution: self.execution,
+            thread: self.thread,
             message: self.message.to_static(),
         }
     }
@@ -192,9 +207,9 @@ pub struct LogMessage<'a> {
     #[serde(borrow)]
     pub attributes: AttributeListType<'a>,
 
-    /// Optional trace ID for correlation with traces
+    /// Optional trace id for correlation with traces
     pub trace_id: Option<TraceId>,
-    /// Optional span ID for correlation with traces
+    /// Optional span id for correlation with traces
     pub span_id: Option<SpanId>,
 }
 
@@ -275,9 +290,9 @@ impl ToStatic for TracingMessage<'_> {
 pub struct SpanCreateMessage<'a> {
     /// The trace this span belongs to
     pub trace_id: TraceId,
-    /// The unique identifier for this span
+    /// The unique identifier (within the associated process) for this span.
     pub span_id: SpanId,
-    /// The parent span ID, if this is a child span
+    /// The parent span id, if this is a child span
     pub parent_span_id: Option<SpanId>,
 
     /// The name of the span
@@ -496,7 +511,7 @@ mod tests {
         let tracing_message = TracingMessage::AddEvent(span_event);
         let telemetry_message = TelemetryMessage::Tracing(tracing_message);
         let instance_message = InstanceMessage {
-            execution: ExecutionId(999),
+            thread: ThreadId::from_raw(ProcessId::from_raw(999), 111),
             message: telemetry_message,
         };
 
