@@ -2,6 +2,7 @@
 
 ## Veecle OS
 
+* **breaking** Replaced `SpanContext::from_span` with `Span::context` method.
 * **breaking** Telemetry execution id now includes thread id to uniquely identify thread/task combinations.
 * Added `ThreadAbstraction` trait to OSAL for querying current thread id.
 * Fixed `veecle_os::telemetry::instrument` macro to automatically resolve correct crate paths for the facade.
