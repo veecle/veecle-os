@@ -121,20 +121,29 @@ where
     }
 
     /// Updates the value in-place and notifies readers.
-    #[veecle_telemetry::instrument]
     pub async fn modify(&mut self, f: impl FnOnce(&mut Option<T::DataType>)) {
-        self.ready().await;
-        self.waiter.update_generation();
+        use veecle_telemetry::future::FutureExt;
+        let span = veecle_telemetry::span!("modify");
+        let span_context = span.context();
+        (async move {
+            self.ready().await;
+            self.waiter.update_generation();
 
-        let type_name = self.slot.inner_type_name();
+            let type_name = self.slot.inner_type_name();
 
-        self.slot.modify(|value| {
-            f(value);
+            self.slot.modify(
+                |value| {
+                    f(value);
 
-            // TODO(DEV-532): add debug format
-            veecle_telemetry::trace!("Slot modified", type_name);
-        });
-        self.slot.increment_generation();
+                    // TODO(DEV-532): add debug format
+                    veecle_telemetry::trace!("Slot modified", type_name);
+                },
+                span_context,
+            );
+            self.slot.increment_generation();
+        })
+        .with_span(span)
+        .await;
     }
 
     /// Reads the current value of a type.
