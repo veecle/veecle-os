@@ -213,6 +213,30 @@ impl Span {
         }
     }
 
+    /// Returns a [`SpanContext`] that identifies this [`Span`].
+    /// For a noop span, this function will return `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use veecle_telemetry::{Span, SpanContext};
+    ///
+    /// let context = SpanContext::generate();
+    /// let span = Span::root("root_span", context, &[]);
+    /// assert!(span.context().is_some());
+    /// ```
+    pub fn context(&self) -> Option<SpanContext> {
+        #[cfg(not(feature = "enable"))]
+        {
+            None
+        }
+
+        #[cfg(feature = "enable")]
+        {
+            self.inner.as_ref().map(|inner| inner.context)
+        }
+    }
+
     /// Enters this span, making it the current active span.
     ///
     /// This method returns a guard that will automatically exit the span when dropped.
@@ -753,7 +777,7 @@ mod tests {
         let root_context = SpanContext::generate();
         let span = Span::root("test_span", root_context, &[]);
 
-        let extracted_context = SpanContext::from_span(&span);
+        let extracted_context = span.context();
         let context = extracted_context.unwrap();
         assert_eq!(context.trace_id, root_context.trace_id);
     }
@@ -761,7 +785,7 @@ mod tests {
     #[test]
     fn span_context_from_noop_span() {
         let span = Span::noop();
-        let extracted_context = SpanContext::from_span(&span);
+        let extracted_context = span.context();
         assert!(extracted_context.is_none());
     }
 
