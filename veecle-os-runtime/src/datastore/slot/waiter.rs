@@ -76,7 +76,13 @@ where
     T: Storable + 'static,
 {
     /// Takes the current value of the slot, leaving behind `None`.
-    pub(crate) fn take(&mut self) -> Option<T::DataType> {
-        self.slot.take()
+    pub(crate) fn take(
+        &mut self,
+        #[cfg(feature = "veecle-telemetry")] span_context: Option<veecle_telemetry::SpanContext>,
+    ) -> Option<T::DataType> {
+        self.slot.take(
+            #[cfg(feature = "veecle-telemetry")]
+            span_context,
+        )
     }
 }
