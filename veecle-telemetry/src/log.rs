@@ -82,14 +82,11 @@ pub fn log(severity: Severity, body: &'static str, attributes: &'_ [KeyValue<'st
 
     #[cfg(feature = "enable")]
     {
-        let span_id = crate::SpanContext::current().map(|context| context.span_id);
-
         let log_message = LogMessage {
             time_unix_nano: now().as_nanos(),
             severity,
             body: body.into(),
             attributes: attribute_list_from_slice(attributes),
-            span_id,
         };
 
         get_collector().log_message(log_message);
