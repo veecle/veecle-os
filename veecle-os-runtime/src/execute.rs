@@ -352,7 +352,7 @@ where
     #[cfg(feature = "veecle-telemetry")]
     let future = veecle_telemetry::future::FutureExt::with_span(
         future,
-        veecle_telemetry::root_span!("actor", actor = core::any::type_name::<A>()),
+        veecle_telemetry::span!("actor", actor = core::any::type_name::<A>()),
     );
 
     match future.await {
