@@ -29,7 +29,7 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 
 use crate::SpanContext;
-pub use crate::id::{ProcessId, SpanId, TraceId};
+pub use crate::id::{ProcessId, SpanId};
 #[cfg(feature = "alloc")]
 use crate::to_static::ToStatic;
 use crate::types::{ListType, StringType, list_from_slice};
@@ -201,9 +201,6 @@ pub struct LogMessage<'a> {
     /// Key-value attributes providing additional context
     #[serde(borrow)]
     pub attributes: AttributeListType<'a>,
-
-    /// Optional trace id for correlation with traces
-    pub trace_id: Option<TraceId>,
     /// Optional span id for correlation with traces
     pub span_id: Option<SpanId>,
 }
@@ -218,7 +215,6 @@ impl ToStatic for LogMessage<'_> {
             severity: self.severity,
             body: self.body.to_static(),
             attributes: self.attributes.to_static(),
-            trace_id: self.trace_id,
             span_id: self.span_id,
         }
     }
@@ -283,8 +279,6 @@ impl ToStatic for TracingMessage<'_> {
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "alloc", derive(Deserialize))]
 pub struct SpanCreateMessage<'a> {
-    /// The trace this span belongs to
-    pub trace_id: TraceId,
     /// The unique identifier (within the associated process) for this span.
     pub span_id: SpanId,
     /// The parent span id, if this is a child span
@@ -308,7 +302,6 @@ impl ToStatic for SpanCreateMessage<'_> {
 
     fn to_static(&self) -> Self::Static {
         SpanCreateMessage {
-            trace_id: self.trace_id,
             span_id: self.span_id,
             parent_span_id: self.parent_span_id,
             name: self.name.to_static(),
@@ -321,8 +314,6 @@ impl ToStatic for SpanCreateMessage<'_> {
 /// Message indicating a span has been entered.
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct SpanEnterMessage {
-    /// The trace this span belongs to
-    pub trace_id: TraceId,
     /// The span being entered
     pub span_id: SpanId,
 
@@ -333,8 +324,6 @@ pub struct SpanEnterMessage {
 /// Message indicating a span has been exited.
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct SpanExitMessage {
-    /// The trace this span belongs to
-    pub trace_id: TraceId,
     /// The span being exited
     pub span_id: SpanId,
 
@@ -345,8 +334,6 @@ pub struct SpanExitMessage {
 /// Message indicating a span has been closed (completed).
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct SpanCloseMessage {
-    /// The trace this span belongs to
-    pub trace_id: TraceId,
     /// The span being closed
     pub span_id: SpanId,
 
@@ -357,8 +344,6 @@ pub struct SpanCloseMessage {
 /// Message indicating an attribute has been set on a span.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpanSetAttributeMessage<'a> {
-    /// The trace this span belongs to
-    pub trace_id: TraceId,
     /// The span the attribute is being set on
     pub span_id: SpanId,
 
@@ -373,7 +358,6 @@ impl ToStatic for SpanSetAttributeMessage<'_> {
 
     fn to_static(&self) -> Self::Static {
         SpanSetAttributeMessage {
-            trace_id: self.trace_id,
             span_id: self.span_id,
             attribute: self.attribute.to_static(),
         }
@@ -384,8 +368,6 @@ impl ToStatic for SpanSetAttributeMessage<'_> {
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "alloc", derive(Deserialize))]
 pub struct SpanAddEventMessage<'a> {
-    /// The trace this span belongs to
-    pub trace_id: TraceId,
     /// The span the event is being added to
     pub span_id: SpanId,
 
@@ -406,7 +388,6 @@ impl ToStatic for SpanAddEventMessage<'_> {
 
     fn to_static(&self) -> Self::Static {
         SpanAddEventMessage {
-            trace_id: self.trace_id,
             span_id: self.span_id,
             name: self.name.to_static(),
             time_unix_nano: self.time_unix_nano,
@@ -421,8 +402,6 @@ impl ToStatic for SpanAddEventMessage<'_> {
 /// that are not parent-child hierarchies.
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct SpanAddLinkMessage {
-    /// The trace this span belongs to
-    pub trace_id: TraceId,
     /// The span the link is being added to
     pub span_id: SpanId,
 
@@ -442,7 +421,6 @@ mod tests {
         let static_str: StringType<'static> = "static".into();
 
         let _event = SpanAddEventMessage {
-            trace_id: TraceId(0),
             span_id: SpanId(0),
             name: static_str,
             time_unix_nano: 0,
@@ -452,7 +430,6 @@ mod tests {
         let borrowed_str: StringType = "borrowed".into();
 
         let _event = SpanAddEventMessage {
-            trace_id: TraceId(0),
             span_id: SpanId(0),
             name: borrowed_str,
             time_unix_nano: 0,
@@ -467,7 +444,6 @@ mod tests {
         let owned: StringType<'static> = StringType::from(string);
 
         let _event = SpanAddEventMessage {
-            trace_id: TraceId(0),
             span_id: SpanId(0),
             name: owned,
             time_unix_nano: 0,
@@ -495,7 +471,6 @@ mod tests {
 
         let attributes = [attribute];
         let span_event = SpanAddEventMessage {
-            trace_id: TraceId(0),
             span_id: SpanId(0),
             name: borrowed_name,
             time_unix_nano: 0,
