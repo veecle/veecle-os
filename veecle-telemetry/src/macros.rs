@@ -347,7 +347,7 @@ macro_rules! fatal {
 ///
 /// Span construction with attributes:
 /// ```rust
-/// use veecle_telemetry::{Span, SpanContext, attributes};
+/// use veecle_telemetry::{Span, attributes};
 ///
 /// let operation = "user_login";
 /// let user_id = 456;
