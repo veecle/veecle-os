@@ -71,7 +71,7 @@ use crate::value::KeyValue;
 
 #[cfg(feature = "enable")]
 thread_local! {
-    pub(crate) static CURRENT_SPAN: Cell<Option<SpanContext>> = const { Cell::new(None) };
+    pub(crate) static CURRENT_SPAN: Cell<Option<SpanId>> = const { Cell::new(None) };
 }
 
 /// A distributed tracing span representing a unit of work.
@@ -104,13 +104,7 @@ thread_local! {
 #[derive(Default, Debug)]
 pub struct Span {
     #[cfg(feature = "enable")]
-    pub(crate) inner: Option<SpanInner>,
-}
-
-#[cfg(feature = "enable")]
-#[derive(Debug)]
-pub(crate) struct SpanInner {
-    pub(crate) context: SpanContext,
+    pub(crate) span_id: Option<SpanId>,
 }
 
 /// Utilities for working with the currently active span.
@@ -143,7 +137,7 @@ impl Span {
     pub fn noop() -> Self {
         Self {
             #[cfg(feature = "enable")]
-            inner: None,
+            span_id: None,
         }
     }
 
@@ -172,18 +166,17 @@ impl Span {
 
         #[cfg(feature = "enable")]
         {
-            let parent = CURRENT_SPAN.get().unwrap_or_else(SpanContext::generate);
-            Self::new_inner(name, parent, attributes)
+            Self::new_inner(name, attributes)
         }
     }
 
-    /// Returns a [`SpanContext`] that identifies this [`Span`].
+    /// Creates a [`SpanContext`] from this [`Span`].
     /// For a noop span, this function will return `None`.
     ///
     /// # Examples
     ///
     /// ```
-    /// use veecle_telemetry::{Span, SpanContext};
+    /// use veecle_telemetry::Span;
     ///
     /// let span = Span::new("root_span", &[]);
     /// assert!(span.context().is_some());
@@ -196,7 +189,8 @@ impl Span {
 
         #[cfg(feature = "enable")]
         {
-            self.inner.as_ref().map(|inner| inner.context)
+            self.span_id
+                .map(|span_id| SpanContext::new(get_collector().process_id(), span_id))
         }
     }
 
@@ -223,7 +217,7 @@ impl Span {
 
         #[cfg(feature = "enable")]
         {
-            let Some(context) = self.inner.as_ref().map(|inner| inner.context) else {
+            let Some(span_id) = self.span_id else {
                 return SpanGuardRef::noop();
             };
 
@@ -231,7 +225,7 @@ impl Span {
             CURRENT_SPAN
                 .try_with(|current| {
                     let parent = current.get();
-                    current.set(Some(context));
+                    current.set(Some(span_id));
 
                     SpanGuardRef::new(self, parent)
                 })
@@ -262,7 +256,7 @@ impl Span {
 
         #[cfg(feature = "enable")]
         {
-            let Some(context) = self.inner.as_ref().map(|inner| inner.context) else {
+            let Some(span_id) = self.span_id else {
                 return SpanGuard::noop();
             };
 
@@ -270,7 +264,7 @@ impl Span {
             CURRENT_SPAN
                 .try_with(|current| {
                     let parent = current.get();
-                    current.set(Some(context));
+                    current.set(Some(span_id));
 
                     SpanGuard::new(self, parent)
                 })
@@ -305,10 +299,9 @@ impl Span {
 
         #[cfg(feature = "enable")]
         {
-            if let Some(inner) = &self.inner {
+            if let Some(span_id) = self.span_id {
                 get_collector().span_event(SpanAddEventMessage {
-                    trace_id: inner.context.trace_id,
-                    span_id: inner.context.span_id,
+                    span_id,
                     name: name.into(),
                     time_unix_nano: now().as_nanos(),
                     attributes: attributes.into(),
@@ -325,10 +318,10 @@ impl Span {
     /// # Examples
     ///
     /// ```
-    /// use veecle_telemetry::{Span, SpanContext, SpanId, TraceId};
+    /// use veecle_telemetry::{Span, SpanContext, SpanId, ProcessId};
     ///
     /// let span = Span::new("my_span", &[]);
-    /// let external_context = SpanContext::new(TraceId(0x123), SpanId(0x456));
+    /// let external_context = SpanContext::new(ProcessId::from_raw(0x123), SpanId(0x456));
     /// span.add_link(external_context);
     /// ```
     pub fn add_link(&self, link: SpanContext) {
@@ -339,12 +332,8 @@ impl Span {
 
         #[cfg(feature = "enable")]
         {
-            if let Some(inner) = self.inner.as_ref() {
-                get_collector().span_link(SpanAddLinkMessage {
-                    trace_id: inner.context.trace_id,
-                    span_id: inner.context.span_id,
-                    link,
-                });
+            if let Some(span_id) = self.span_id {
+                get_collector().span_link(SpanAddLinkMessage { span_id, link });
             }
         }
     }
@@ -375,12 +364,8 @@ impl Span {
 
         #[cfg(feature = "enable")]
         {
-            if let Some(inner) = self.inner.as_ref() {
-                get_collector().span_attribute(SpanSetAttributeMessage {
-                    trace_id: inner.context.trace_id,
-                    span_id: inner.context.span_id,
-                    attribute,
-                });
+            if let Some(span_id) = self.span_id {
+                get_collector().span_attribute(SpanSetAttributeMessage { span_id, attribute });
             }
         }
     }
@@ -417,7 +402,6 @@ impl CurrentSpan {
         {
             if let Some(context) = SpanContext::current() {
                 get_collector().span_event(SpanAddEventMessage {
-                    trace_id: context.trace_id,
                     span_id: context.span_id,
                     name: name.into(),
                     time_unix_nano: now().as_nanos(),
@@ -436,11 +420,11 @@ impl CurrentSpan {
     /// # Examples
     ///
     /// ```
-    /// use veecle_telemetry::{CurrentSpan, Span, SpanContext, SpanId, TraceId};
+    /// use veecle_telemetry::{CurrentSpan, Span, SpanContext, SpanId, ProcessId};
     ///
     /// let _guard = Span::new("my_span", &[]).entered();
     ///
-    /// let external_context = SpanContext::new(TraceId(0x123), SpanId(0x456));
+    /// let external_context = SpanContext::new(ProcessId::from_raw(0x123), SpanId(0x456));
     /// CurrentSpan::add_link(external_context);
     /// ```
     pub fn add_link(link: SpanContext) {
@@ -453,7 +437,6 @@ impl CurrentSpan {
         {
             if let Some(context) = SpanContext::current() {
                 get_collector().span_link(SpanAddLinkMessage {
-                    trace_id: context.trace_id,
                     span_id: context.span_id,
                     link,
                 });
@@ -491,7 +474,6 @@ impl CurrentSpan {
         {
             if let Some(context) = SpanContext::current() {
                 get_collector().span_attribute(SpanSetAttributeMessage {
-                    trace_id: context.trace_id,
                     span_id: context.span_id,
                     attribute,
                 });
@@ -502,41 +484,29 @@ impl CurrentSpan {
 
 #[cfg(feature = "enable")]
 impl Span {
-    fn new_inner(
-        name: &'static str,
-        parent: SpanContext,
-        attributes: &'_ [KeyValue<'static>],
-    ) -> Self {
+    fn new_inner(name: &'static str, attributes: &'_ [KeyValue<'static>]) -> Self {
         let span_id = SpanId::next_id();
-        let context = SpanContext::new(parent.trace_id, span_id);
-
-        let parent_id = if parent.span_id == SpanId(0) {
-            None
-        } else {
-            Some(parent.span_id)
-        };
+        let parent_span_id = CURRENT_SPAN.get();
 
         get_collector().new_span(SpanCreateMessage {
-            trace_id: context.trace_id,
-            span_id: context.span_id,
-            parent_span_id: parent_id,
+            span_id,
+            parent_span_id,
             name: name.into(),
             start_time_unix_nano: now().as_nanos(),
             attributes: attributes.into(),
         });
 
         Self {
-            inner: Some(SpanInner { context }),
+            span_id: Some(span_id),
         }
     }
 
     fn do_enter(&self) {
         #[cfg(feature = "enable")]
-        if let Some(inner) = self.inner.as_ref() {
+        if let Some(span_id) = self.span_id {
             let timestamp = now();
             get_collector().enter_span(SpanEnterMessage {
-                trace_id: inner.context.trace_id,
-                span_id: inner.context.span_id,
+                span_id,
                 time_unix_nano: timestamp.0,
             });
         }
@@ -544,11 +514,10 @@ impl Span {
 
     fn do_exit(&self) {
         #[cfg(feature = "enable")]
-        if let Some(inner) = self.inner.as_ref() {
+        if let Some(span_id) = self.span_id {
             let timestamp = now();
             get_collector().exit_span(SpanExitMessage {
-                trace_id: inner.context.trace_id,
-                span_id: inner.context.span_id,
+                span_id,
                 time_unix_nano: timestamp.0,
             });
         }
@@ -558,11 +527,10 @@ impl Span {
 impl Drop for Span {
     fn drop(&mut self) {
         #[cfg(feature = "enable")]
-        if let Some(inner) = self.inner.take() {
+        if let Some(span_id) = self.span_id.take() {
             let timestamp = now();
             get_collector().close_span(SpanCloseMessage {
-                trace_id: inner.context.trace_id,
-                span_id: inner.context.span_id,
+                span_id,
                 end_time_unix_nano: timestamp.0,
             });
         }
@@ -588,7 +556,7 @@ pub struct SpanGuard {
 #[derive(Debug)]
 pub(crate) struct SpanGuardInner {
     span: Span,
-    parent: Option<SpanContext>,
+    parent: Option<SpanId>,
 }
 
 impl SpanGuard {
@@ -601,7 +569,7 @@ impl SpanGuard {
     }
 
     #[cfg(feature = "enable")]
-    pub(crate) fn new(span: Span, parent: Option<SpanContext>) -> Self {
+    pub(crate) fn new(span: Span, parent: Option<SpanId>) -> Self {
         Self {
             #[cfg(feature = "enable")]
             inner: Some(SpanGuardInner { span, parent }),
@@ -633,7 +601,7 @@ pub struct SpanGuardRef<'a> {
 #[derive(Debug)]
 pub(crate) struct SpanGuardRefInner<'a> {
     span: &'a Span,
-    parent: Option<SpanContext>,
+    parent: Option<SpanId>,
 }
 
 impl<'a> SpanGuardRef<'a> {
@@ -646,7 +614,7 @@ impl<'a> SpanGuardRef<'a> {
     }
 
     #[cfg(feature = "enable")]
-    pub(crate) fn new(span: &'a Span, parent: Option<SpanContext>) -> Self {
+    pub(crate) fn new(span: &'a Span, parent: Option<SpanId>) -> Self {
         Self {
             #[cfg(feature = "enable")]
             inner: Some(SpanGuardRefInner { span, parent }),
@@ -695,12 +663,12 @@ unsafe impl Sync for PhantomNotSend {}
 #[cfg(all(test, feature = "std"))]
 mod tests {
     use super::*;
-    use crate::{SpanContext, SpanId, TraceId};
+    use crate::{ProcessId, SpanContext, SpanId};
 
     #[test]
     fn span_noop() {
         let span = Span::noop();
-        assert!(span.inner.is_none());
+        assert!(span.span_id.is_none());
     }
 
     #[test]
@@ -708,18 +676,17 @@ mod tests {
         CURRENT_SPAN.set(None);
 
         let span = Span::new("test_span", &[]);
-        assert!(span.inner.is_some());
+        assert!(span.span_id.is_some());
     }
 
     #[test]
     fn span_new_with_parent() {
-        let parent_context = SpanContext::generate();
-        CURRENT_SPAN.set(Some(parent_context));
+        let parent_span_id = SpanId::next_id();
+        CURRENT_SPAN.set(Some(parent_span_id));
 
         let span = Span::new("child_span", &[]);
-        let inner = span.inner.as_ref().unwrap();
-        assert_eq!(inner.context.trace_id, parent_context.trace_id);
-        assert_ne!(inner.context.span_id, parent_context.span_id);
+        let span_id = span.span_id.unwrap();
+        assert_ne!(span_id, parent_span_id);
 
         CURRENT_SPAN.set(None);
     }
@@ -727,8 +694,17 @@ mod tests {
     #[test]
     fn span_root() {
         let span = Span::new("root_span", &[]);
-        let inner = span.inner.as_ref().unwrap();
-        assert_ne!(inner.context.span_id, SpanId(0));
+        let span_id = span.span_id.unwrap();
+        assert_ne!(span_id, SpanId(0));
+    }
+
+    #[test]
+    fn span_context_from_span() {
+        let span = Span::new("test_span", &[]);
+
+        let extracted_context = span.context();
+        let context = extracted_context.unwrap();
+        assert_eq!(context.process_id, get_collector().process_id());
     }
 
     #[test]
@@ -794,10 +770,6 @@ mod tests {
         let _root_guard = root_span.entered();
 
         let child_span = Span::new("child", &[]);
-        assert_eq!(
-            child_span.context().unwrap().trace_id,
-            root_context.trace_id
-        );
         assert_ne!(child_span.context().unwrap().span_id, root_context.span_id);
     }
 
@@ -817,7 +789,7 @@ mod tests {
     fn span_link() {
         let span = Span::new("test_span", &[]);
 
-        let link_context = SpanContext::new(TraceId(0), SpanId(0));
+        let link_context = SpanContext::new(ProcessId::from_raw(0), SpanId(0));
         span.add_link(link_context);
 
         let noop_span = Span::noop();
@@ -843,7 +815,7 @@ mod tests {
 
         // All these should work while span is entered
         span.add_event("entered_event", &[]);
-        span.add_link(SpanContext::new(TraceId(0), SpanId(0)));
+        span.add_link(SpanContext::new(ProcessId::from_raw(0), SpanId(0)));
         span.set_attribute(KeyValue::new("entered_key", true));
     }
 
@@ -863,7 +835,7 @@ mod tests {
 
         let _root_guard = Span::new("test_span", &[]).entered();
 
-        let link_context = SpanContext::new(TraceId(0), SpanId(0));
+        let link_context = SpanContext::new(ProcessId::from_raw(0), SpanId(0));
         CurrentSpan::add_link(link_context);
     }
 

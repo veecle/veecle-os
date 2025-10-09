@@ -3,19 +3,19 @@ use alloc::format;
 use alloc::string::String;
 use alloc::vec::Vec;
 
+use crate::SpanId;
 use crate::protocol::{
     InstanceMessage, LogMessage, SpanAddEventMessage, SpanAddLinkMessage, SpanCreateMessage,
     SpanSetAttributeMessage, TelemetryMessage, TracingMessage,
 };
 use crate::value::Value;
-use crate::{SpanId, TraceId};
 
 struct TelemetryData<'a> {
     spans: Vec<SpanCreateMessage<'a>>,
-    links: BTreeMap<(TraceId, SpanId), Vec<SpanAddLinkMessage>>,
-    attributes: BTreeMap<(TraceId, SpanId), Vec<SpanSetAttributeMessage<'a>>>,
-    events: BTreeMap<(TraceId, SpanId), Vec<SpanAddEventMessage<'a>>>,
-    logs: BTreeMap<(Option<TraceId>, Option<SpanId>), Vec<LogMessage<'a>>>,
+    links: BTreeMap<SpanId, Vec<SpanAddLinkMessage>>,
+    attributes: BTreeMap<SpanId, Vec<SpanSetAttributeMessage<'a>>>,
+    events: BTreeMap<SpanId, Vec<SpanAddEventMessage<'a>>>,
+    logs: BTreeMap<Option<SpanId>, Vec<LogMessage<'a>>>,
 }
 
 pub fn format_telemetry_tree(messages: Vec<InstanceMessage>) -> String {
@@ -35,28 +35,28 @@ pub fn format_telemetry_tree(messages: Vec<InstanceMessage>) -> String {
             TelemetryMessage::Tracing(TracingMessage::AddEvent(event)) => {
                 telemetry_data
                     .events
-                    .entry((event.trace_id, event.span_id))
+                    .entry(event.span_id)
                     .or_default()
                     .push(event);
             }
             TelemetryMessage::Tracing(TracingMessage::AddLink(link)) => {
                 telemetry_data
                     .links
-                    .entry((link.trace_id, link.span_id))
+                    .entry(link.span_id)
                     .or_default()
                     .push(link);
             }
             TelemetryMessage::Tracing(TracingMessage::SetAttribute(attr)) => {
                 telemetry_data
                     .attributes
-                    .entry((attr.trace_id, attr.span_id))
+                    .entry(attr.span_id)
                     .or_default()
                     .push(attr);
             }
             TelemetryMessage::Log(log_msg) => {
                 telemetry_data
                     .logs
-                    .entry((log_msg.trace_id, log_msg.span_id))
+                    .entry(log_msg.span_id)
                     .or_default()
                     .push(log_msg);
             }
@@ -128,7 +128,7 @@ fn build_tree_string(
         result.push_str("]\n");
 
         // Add span-specific attributes
-        if let Some(span_attrs) = data.attributes.get(&(span.trace_id, span.span_id)) {
+        if let Some(span_attrs) = data.attributes.get(&span.span_id) {
             for attr_msg in span_attrs {
                 for _ in 0..=depth {
                     result.push_str("    ");
@@ -142,20 +142,21 @@ fn build_tree_string(
         }
 
         // Add span links
-        if let Some(span_links) = data.links.get(&(span.trace_id, span.span_id)) {
+        if let Some(span_links) = data.links.get(&span.span_id) {
             for link_msg in span_links {
                 for _ in 0..=depth {
                     result.push_str("    ");
                 }
                 result.push_str(&format!(
-                    "+ link: trace={:x}, span={:x}\n",
-                    link_msg.link.trace_id.0, link_msg.link.span_id.0
+                    "+ link: process={:x} span={:x}\n",
+                    link_msg.link.process_id.to_raw(),
+                    link_msg.link.span_id.0
                 ));
             }
         }
 
         // Add span events
-        if let Some(span_events) = data.events.get(&(span.trace_id, span.span_id)) {
+        if let Some(span_events) = data.events.get(&span.span_id) {
             for event in span_events {
                 for _ in 0..=depth {
                     result.push_str("    ");
@@ -169,7 +170,7 @@ fn build_tree_string(
         }
 
         // Add span logs
-        if let Some(span_logs) = data.logs.get(&(Some(span.trace_id), Some(span.span_id))) {
+        if let Some(span_logs) = data.logs.get(&Some(span.span_id)) {
             for log_msg in span_logs {
                 for _ in 0..=depth {
                     result.push_str("    ");
@@ -188,7 +189,7 @@ fn build_tree_string(
 
     // Add unattached logs (logs without trace/span context) at root level
     if depth == 0
-        && let Some(unattached_logs) = data.logs.get(&(None, None))
+        && let Some(unattached_logs) = data.logs.get(&None)
     {
         for log_msg in unattached_logs {
             result.push_str(&format!(
