@@ -130,34 +130,6 @@ impl SpanContext {
             span_id,
         }
     }
-
-    /// Creates a `SpanContext` from the current local parent span. If there is no
-    /// local parent span, this function will return `None`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use veecle_telemetry::*;
-    ///
-    /// let span = Span::new("root", &[]);
-    /// let _guard = span.entered();
-    ///
-    /// let span_context = SpanContext::current();
-    /// assert!(span_context.is_some());
-    /// ```
-    pub fn current() -> Option<Self> {
-        #[cfg(not(feature = "enable"))]
-        {
-            None
-        }
-
-        #[cfg(feature = "enable")]
-        {
-            crate::span::CURRENT_SPAN
-                .get()
-                .map(|span_id| Self::new(crate::collector::get_collector().process_id(), span_id))
-        }
-    }
 }
 
 #[cfg(all(test, feature = "std"))]

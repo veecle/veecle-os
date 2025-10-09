@@ -206,8 +206,6 @@ pub struct LogMessage<'a> {
     /// Key-value attributes providing additional context
     #[serde(borrow)]
     pub attributes: AttributeListType<'a>,
-    /// Optional span id for correlation with traces
-    pub span_id: Option<SpanId>,
 }
 
 #[cfg(feature = "alloc")]
@@ -220,7 +218,6 @@ impl ToStatic for LogMessage<'_> {
             severity: self.severity,
             body: self.body.to_static(),
             attributes: self.attributes.to_static(),
-            span_id: self.span_id,
         }
     }
 }
@@ -286,8 +283,6 @@ impl ToStatic for TracingMessage<'_> {
 pub struct SpanCreateMessage<'a> {
     /// The unique identifier (within the associated process) for this span.
     pub span_id: SpanId,
-    /// The parent span id, if this is a child span
-    pub parent_span_id: Option<SpanId>,
 
     /// The name of the span
     #[serde(borrow)]
@@ -308,7 +303,6 @@ impl ToStatic for SpanCreateMessage<'_> {
     fn to_static(&self) -> Self::Static {
         SpanCreateMessage {
             span_id: self.span_id,
-            parent_span_id: self.parent_span_id,
             name: self.name.to_static(),
             start_time_unix_nano: self.start_time_unix_nano,
             attributes: self.attributes.to_static(),
@@ -349,8 +343,9 @@ pub struct SpanCloseMessage {
 /// Message indicating an attribute has been set on a span.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpanSetAttributeMessage<'a> {
-    /// The span the attribute is being set on
-    pub span_id: SpanId,
+    /// The span the attribute is being set on, if [`None`] then this applies to the "current span"
+    /// as determined by tracking [`SpanEnterMessage`] and [`SpanExitMessage`] pairs.
+    pub span_id: Option<SpanId>,
 
     /// The attribute being set
     #[serde(borrow)]
@@ -373,12 +368,14 @@ impl ToStatic for SpanSetAttributeMessage<'_> {
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "alloc", derive(Deserialize))]
 pub struct SpanAddEventMessage<'a> {
-    /// The span the event is being added to
-    pub span_id: SpanId,
+    /// The span the event is being added to, if [`None`] then this applies to the "current span"
+    /// as determined by tracking [`SpanEnterMessage`] and [`SpanExitMessage`] pairs.
+    pub span_id: Option<SpanId>,
 
     /// The name of the event
     #[serde(borrow)]
     pub name: StringType<'a>,
+
     /// Timestamp when the event occurred
     pub time_unix_nano: u64,
 
@@ -407,8 +404,9 @@ impl ToStatic for SpanAddEventMessage<'_> {
 /// that are not parent-child hierarchies.
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct SpanAddLinkMessage {
-    /// The span the link is being added to
-    pub span_id: SpanId,
+    /// The span the link is being added to, if [`None`] then this applies to the "current span"
+    /// as determined by tracking [`SpanEnterMessage`] and [`SpanExitMessage`] pairs.
+    pub span_id: Option<SpanId>,
 
     /// The span context being linked to
     pub link: SpanContext,
@@ -427,7 +425,7 @@ mod tests {
         let static_str: StringType<'static> = "static".into();
 
         let _event = SpanAddEventMessage {
-            span_id: SpanId(0),
+            span_id: Some(SpanId(0)),
             name: static_str,
             time_unix_nano: 0,
             attributes: attribute_list_from_slice(&[]),
@@ -436,7 +434,7 @@ mod tests {
         let borrowed_str: StringType = "borrowed".into();
 
         let _event = SpanAddEventMessage {
-            span_id: SpanId(0),
+            span_id: Some(SpanId(0)),
             name: borrowed_str,
             time_unix_nano: 0,
             attributes: attribute_list_from_slice(&[]),
@@ -450,7 +448,7 @@ mod tests {
         let owned: StringType<'static> = StringType::from(string);
 
         let _event = SpanAddEventMessage {
-            span_id: SpanId(0),
+            span_id: Some(SpanId(0)),
             name: owned,
             time_unix_nano: 0,
             attributes: attribute_list_from_slice(&[]),
@@ -477,7 +475,7 @@ mod tests {
 
         let attributes = [attribute];
         let span_event = SpanAddEventMessage {
-            span_id: SpanId(0),
+            span_id: Some(SpanId(0)),
             name: borrowed_name,
             time_unix_nano: 0,
             attributes: attribute_list_from_slice(&attributes),
