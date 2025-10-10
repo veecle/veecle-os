@@ -25,12 +25,14 @@ build-public-rustdoc:
     cargo doc --no-deps --all-features \
         --package veecle-os \
         --package veecle-osal-api \
+        --package veecle-osal-embassy \
         --package veecle-osal-freertos \
         --package veecle-osal-std \
         --package veecle-os-runtime \
         --package veecle-os-data-support-can \
         --package veecle-os-data-support-someip \
-        --package veecle-os-test
+        --package veecle-os-test \
+        --package veecle-telemetry
 
 # Build the user manual and expose them at http://0.0.0.0:8000/
 serve-user-manual: build-user-manual
