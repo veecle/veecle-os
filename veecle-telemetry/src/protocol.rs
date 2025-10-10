@@ -25,6 +25,8 @@
 
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
+use core::fmt;
+use core::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
@@ -56,9 +58,7 @@ impl ToStatic for AttributeListType<'_> {
 }
 
 /// A process-unique id identifying a thread within a process.
-#[derive(
-    Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Default, Serialize, Deserialize,
-)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct ThreadId(u64);
 
 impl ThreadId {
@@ -89,14 +89,158 @@ impl ThreadId {
     }
 }
 
+impl fmt::Display for ThreadId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:016x}", self.0)
+    }
+}
+
+impl FromStr for ThreadId {
+    type Err = core::num::ParseIntError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        u64::from_str_radix(s, 16).map(ThreadId)
+    }
+}
+
+impl serde::Serialize for ThreadId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut hex_bytes = [0u8; size_of::<u64>() * 2];
+        hex::encode_to_slice(self.0.to_le_bytes(), &mut hex_bytes).unwrap();
+
+        serializer.serialize_str(str::from_utf8(&hex_bytes).unwrap())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ThreadId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let bytes: [u8; size_of::<u64>()] = hex::serde::deserialize(deserializer)?;
+
+        Ok(ThreadId(u64::from_le_bytes(bytes)))
+    }
+}
+
 /// A globally-unique id identifying a thread of execution.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Default, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Default)]
 pub struct ExecutionId {
     /// The globally-unique id for the process this thread is within.
     pub process: ProcessId,
 
     /// The process-unique id for this thread within the process.
     pub thread: ThreadId,
+}
+
+impl fmt::Display for ExecutionId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Self { process, thread } = self;
+        write!(f, "{process}:{thread}")
+    }
+}
+
+/// Errors that can occur while parsing [`ExecutionId`] from a string.
+#[derive(Clone, Debug)]
+pub enum ParseExecutionIdError {
+    /// The string is missing a `:` separator.
+    MissingSeparator,
+
+    /// The embedded [`ProcessId`] failed to parse.
+    InvalidProcessId(core::num::ParseIntError),
+
+    /// The embedded [`ThreadId`] failed to parse.
+    InvalidThreadId(core::num::ParseIntError),
+}
+
+impl fmt::Display for ParseExecutionIdError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::MissingSeparator => f.write_str("missing ':' separator"),
+            Self::InvalidProcessId(_) => f.write_str("failed to parse process id"),
+            Self::InvalidThreadId(_) => f.write_str("failed to parse thread id"),
+        }
+    }
+}
+
+impl core::error::Error for ParseExecutionIdError {
+    fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
+        match self {
+            Self::MissingSeparator => None,
+            Self::InvalidProcessId(error) => Some(error),
+            Self::InvalidThreadId(error) => Some(error),
+        }
+    }
+}
+
+impl FromStr for ExecutionId {
+    type Err = ParseExecutionIdError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let Some((process, thread)) = s.split_once(":") else {
+            return Err(ParseExecutionIdError::MissingSeparator);
+        };
+        let process =
+            ProcessId::from_str(process).map_err(ParseExecutionIdError::InvalidProcessId)?;
+        let thread = ThreadId::from_str(thread).map_err(ParseExecutionIdError::InvalidThreadId)?;
+        Ok(Self { process, thread })
+    }
+}
+
+impl serde::Serialize for ExecutionId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut bytes = [0u8; 49];
+
+        hex::encode_to_slice(self.process.to_raw().to_le_bytes(), &mut bytes[..32]).unwrap();
+        bytes[32] = b':';
+        hex::encode_to_slice(self.thread.0.to_le_bytes(), &mut bytes[33..]).unwrap();
+
+        serializer.serialize_str(str::from_utf8(&bytes).unwrap())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ExecutionId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        let string = <&str>::deserialize(deserializer)?;
+
+        if string.len() != 49 {
+            return Err(D::Error::invalid_length(
+                string.len(),
+                &"expected 49 byte string",
+            ));
+        }
+
+        let bytes = string.as_bytes();
+
+        if bytes[32] != b':' {
+            return Err(D::Error::invalid_value(
+                serde::de::Unexpected::Str(string),
+                &"expected : separator at byte 33",
+            ));
+        }
+
+        let mut process = [0; 16];
+        hex::decode_to_slice(&bytes[..32], &mut process).map_err(D::Error::custom)?;
+
+        let mut thread = [0; 8];
+        hex::decode_to_slice(&bytes[33..], &mut thread).map_err(D::Error::custom)?;
+
+        Ok(Self {
+            process: ProcessId::from_raw(u128::from_le_bytes(process)),
+            thread: ThreadId::from_raw(u64::from_le_bytes(thread)),
+        })
+    }
 }
 
 /// A telemetry message associated with a specific execution thread.
@@ -412,10 +556,114 @@ pub struct SpanAddLinkMessage {
 
 #[cfg(test)]
 mod tests {
+    use alloc::format;
     #[cfg(feature = "alloc")]
     use alloc::string::String;
 
     use super::*;
+
+    #[test]
+    fn thread_id_format_from_str_roundtrip() {
+        let test_cases = [0u64, 1, 0x123, 0xFEDCBA9876543210, u64::MAX, u64::MAX - 1];
+
+        for value in test_cases {
+            let thread_id = ThreadId::from_raw(value);
+            let formatted = format!("{thread_id}");
+            let parsed = formatted.parse::<ThreadId>().unwrap();
+            assert_eq!(thread_id, parsed, "Failed roundtrip for value {value:#x}");
+        }
+    }
+
+    #[test]
+    fn thread_id_serde_roundtrip() {
+        let test_cases = [
+            ThreadId::from_raw(0),
+            ThreadId::from_raw(1),
+            ThreadId::from_raw(0x123),
+            ThreadId::from_raw(0xFEDCBA9876543210),
+            ThreadId::from_raw(u64::MAX),
+            ThreadId::from_raw(u64::MAX - 1),
+        ];
+
+        for original in test_cases {
+            let json = serde_json::to_string(&original).unwrap();
+            let deserialized: ThreadId = serde_json::from_str(&json).unwrap();
+            assert_eq!(
+                original, deserialized,
+                "JSON roundtrip failed for {:#x}",
+                original.0
+            );
+        }
+    }
+
+    #[test]
+    fn execution_id_format_from_str_roundtrip() {
+        let test_cases = [
+            ExecutionId {
+                process: ProcessId::from_raw(0),
+                thread: ThreadId::from_raw(0),
+            },
+            ExecutionId {
+                process: ProcessId::from_raw(0x123456789ABCDEF0FEDCBA9876543210),
+                thread: ThreadId::from_raw(0xFEDCBA9876543210),
+            },
+            ExecutionId {
+                process: ProcessId::from_raw(u128::MAX),
+                thread: ThreadId::from_raw(u64::MAX),
+            },
+            ExecutionId {
+                process: ProcessId::from_raw(1),
+                thread: ThreadId::from_raw(1),
+            },
+        ];
+
+        for execution_id in test_cases {
+            let formatted = format!("{execution_id}");
+            let parsed = formatted.parse::<ExecutionId>().unwrap();
+            assert_eq!(
+                execution_id,
+                parsed,
+                "Failed roundtrip for {:#x}:{:#x}",
+                execution_id.process.to_raw(),
+                execution_id.thread.0
+            );
+        }
+    }
+
+    #[test]
+    fn execution_id_serde_roundtrip() {
+        let test_cases = [
+            ExecutionId {
+                process: ProcessId::from_raw(0),
+                thread: ThreadId::from_raw(0),
+            },
+            ExecutionId {
+                process: ProcessId::from_raw(0x123456789ABCDEF0FEDCBA9876543210),
+                thread: ThreadId::from_raw(0xFEDCBA9876543210),
+            },
+            ExecutionId {
+                process: ProcessId::from_raw(u128::MAX),
+                thread: ThreadId::from_raw(u64::MAX),
+            },
+            ExecutionId {
+                process: ProcessId::from_raw(1),
+                thread: ThreadId::from_raw(1),
+            },
+        ];
+
+        for original in test_cases {
+            let json = serde_json::to_string(&original).unwrap();
+            let deserialized: ExecutionId = serde_json::from_str(&json).unwrap();
+            assert_eq!(
+                original.process, deserialized.process,
+                "JSON roundtrip failed for process"
+            );
+            assert_eq!(
+                original.thread, deserialized.thread,
+                "JSON roundtrip failed for thread"
+            );
+        }
+    }
 
     #[test]
     fn string_type_conversions() {

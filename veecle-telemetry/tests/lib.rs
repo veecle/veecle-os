@@ -290,11 +290,11 @@ fn current_span_integration() {
         indoc! {r#"
             root []
                 + attr: runtime_attr="added_later"
-                + link: process=123456789abcdef0 span=fedcba9876543210
+                + link: span=0000000000000000123456789abcdef0:fedcba9876543210
                 + event: test_event [event_key="event_value", event_num=42]
                 child [child_attr=true]
                     + attr: child_runtime_attr=100
-                    + link: process=1111111111111111 span=2222222222222222
+                    + link: span=00000000000000001111111111111111:2222222222222222
                     + event: child_event [child_event_data="nested"]
         "#}
     );
