@@ -9,8 +9,10 @@
 use std::time::Duration;
 
 use indoc::indoc;
+use pretty_assertions::assert_eq;
 use serial_test::serial;
 use tokio::runtime::Builder;
+
 use veecle_telemetry::future::FutureExt;
 use veecle_telemetry::protocol::Severity;
 use veecle_telemetry::test_helpers::format_telemetry_tree;
@@ -442,6 +444,20 @@ fn test_trailing_comma_support() {
         veecle_telemetry::event!("empty event",);
     }
 
-    let messages = exporter.take_messages();
-    assert_eq!(messages.len(), 12);
+    let graph = format_telemetry_tree(exporter.take_messages());
+    assert_eq!(
+        graph,
+        indoc! {r#"
+            root span [root_attr=123]
+            root span [root_attr=123]
+            + log: [Trace] empty log []
+            + log: [Trace] empty log []
+            + log: [Info] single attr [value=1]
+            + log: [Info] single attr [value=1]
+            + log: [Debug] multiple attrs [key1="val1", key2=42]
+            + log: [Debug] multiple attrs [key1="val1", key2=42]
+            + log: [Warn] mixed syntax [identifier="test", literal=true]
+            + log: [Warn] mixed syntax [identifier="test", literal=true]
+        "#}
+    );
 }
