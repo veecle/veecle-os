@@ -36,6 +36,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1
         with:
+          cache-bin: "false"
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # `someip` tests `cargo run` this binary internally, pre-build it so they don't timeout.
