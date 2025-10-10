@@ -16,7 +16,7 @@ use veecle_orchestrator_protocol::{Info, InstanceId, LinkTarget, Request, Respon
 ///
 /// Communicates with the control socket of a local Veecle OS Orchestrator.
 #[derive(clap::Parser, Debug)]
-#[command(disable_help_subcommand = true)]
+#[command(disable_help_subcommand = true, version)]
 pub struct Arguments {
     /// The socket address to connect to (Unix path or TCP host:port), can be set via environment for easy sharing between the orchestrator and CLI.
     #[arg(long, env = "VEECLE_ORCHESTRATOR_SOCKET")]

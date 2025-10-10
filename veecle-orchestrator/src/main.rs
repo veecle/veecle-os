@@ -22,6 +22,7 @@ mod eyre_tracing_error;
 mod telemetry;
 
 #[derive(Parser)]
+#[command(version)]
 struct Arguments {
     #[arg(long, env = "VEECLE_ORCHESTRATOR_SOCKET")]
     control_socket: UnresolvedMultiSocketAddress,
