@@ -204,11 +204,7 @@ fn build_tree_string(
                 for _ in 0..=depth {
                     result.push_str("    ");
                 }
-                result.push_str(&format!(
-                    "+ link: process={:x} span={:x}\n",
-                    link_msg.link.process_id.to_raw(),
-                    link_msg.link.span_id.0
-                ));
+                result.push_str(&format!("+ link: span={}\n", link_msg.link));
             }
         }
 
