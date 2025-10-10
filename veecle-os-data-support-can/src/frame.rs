@@ -96,14 +96,21 @@ mod tests {
     use crate::Frame;
 
     #[test]
-    fn test_deserialize_frame() {
-        let json = r#"{
-            "id": 0,
-            "data": [1, 2, 3, 4]
-        }"#;
+    fn test_deserialize_frame_standard() {
+        let json = r#"{"id":{"Standard":291},"data":[1,2,3,4]}"#;
         let frame: Frame = serde_json::from_str(json).unwrap();
-        assert_eq!(frame.id(), crate::StandardId::new(0).unwrap().into());
+        assert_eq!(frame.id(), crate::StandardId::new(0x123).unwrap().into());
         assert_eq!(frame.data(), &[1, 2, 3, 4]);
+        assert_eq!(json, serde_json::to_string(&frame).unwrap());
+    }
+
+    #[test]
+    fn test_deserialize_frame_extended() {
+        let json = r#"{"id":{"Extended":74565},"data":[1,2,3,4]}"#;
+        let frame: Frame = serde_json::from_str(json).unwrap();
+        assert_eq!(frame.id(), crate::ExtendedId::new(74565).unwrap().into());
+        assert_eq!(frame.data(), &[1, 2, 3, 4]);
+        assert_eq!(json, serde_json::to_string(&frame).unwrap());
     }
 
     /// More of an example of the output format than a real test, but as a test to force updating it.
