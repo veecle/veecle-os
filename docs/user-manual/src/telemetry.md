@@ -4,7 +4,7 @@
 
 Veecle OS has features to learn about the execution of Veecle OS applications.
 
-The [`veecle-telemetry` crate](crate@veecle-telemetry) provides functions to add events and spans to Rust programs.
+The [`veecle-telemetry` crate][`crate@veecle_telemetry`] provides functions to add events and spans to Rust programs.
 
 The Veecle OS crates themselves are instrumented, and you can instrument your code with the `veecle_os::telemetry` macros.
 Veecle OS applications can use a [collector][`fn@veecle_os::telemetry::collector::set_exporter`] to define where these events and spans are sent.
@@ -27,7 +27,7 @@ The result is that the Veecle OS application prints serialized traces to standar
 
 ## Viewing serialized traces
 
-See [installing the `veecle-telemetry-ui` graphical telemetry viewer](/crates-and-tools.md#installing-the-veecle-telemetry-ui-graphical-telemetry-viewer).
+See [installing the `veecle-telemetry-ui` graphical telemetry viewer](./crates-and-tools.md#installing-the-veecle-telemetry-ui-graphical-telemetry-viewer).
 
 If `cargo run ...` starts a program that emits serialized traces, then you can pipe the traces into `veecle-telemetry-ui` to read and display telemetry in real time:
 
