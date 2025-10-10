@@ -98,6 +98,8 @@ echo
 echo 'Starting veecle-telemetry-server and orchestrators'
 echo
 
+export VEECLE_ORCHESTRATOR_LOG=debug
+
 run-background "$UI_SERVER" --bind "$EXAMPLE_IP" --port "$UI_WEBSOCKET_PORT" --telemetry-socket "$TELEMETRY_SOCKET"
 run-background "$ORCHESTRATOR" --control-socket "$CONTROL1" --ipc-socket $IPC1 --telemetry-socket "$TELEMETRY_SOCKET"
 run-background "$ORCHESTRATOR" --control-socket "$CONTROL2" --ipc-socket $IPC2 --telemetry-socket "$TELEMETRY_SOCKET"
@@ -123,6 +125,18 @@ run "$CLI" --socket "$CONTROL1" link add --type $mod::Pong --to $PING_ID
 
 run "$CLI" --socket "$CONTROL1" runtime list
 run "$CLI" --socket "$CONTROL1" link list
+
+run "$CLI" --socket "$CONTROL2" runtime list
+run "$CLI" --socket "$CONTROL2" link list
+
+run "$CLI" --socket "$CONTROL2" clear
+
+run "$CLI" --socket "$CONTROL2" runtime list
+run "$CLI" --socket "$CONTROL2" link list
+
+run "$CLI" --socket "$CONTROL2" runtime add "$PONG" --id $PONG_ID --copy
+run "$CLI" --socket "$CONTROL2" link add --type $mod::Ping --to $PONG_ID
+run "$CLI" --socket "$CONTROL2" link add --type $mod::Pong --to $IPC1
 
 run "$CLI" --socket "$CONTROL2" runtime list
 run "$CLI" --socket "$CONTROL2" link list

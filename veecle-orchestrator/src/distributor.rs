@@ -23,6 +23,10 @@ enum Command {
     GetInfo {
         response_tx: oneshot::Sender<BTreeMap<String, Vec<LinkTarget>>>,
     },
+
+    Clear {
+        response_tx: oneshot::Sender<()>,
+    },
 }
 
 /// Handles routing `EncodedStorable` messages between different instances based on the configured links.
@@ -108,6 +112,17 @@ impl Distributor {
         let info = response_rx.await?;
 
         Ok(info)
+    }
+
+    /// Clears all links and instance registrations.
+    pub async fn clear(&self) -> eyre::Result<()> {
+        let (response_tx, response_rx) = oneshot::channel();
+
+        self.command_tx.send(Command::Clear { response_tx }).await?;
+
+        response_rx.await?;
+
+        Ok(())
     }
 }
 
@@ -223,6 +238,11 @@ impl Inner {
             }
             Command::GetInfo { response_tx } => {
                 let _ = response_tx.send(self.links.clone());
+            }
+            Command::Clear { response_tx } => {
+                self.links.clear();
+                self.instance_txs.clear();
+                let _ = response_tx.send(());
             }
         }
     }

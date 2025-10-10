@@ -197,6 +197,11 @@ async fn handle_request(
             runtimes: conductor.info(),
             links: distributor.info().await?,
         })?,
+        Request::Clear => {
+            conductor.clear().await;
+            distributor.clear().await.wrap_err("clearing distributor")?;
+            encode(())?
+        }
     };
 
     Ok((response, None))
