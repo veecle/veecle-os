@@ -4,13 +4,36 @@
 
 Ready-to-use actors that users can just bring into their application are at the heart of veecle-os.
 Breaking changes to the actor API, and by extension reader/writer API, fracture the actor ecosystem.
-By defining the basic reader and writer types early and building features on top, previous versions remain compatible even if they might not utilize the latest features.
 
-If we can build everything on top of the single-/multi-reader/writer by using abstractions like `Queued<T>`, we are in a position to expand our functionality in a non-breaking way and everything build on the initial implementation continues to work.
+## Implementation
 
-`Queued<T>` is a struct to use as slot value to enable a slot to contain an ordered list of values.
-Can be implemented using a `Queued<T: Storable>` type within a slot.
+Two options for implementing more reader and writer variants are introducing new types of readers or wrapping the `T: Storable` type.
+
+New types means introducing `QueueReader` and similar.
+
+Wrapping can be done by using a `Queue<T>` struct as the type parameter for a `Reader`.
 Convenience methods can be implemented using a `IsQueue` trait that's implemented for `Queued<T>` and `impl<T: Storable + IsQueue + 'static> Reader<...>{...}`.
+This leaves the question of how to default non-wrapped case.
+The `Reader` methods like `read` will either be available on every `Reader`, even though it contains a wrapped value or require a marker trait to be implemented for every non-wrapped `Storable`.
+
+### Challenges
+
+#### `T: Storable` Defines `Slot<T>` Type
+
+The reader or writer cannot affect the type `T` in `Slot<T>`.
+`T` is defined by the user by passing types to the `execute!` macro.
+
+While the `Slot` implementation can be decoupled from the `Storable` trait, the declaration of `T` cannot with the current implementation.
+
+#### Actors Must Be Unique
+
+The requirement for unique actors prevents using `N` of the same actors to process the output of a multi-writer.
+The requirement is currently imposed by having a single writer per slot.
+
+## Scaling
+
+N:1 and 1:N reader and writer combinations provide a way to scale applications without fundamental changes to the actors.
+A single multi-writer can distribute data or work to a user-defined amount of readers.
 
 ## Slot Value State
 
