@@ -2,7 +2,7 @@
 //!
 //! See [`Store`].
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Formatter;
 use std::ops::{Add, Deref, Sub};
 #[cfg(not(target_arch = "wasm32"))]
@@ -12,8 +12,10 @@ use anyhow::Context;
 use egui::Color32;
 use indexmap::{IndexMap, IndexSet};
 use serde::{Deserialize, Serialize};
-use veecle_telemetry::protocol::{InstanceMessage, TelemetryMessage, TracingMessage};
-use veecle_telemetry::{SpanContext, SpanId as TelemetrySpanId, TraceId, Value as TelemetryValue};
+use veecle_telemetry::protocol::{
+    ExecutionId, InstanceMessage, ProcessId, TelemetryMessage, TracingMessage,
+};
+use veecle_telemetry::{SpanContext, SpanId as TelemetrySpanId, Value as TelemetryValue};
 #[cfg(target_arch = "wasm32")]
 use web_time::Instant;
 
@@ -34,6 +36,10 @@ pub struct Store {
     root_spans: IndexSet<SpanContext>,
     logs: Vec<Log>,
     actors: HashSet<String>,
+
+    /// Tracks the currently entered spans for a specific thread of execution to mark the parent of
+    /// newly created spans.
+    execution_contexts: HashMap<ExecutionId, Vec<SpanContext>>,
 
     /// The earliest known timestamp.
     ///
@@ -61,6 +67,7 @@ impl Default for Store {
             root_spans: IndexSet::default(),
             logs: Vec::default(),
             actors: HashSet::default(),
+            execution_contexts: HashMap::default(),
             start: Timestamp::MAX,
             end: Timestamp::MIN,
             last_update: Instant::now(),
@@ -71,7 +78,7 @@ impl Default for Store {
 
 // Program span context for logs without a specific span.
 const PROGRAM_SPAN_CONTEXT: SpanContext = SpanContext {
-    trace_id: TraceId(0),
+    process_id: ProcessId::from_raw(0),
     span_id: TelemetrySpanId(0),
 };
 
@@ -170,16 +177,16 @@ impl Store {
 
         let InstanceMessage {
             // TODO(DEV-605): support filtering by execution.
-            execution: _,
+            execution,
             message,
         } = instance_message;
 
         match message {
             TelemetryMessage::Tracing(tracing_msg) => {
-                self.process_tracing_message(tracing_msg);
+                self.process_tracing_message(execution, tracing_msg);
             }
             TelemetryMessage::Log(log_msg) => {
-                self.process_log_message(log_msg);
+                self.process_log_message(execution, log_msg);
             }
             TelemetryMessage::TimeSync(_) => {
                 // TODO(DEV-601): handle these messages.
@@ -196,16 +203,19 @@ impl Store {
         timestamp
     }
 
+    /// Returns the span at the top of the stack for `execution_id`.
+    fn current_span_for(&self, execution_id: ExecutionId) -> Option<SpanContext> {
+        self.execution_contexts.get(&execution_id)?.last().copied()
+    }
+
     /// Processes a single tracing message.
-    fn process_tracing_message(&mut self, tracing_msg: TracingMessage) {
+    fn process_tracing_message(&mut self, execution_id: ExecutionId, tracing_msg: TracingMessage) {
         match tracing_msg {
             TracingMessage::CreateSpan(span_msg) => {
                 let timestamp = self.update_timestamp(span_msg.start_time_unix_nano);
 
-                let context = SpanContext::new(span_msg.trace_id, span_msg.span_id);
-                let parent_context = span_msg
-                    .parent_span_id
-                    .map(|parent_id| SpanContext::new(span_msg.trace_id, parent_id));
+                let context = SpanContext::new(execution_id.process, span_msg.span_id);
+                let parent_context = self.current_span_for(execution_id);
 
                 let mut parent_span = parent_context.map(|parent| {
                     self.spans
@@ -250,7 +260,11 @@ impl Store {
             TracingMessage::EnterSpan(enter_msg) => {
                 let timestamp = self.update_timestamp(enter_msg.time_unix_nano);
 
-                let span_context = SpanContext::new(enter_msg.trace_id, enter_msg.span_id);
+                let span_context = SpanContext::new(execution_id.process, enter_msg.span_id);
+                self.execution_contexts
+                    .entry(execution_id)
+                    .or_default()
+                    .push(span_context);
 
                 let span = self
                     .spans
@@ -266,7 +280,17 @@ impl Store {
             TracingMessage::ExitSpan(exit_msg) => {
                 let timestamp = self.update_timestamp(exit_msg.time_unix_nano);
 
-                let span_context = SpanContext::new(exit_msg.trace_id, exit_msg.span_id);
+                let span_context = SpanContext::new(execution_id.process, exit_msg.span_id);
+                let expected = self
+                    .execution_contexts
+                    .entry(execution_id)
+                    .or_default()
+                    .pop();
+                if expected != Some(span_context) {
+                    log::warn!(
+                        "execution exited span that wasn't at the top of its stack: expected={expected:?} got={span_context:?}"
+                    );
+                }
                 let span = self
                     .spans
                     .get_mut(&span_context)
@@ -288,7 +312,7 @@ impl Store {
             TracingMessage::CloseSpan(close_msg) => {
                 let timestamp = self.update_timestamp(close_msg.end_time_unix_nano);
 
-                let span_context = SpanContext::new(close_msg.trace_id, close_msg.span_id);
+                let span_context = SpanContext::new(execution_id.process, close_msg.span_id);
                 let span = self
                     .spans
                     .get_mut(&span_context)
@@ -306,7 +330,23 @@ impl Store {
             TracingMessage::AddEvent(event_msg) => {
                 let timestamp = self.update_timestamp(event_msg.time_unix_nano);
 
-                let span_context = SpanContext::new(event_msg.trace_id, event_msg.span_id);
+                let Some(span_context) = event_msg
+                    .span_id
+                    .map(|span_id| SpanContext::new(execution_id.process, span_id))
+                    .or_else(|| {
+                        self.execution_contexts
+                            .entry(execution_id)
+                            .or_default()
+                            .last()
+                            .cloned()
+                    })
+                else {
+                    log::warn!(
+                        "received AddEvent for current span but no current span known for {execution_id:?}"
+                    );
+                    return;
+                };
+
                 let span = self
                     .spans
                     .get_mut(&span_context)
@@ -342,7 +382,17 @@ impl Store {
                 });
             }
             TracingMessage::AddLink(link_msg) => {
-                let span_context = SpanContext::new(link_msg.trace_id, link_msg.span_id);
+                let Some(span_context) = link_msg
+                    .span_id
+                    .map(|span_id| SpanContext::new(execution_id.process, span_id))
+                    .or_else(|| self.current_span_for(execution_id))
+                else {
+                    log::warn!(
+                        "received AddLink for current span but no current span known for {execution_id:?}"
+                    );
+                    return;
+                };
+
                 let linked_span_context = link_msg.link;
 
                 let span = self
@@ -352,7 +402,17 @@ impl Store {
                 span.links.push(linked_span_context);
             }
             TracingMessage::SetAttribute(attr_msg) => {
-                let span_context = SpanContext::new(attr_msg.trace_id, attr_msg.span_id);
+                let Some(span_context) = attr_msg
+                    .span_id
+                    .map(|span_id| SpanContext::new(execution_id.process, span_id))
+                    .or_else(|| self.current_span_for(execution_id))
+                else {
+                    log::warn!(
+                        "received SetAttribute for current span but no current span known for {execution_id:?}"
+                    );
+                    return;
+                };
+
                 let span = self
                     .spans
                     .get_mut(&span_context)
@@ -366,17 +426,16 @@ impl Store {
     }
 
     /// Processes a single log message.
-    fn process_log_message(&mut self, log_msg: veecle_telemetry::protocol::LogMessage) {
+    fn process_log_message(
+        &mut self,
+        execution_id: ExecutionId,
+        log_msg: veecle_telemetry::protocol::LogMessage,
+    ) {
         let timestamp = self.update_timestamp(log_msg.time_unix_nano);
 
         // Find the span this log belongs to, or use the program span.
-        let span_context = log_msg
-            .span_id
-            .and_then(|span_id| {
-                log_msg
-                    .trace_id
-                    .map(|trace_id| SpanContext::new(trace_id, span_id))
-            })
+        let span_context = self
+            .current_span_for(execution_id)
             .unwrap_or(PROGRAM_SPAN_CONTEXT);
 
         let span = if let Some(span) = self.spans.get_mut(&span_context) {

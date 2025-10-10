@@ -60,8 +60,15 @@ where
 
     /// Takes the current value of the slot, leaving behind `None`.
     #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
-    pub(crate) fn take(&self) -> Option<T::DataType> {
-        self.borrow_mut().take()
+    pub(crate) fn take(
+        &self,
+        #[cfg(feature = "veecle-telemetry")] span_context: Option<SpanContext>,
+    ) -> Option<T::DataType> {
+        self.borrow_mut(
+            #[cfg(feature = "veecle-telemetry")]
+            span_context,
+        )
+        .take()
     }
 }
 
@@ -100,15 +107,17 @@ where
         self.item.borrow()
     }
 
-    pub(super) fn borrow_mut(&self) -> RefMut<'_, Option<T::DataType>> {
+    pub(super) fn borrow_mut(
+        &self,
+        #[cfg(feature = "veecle-telemetry")] span_context: Option<SpanContext>,
+    ) -> RefMut<'_, Option<T::DataType>> {
         #[cfg(feature = "veecle-telemetry")]
         {
             // TODO(DEV-531): this should be added, but only for an in place update
             // if let Some(writer_context) = self.writer_context.get() {
             //     veecle_telemetry::CurrentSpan::add_link(writer_context);
             // }
-            self.writer_context
-                .set(veecle_telemetry::SpanContext::current());
+            self.writer_context.set(span_context);
         }
 
         self.item.borrow_mut()
@@ -120,8 +129,15 @@ where
     }
 
     #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
-    pub(crate) fn modify(&self, f: impl FnOnce(&mut Option<T::DataType>)) {
-        f(&mut *self.borrow_mut())
+    pub(crate) fn modify(
+        &self,
+        f: impl FnOnce(&mut Option<T::DataType>),
+        #[cfg(feature = "veecle-telemetry")] span_context: Option<SpanContext>,
+    ) {
+        f(&mut *self.borrow_mut(
+            #[cfg(feature = "veecle-telemetry")]
+            span_context,
+        ))
     }
 
     pub(crate) fn increment_generation(self: Pin<&Self>) {

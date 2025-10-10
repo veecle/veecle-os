@@ -25,8 +25,6 @@
 
 use crate::KeyValue;
 #[cfg(feature = "enable")]
-use crate::SpanContext;
-#[cfg(feature = "enable")]
 use crate::collector::get_collector;
 use crate::protocol::Severity;
 #[cfg(feature = "enable")]
@@ -84,20 +82,11 @@ pub fn log(severity: Severity, body: &'static str, attributes: &'_ [KeyValue<'st
 
     #[cfg(feature = "enable")]
     {
-        let current_context = SpanContext::current();
-        let (trace_id, span_id) = if let Some(context) = current_context {
-            (Some(context.trace_id), Some(context.span_id))
-        } else {
-            (None, None)
-        };
-
         let log_message = LogMessage {
             time_unix_nano: now().as_nanos(),
             severity,
             body: body.into(),
             attributes: attribute_list_from_slice(attributes),
-            trace_id,
-            span_id,
         };
 
         get_collector().log_message(log_message);

@@ -26,6 +26,7 @@ veecle-telemetry-macros = { workspace = true }
 
 [dev-dependencies]
 indoc = { workspace = true }
+pretty_assertions = { workspace = true, features = ["std"] }
 serial_test = { workspace = true }
 tokio = { workspace = true }
 veecle-telemetry = { path = ".", features = ["enable", "std"] }

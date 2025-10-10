@@ -87,9 +87,16 @@ where
     }
 
     /// Takes the current value of the type, leaving behind `None`.
-    #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
     pub fn take(&mut self) -> Option<T::DataType> {
-        let value = self.waiter.take();
+        #[cfg(feature = "veecle-telemetry")]
+        let span = veecle_telemetry::span!("take");
+        #[cfg(feature = "veecle-telemetry")]
+        let _guard = span.enter();
+
+        let value = self.waiter.take(
+            #[cfg(feature = "veecle-telemetry")]
+            span.context(),
+        );
 
         // TODO(DEV-532): add debug format
         #[cfg(feature = "veecle-telemetry")]

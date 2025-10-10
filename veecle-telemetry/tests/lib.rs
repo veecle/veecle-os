@@ -9,8 +9,10 @@
 use std::time::Duration;
 
 use indoc::indoc;
+use pretty_assertions::assert_eq;
 use serial_test::serial;
 use tokio::runtime::Builder;
+
 use veecle_telemetry::future::FutureExt;
 use veecle_telemetry::protocol::Severity;
 use veecle_telemetry::test_helpers::format_telemetry_tree;
@@ -19,8 +21,8 @@ use veecle_telemetry::{CurrentSpan, KeyValue, Span, SpanContext, instrument, spa
 mod exporter {
     use std::sync::{Arc, LazyLock, Mutex};
 
-    use veecle_telemetry::collector::TestExporter;
-    use veecle_telemetry::protocol::{ExecutionId, InstanceMessage};
+    use veecle_telemetry::collector::{ProcessId, TestExporter};
+    use veecle_telemetry::protocol::InstanceMessage;
 
     /// Initializes the lazy lock which sets the exporter.
     pub fn set_exporter() -> ExporterHandle {
@@ -28,9 +30,8 @@ mod exporter {
             LazyLock::new(|| {
                 let (reporter, collected_spans) = TestExporter::new();
 
-                let execution_id = ExecutionId::random(&mut rand::rng());
                 veecle_telemetry::collector::set_exporter(
-                    execution_id,
+                    ProcessId::random(&mut rand::rng()),
                     Box::leak(Box::new(reporter)),
                 )
                 .expect("exporter was not set yet");
@@ -111,8 +112,7 @@ fn trace_macro() {
     let exporter = set_exporter();
 
     {
-        let context = SpanContext::generate();
-        let root = Span::root("root", context, &[]);
+        let root = Span::new("root", &[]);
 
         let runtime = Builder::new_multi_thread()
             .worker_threads(4)
@@ -178,8 +178,7 @@ fn trace_macro_example() {
     let exporter = set_exporter();
 
     {
-        let context = SpanContext::generate();
-        let _root_guard = Span::root("root", context, &[]).entered();
+        let _root_guard = Span::new("root", &[]).entered();
 
         let runtime = Builder::new_current_thread().enable_all().build().unwrap();
 
@@ -208,12 +207,7 @@ fn span_property() {
     let exporter = set_exporter();
 
     {
-        let context = SpanContext::generate();
-        let root = Span::root(
-            "root",
-            context,
-            &[KeyValue::new("k1", "v1"), KeyValue::new("k2", 2)],
-        );
+        let root = Span::new("root", &[KeyValue::new("k1", "v1"), KeyValue::new("k2", 2)]);
         root.set_attribute(KeyValue::new("k3", "v3"));
 
         let _g = root.enter();
@@ -244,13 +238,12 @@ fn span_property() {
 #[test]
 #[serial]
 fn current_span_integration() {
-    use veecle_telemetry::{CurrentSpan, SpanId, TraceId};
+    use veecle_telemetry::{CurrentSpan, ProcessId, SpanId};
 
     let exporter = set_exporter();
 
     {
-        let context = SpanContext::generate();
-        let root = Span::root("root", context, &[]);
+        let root = Span::new("root", &[]);
 
         let _guard = root.entered();
 
@@ -264,8 +257,10 @@ fn current_span_integration() {
         );
 
         // Test CurrentSpan::link
-        let external_context =
-            SpanContext::new(TraceId(0x123456789ABCDEF0), SpanId(0xFEDCBA9876543210));
+        let external_context = SpanContext::new(
+            ProcessId::from_raw(0x123456789ABCDEF0),
+            SpanId(0xFEDCBA9876543210),
+        );
         CurrentSpan::add_link(external_context);
 
         // Test CurrentSpan::attribute
@@ -282,8 +277,10 @@ fn current_span_integration() {
         );
         CurrentSpan::set_attribute(KeyValue::new("child_runtime_attr", 100));
 
-        let another_external =
-            SpanContext::new(TraceId(0x1111111111111111), SpanId(0x2222222222222222));
+        let another_external = SpanContext::new(
+            ProcessId::from_raw(0x1111111111111111),
+            SpanId(0x2222222222222222),
+        );
         CurrentSpan::add_link(another_external);
     }
 
@@ -293,11 +290,11 @@ fn current_span_integration() {
         indoc! {r#"
             root []
                 + attr: runtime_attr="added_later"
-                + link: trace=123456789abcdef0, span=fedcba9876543210
+                + link: span=fedcba9876543210
                 + event: test_event [event_key="event_value", event_num=42]
                 child [child_attr=true]
                     + attr: child_runtime_attr=100
-                    + link: trace=1111111111111111, span=2222222222222222
+                    + link: span=2222222222222222
                     + event: child_event [child_event_data="nested"]
         "#}
     );
@@ -324,15 +321,10 @@ fn log_without_span_context() {
 #[test]
 #[serial]
 fn log_with_span_context() {
-    use veecle_telemetry::{SpanId, TraceId};
-
     let exporter = set_exporter();
 
     {
-        let trace_id = TraceId(0x123);
-        let span_id = SpanId(0);
-        let span_context = SpanContext::new(trace_id, span_id);
-        let span = Span::root("test_span", span_context, &[]);
+        let span = Span::new("test_span", &[]);
 
         let _guard = span.entered();
         veecle_telemetry::log::log(Severity::Error, "error message", &[]);
@@ -429,8 +421,8 @@ fn test_trailing_comma_support() {
         let _span = veecle_telemetry::span!("test span", span_attr = "value");
         let _span = veecle_telemetry::span!("test span", span_attr = "value",);
 
-        let _root_span = veecle_telemetry::root_span!("root span", root_attr = 123);
-        let _root_span = veecle_telemetry::root_span!("root span", root_attr = 123,);
+        let _root_span = veecle_telemetry::span!("root span", root_attr = 123);
+        let _root_span = veecle_telemetry::span!("root span", root_attr = 123,);
 
         veecle_telemetry::event!("test event", event_attr = true);
         veecle_telemetry::event!("test event", event_attr = true,);
@@ -442,6 +434,24 @@ fn test_trailing_comma_support() {
         veecle_telemetry::event!("empty event",);
     }
 
-    let messages = exporter.take_messages();
-    assert_eq!(messages.len(), 12);
+    let graph = format_telemetry_tree(exporter.take_messages());
+    assert_eq!(
+        graph,
+        indoc! {r#"
+            test span [span_attr="value"]
+            test span [span_attr="value"]
+            root span [root_attr=123]
+            root span [root_attr=123]
+            empty span []
+            empty span []
+            + log: [Trace] empty log []
+            + log: [Trace] empty log []
+            + log: [Info] single attr [value=1]
+            + log: [Info] single attr [value=1]
+            + log: [Debug] multiple attrs [key1="val1", key2=42]
+            + log: [Debug] multiple attrs [key1="val1", key2=42]
+            + log: [Warn] mixed syntax [identifier="test", literal=true]
+            + log: [Warn] mixed syntax [identifier="test", literal=true]
+        "#}
+    );
 }
