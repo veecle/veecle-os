@@ -179,7 +179,7 @@ define org.genivi.commonapi.someip.deployment for interface test.TestService {
         SomeIpMethodID = 0440
         SomeIpReliable = false
     }
-    
+
     method test_fixed_length_array {
         SomeIpMethodID = 0441
         SomeIpReliable = false

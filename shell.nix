@@ -23,6 +23,7 @@ in pkgs.mkShell {
     cargo-nextest
     cargo-vet
     cmake
+    editorconfig-checker
     gcc
     gcc-arm-embedded
     gdb

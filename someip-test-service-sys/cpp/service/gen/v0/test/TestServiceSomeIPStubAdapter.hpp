@@ -48,7 +48,7 @@ public:
     }
 
     void deactivateManagedInstances() {}
-    
+
     CommonAPI::SomeIP::GetAttributeStubDispatcher<
         ::v0::test::TestServiceStub,
         CommonAPI::Version
@@ -61,7 +61,7 @@ public:
         std::tuple< CommonAPI::EmptyDeployment>,
         std::tuple< CommonAPI::EmptyDeployment>
     > test_boolStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< int8_t>,
@@ -69,7 +69,7 @@ public:
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<int8_t>>,
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<int8_t>>
     > test_int8StubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< int16_t>,
@@ -77,7 +77,7 @@ public:
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<int16_t>>,
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<int16_t>>
     > test_int16StubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< int32_t>,
@@ -85,7 +85,7 @@ public:
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<int32_t>>,
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<int32_t>>
     > test_int32StubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< int64_t>,
@@ -93,7 +93,7 @@ public:
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<int64_t>>,
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<int64_t>>
     > test_int64StubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< uint8_t>,
@@ -101,7 +101,7 @@ public:
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<uint8_t>>,
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<uint8_t>>
     > test_uint8StubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< uint16_t>,
@@ -109,7 +109,7 @@ public:
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<uint16_t>>,
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<uint16_t>>
     > test_uint16StubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< uint32_t>,
@@ -117,7 +117,7 @@ public:
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<uint32_t>>,
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<uint32_t>>
     > test_uint32StubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< uint64_t>,
@@ -125,7 +125,7 @@ public:
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<uint64_t>>,
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<uint64_t>>
     > test_uint64StubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< double>,
@@ -133,7 +133,7 @@ public:
         std::tuple< CommonAPI::EmptyDeployment>,
         std::tuple< CommonAPI::EmptyDeployment>
     > test_doubleStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< float>,
@@ -141,7 +141,7 @@ public:
         std::tuple< CommonAPI::EmptyDeployment>,
         std::tuple< CommonAPI::EmptyDeployment>
     > test_floatStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< std::string>,
@@ -149,7 +149,7 @@ public:
         std::tuple< CommonAPI::SomeIP::StringDeployment>,
         std::tuple< CommonAPI::SomeIP::StringDeployment>
     > test_utf16le_dynamic_length_stringStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< std::string>,
@@ -157,7 +157,7 @@ public:
         std::tuple< CommonAPI::SomeIP::StringDeployment>,
         std::tuple< CommonAPI::SomeIP::StringDeployment>
     > test_utf16be_dynamic_length_stringStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< std::string>,
@@ -165,7 +165,7 @@ public:
         std::tuple< CommonAPI::SomeIP::StringDeployment>,
         std::tuple< CommonAPI::SomeIP::StringDeployment>
     > test_utf8_dynamic_length_stringStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< std::string>,
@@ -173,7 +173,7 @@ public:
         std::tuple< CommonAPI::SomeIP::StringDeployment>,
         std::tuple< CommonAPI::SomeIP::StringDeployment>
     > test_utf16le_fixed_length_stringStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< std::string>,
@@ -181,7 +181,7 @@ public:
         std::tuple< CommonAPI::SomeIP::StringDeployment>,
         std::tuple< CommonAPI::SomeIP::StringDeployment>
     > test_utf16be_fixed_length_stringStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< std::string>,
@@ -189,7 +189,7 @@ public:
         std::tuple< CommonAPI::SomeIP::StringDeployment>,
         std::tuple< CommonAPI::SomeIP::StringDeployment>
     > test_utf8_fixed_length_stringStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< TestService::AllPrimitiveDataTypes>,
@@ -197,7 +197,7 @@ public:
         std::tuple< ::v0::test::TestService_::AllPrimitiveDataTypesDeployment_t>,
         std::tuple< ::v0::test::TestService_::AllPrimitiveDataTypesDeployment_t>
     > test_structStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< std::vector< uint32_t >>,
@@ -205,7 +205,7 @@ public:
         std::tuple< CommonAPI::SomeIP::ArrayDeployment< CommonAPI::SomeIP::IntegerDeployment<uint32_t> >>,
         std::tuple< CommonAPI::SomeIP::ArrayDeployment< CommonAPI::SomeIP::IntegerDeployment<uint32_t> >>
     > test_fixed_length_arrayStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< std::vector< uint32_t >>,
@@ -213,7 +213,7 @@ public:
         std::tuple< CommonAPI::SomeIP::ArrayDeployment< CommonAPI::SomeIP::IntegerDeployment<uint32_t> >>,
         std::tuple< CommonAPI::SomeIP::ArrayDeployment< CommonAPI::SomeIP::IntegerDeployment<uint32_t> >>
     > test_dynamic_length_1_byte_arrayStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< std::vector< uint32_t >>,
@@ -221,7 +221,7 @@ public:
         std::tuple< CommonAPI::SomeIP::ArrayDeployment< CommonAPI::SomeIP::IntegerDeployment<uint32_t> >>,
         std::tuple< CommonAPI::SomeIP::ArrayDeployment< CommonAPI::SomeIP::IntegerDeployment<uint32_t> >>
     > test_dynamic_length_2_bytes_arrayStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodWithReplyStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< std::vector< uint32_t >>,
@@ -229,13 +229,13 @@ public:
         std::tuple< CommonAPI::SomeIP::ArrayDeployment< CommonAPI::SomeIP::IntegerDeployment<uint32_t> >>,
         std::tuple< CommonAPI::SomeIP::ArrayDeployment< CommonAPI::SomeIP::IntegerDeployment<uint32_t> >>
     > test_dynamic_length_4_bytes_arrayStubDispatcher;
-    
+
     CommonAPI::SomeIP::MethodStubDispatcher<
         ::v0::test::TestServiceStub,
         std::tuple< uint64_t>,
         std::tuple< CommonAPI::SomeIP::IntegerDeployment<uint64_t>>
     > test_fire_and_forget_uint64StubDispatcher;
-    
+
     TestServiceSomeIPStubAdapterInternal(
         const CommonAPI::SomeIP::Address &_address,
         const std::shared_ptr<CommonAPI::SomeIP::ProxyConnection> &_connection,
@@ -252,7 +252,7 @@ public:
             _stub->hasElement(0),
             std::make_tuple(static_cast< CommonAPI::EmptyDeployment* >(nullptr)),
             std::make_tuple(static_cast< CommonAPI::EmptyDeployment* >(nullptr)))
-        
+
         ,
         test_int8StubDispatcher(
             &TestServiceStub::test_int8,
@@ -260,7 +260,7 @@ public:
             _stub->hasElement(1),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<int8_t>* >(nullptr)),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<int8_t>* >(nullptr)))
-        
+
         ,
         test_int16StubDispatcher(
             &TestServiceStub::test_int16,
@@ -268,7 +268,7 @@ public:
             _stub->hasElement(2),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<int16_t>* >(nullptr)),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<int16_t>* >(nullptr)))
-        
+
         ,
         test_int32StubDispatcher(
             &TestServiceStub::test_int32,
@@ -276,7 +276,7 @@ public:
             _stub->hasElement(3),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<int32_t>* >(nullptr)),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<int32_t>* >(nullptr)))
-        
+
         ,
         test_int64StubDispatcher(
             &TestServiceStub::test_int64,
@@ -284,7 +284,7 @@ public:
             _stub->hasElement(4),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<int64_t>* >(nullptr)),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<int64_t>* >(nullptr)))
-        
+
         ,
         test_uint8StubDispatcher(
             &TestServiceStub::test_uint8,
@@ -292,7 +292,7 @@ public:
             _stub->hasElement(5),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<uint8_t>* >(nullptr)),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<uint8_t>* >(nullptr)))
-        
+
         ,
         test_uint16StubDispatcher(
             &TestServiceStub::test_uint16,
@@ -300,7 +300,7 @@ public:
             _stub->hasElement(6),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<uint16_t>* >(nullptr)),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<uint16_t>* >(nullptr)))
-        
+
         ,
         test_uint32StubDispatcher(
             &TestServiceStub::test_uint32,
@@ -308,7 +308,7 @@ public:
             _stub->hasElement(7),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<uint32_t>* >(nullptr)),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<uint32_t>* >(nullptr)))
-        
+
         ,
         test_uint64StubDispatcher(
             &TestServiceStub::test_uint64,
@@ -316,7 +316,7 @@ public:
             _stub->hasElement(8),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<uint64_t>* >(nullptr)),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<uint64_t>* >(nullptr)))
-        
+
         ,
         test_doubleStubDispatcher(
             &TestServiceStub::test_double,
@@ -324,7 +324,7 @@ public:
             _stub->hasElement(9),
             std::make_tuple(static_cast< CommonAPI::EmptyDeployment* >(nullptr)),
             std::make_tuple(static_cast< CommonAPI::EmptyDeployment* >(nullptr)))
-        
+
         ,
         test_floatStubDispatcher(
             &TestServiceStub::test_float,
@@ -332,7 +332,7 @@ public:
             _stub->hasElement(10),
             std::make_tuple(static_cast< CommonAPI::EmptyDeployment* >(nullptr)),
             std::make_tuple(static_cast< CommonAPI::EmptyDeployment* >(nullptr)))
-        
+
         ,
         test_utf16le_dynamic_length_stringStubDispatcher(
             &TestServiceStub::test_utf16le_dynamic_length_string,
@@ -340,7 +340,7 @@ public:
             _stub->hasElement(11),
             std::make_tuple(&::v0::test::TestService_::test_utf16le_dynamic_length_string_paramDeployment),
             std::make_tuple(&::v0::test::TestService_::test_utf16le_dynamic_length_string_revalDeployment))
-        
+
         ,
         test_utf16be_dynamic_length_stringStubDispatcher(
             &TestServiceStub::test_utf16be_dynamic_length_string,
@@ -348,7 +348,7 @@ public:
             _stub->hasElement(12),
             std::make_tuple(&::v0::test::TestService_::test_utf16be_dynamic_length_string_paramDeployment),
             std::make_tuple(&::v0::test::TestService_::test_utf16be_dynamic_length_string_revalDeployment))
-        
+
         ,
         test_utf8_dynamic_length_stringStubDispatcher(
             &TestServiceStub::test_utf8_dynamic_length_string,
@@ -356,7 +356,7 @@ public:
             _stub->hasElement(13),
             std::make_tuple(static_cast< CommonAPI::SomeIP::StringDeployment* >(nullptr)),
             std::make_tuple(static_cast< CommonAPI::SomeIP::StringDeployment* >(nullptr)))
-        
+
         ,
         test_utf16le_fixed_length_stringStubDispatcher(
             &TestServiceStub::test_utf16le_fixed_length_string,
@@ -364,7 +364,7 @@ public:
             _stub->hasElement(14),
             std::make_tuple(&::v0::test::TestService_::test_utf16le_fixed_length_string_paramDeployment),
             std::make_tuple(&::v0::test::TestService_::test_utf16le_fixed_length_string_revalDeployment))
-        
+
         ,
         test_utf16be_fixed_length_stringStubDispatcher(
             &TestServiceStub::test_utf16be_fixed_length_string,
@@ -372,7 +372,7 @@ public:
             _stub->hasElement(15),
             std::make_tuple(&::v0::test::TestService_::test_utf16be_fixed_length_string_paramDeployment),
             std::make_tuple(&::v0::test::TestService_::test_utf16be_fixed_length_string_revalDeployment))
-        
+
         ,
         test_utf8_fixed_length_stringStubDispatcher(
             &TestServiceStub::test_utf8_fixed_length_string,
@@ -380,7 +380,7 @@ public:
             _stub->hasElement(16),
             std::make_tuple(&::v0::test::TestService_::test_utf8_fixed_length_string_paramDeployment),
             std::make_tuple(&::v0::test::TestService_::test_utf8_fixed_length_string_revalDeployment))
-        
+
         ,
         test_structStubDispatcher(
             &TestServiceStub::test_struct,
@@ -388,7 +388,7 @@ public:
             _stub->hasElement(17),
             std::make_tuple(static_cast< ::v0::test::TestService_::AllPrimitiveDataTypesDeployment_t* >(nullptr)),
             std::make_tuple(static_cast< ::v0::test::TestService_::AllPrimitiveDataTypesDeployment_t* >(nullptr)))
-        
+
         ,
         test_fixed_length_arrayStubDispatcher(
             &TestServiceStub::test_fixed_length_array,
@@ -396,7 +396,7 @@ public:
             _stub->hasElement(18),
             std::make_tuple(&::v0::test::TestService_::test_fixed_length_array_paramDeployment),
             std::make_tuple(&::v0::test::TestService_::test_fixed_length_array_revalDeployment))
-        
+
         ,
         test_dynamic_length_1_byte_arrayStubDispatcher(
             &TestServiceStub::test_dynamic_length_1_byte_array,
@@ -404,7 +404,7 @@ public:
             _stub->hasElement(19),
             std::make_tuple(&::v0::test::TestService_::test_dynamic_length_1_byte_array_paramDeployment),
             std::make_tuple(&::v0::test::TestService_::test_dynamic_length_1_byte_array_revalDeployment))
-        
+
         ,
         test_dynamic_length_2_bytes_arrayStubDispatcher(
             &TestServiceStub::test_dynamic_length_2_bytes_array,
@@ -412,7 +412,7 @@ public:
             _stub->hasElement(20),
             std::make_tuple(&::v0::test::TestService_::test_dynamic_length_2_bytes_array_paramDeployment),
             std::make_tuple(&::v0::test::TestService_::test_dynamic_length_2_bytes_array_revalDeployment))
-        
+
         ,
         test_dynamic_length_4_bytes_arrayStubDispatcher(
             &TestServiceStub::test_dynamic_length_4_bytes_array,
@@ -420,14 +420,14 @@ public:
             _stub->hasElement(21),
             std::make_tuple(static_cast< CommonAPI::SomeIP::ArrayDeployment< CommonAPI::SomeIP::IntegerDeployment<uint32_t> >* >(nullptr)),
             std::make_tuple(static_cast< CommonAPI::SomeIP::ArrayDeployment< CommonAPI::SomeIP::IntegerDeployment<uint32_t> >* >(nullptr)))
-        
+
         ,
         test_fire_and_forget_uint64StubDispatcher(
             &TestServiceStub::test_fire_and_forget_uint64,
             false,
             _stub->hasElement(22),
             std::make_tuple(static_cast< CommonAPI::SomeIP::IntegerDeployment<uint64_t>* >(nullptr)))
-        
+
     {
         TestServiceSomeIPStubAdapterHelper::addStubDispatcher( { CommonAPI::SomeIP::method_id_t(0x1a6) }, &test_boolStubDispatcher );
         TestServiceSomeIPStubAdapterHelper::addStubDispatcher( { CommonAPI::SomeIP::method_id_t(0x1a7) }, &test_int8StubDispatcher );

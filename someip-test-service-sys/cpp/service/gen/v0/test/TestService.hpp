@@ -41,7 +41,7 @@ public:
     static inline const char* getInterface();
     static inline CommonAPI::Version getInterfaceVersion();
     struct AllPrimitiveDataTypes : CommonAPI::Struct< std::string, bool, int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t, double, float> {
-    
+
         AllPrimitiveDataTypes()
         {
             std::get< 0>(values_) = "";
@@ -102,7 +102,7 @@ public:
         inline bool operator!=(const AllPrimitiveDataTypes &_other) const {
             return !((*this) == _other);
         }
-    
+
     };
 };
 

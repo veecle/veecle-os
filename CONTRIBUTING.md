@@ -137,6 +137,7 @@ Optional tools:
 * [Vale](https://vale.sh/) for prose linting.
   Refer to the [Vale installation instructions](https://vale.sh/docs/install).
   Refer to our [Vale README](.vale/README.md) for more details.
+* [`editorconfig-checker`](https://github.com/editorconfig-checker/editorconfig-checker) for validating files against `.editorconfig` settings.
 
 ### Submodules
 
@@ -167,7 +168,7 @@ Additionally, the environment variable `RUSTDOCFLAGS="--cfg docsrs"` must be set
 ## EditorConfig
 
 This project contains an [`.editorconfig`](.editorconfig) file to enforce some format considerations.
-Because EditorConfig is not enforced in CI, please [configure EditorConfig support in your editor](https://editorconfig.org/#download).
+EditorConfig is mostly enforced in CI via `editorconfig-checker`, but it is simpler to [configure EditorConfig support in your editor](https://editorconfig.org/#download) to comply automatically.
 
 ## Code Quality Checks
 

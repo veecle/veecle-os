@@ -16,7 +16,7 @@ ARG USER_NAME
 ARG USER_UID
 ARG USER_GID
 RUN groupadd --gid $USER_GID $USER_NAME --force \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USER_NAME 
+    && useradd --uid $USER_UID --gid $USER_GID -m $USER_NAME
 USER $USER_NAME
 
 # Explicitly specify shell to avoid build check warning.

@@ -126,7 +126,7 @@ interface TestService {
         UInt64  param_10
         Double  param_11
         Float   param_12
-	}
+    }
 
     method test_fire_and_forget_uint64 fireAndForget {
         in { UInt64 param }
