@@ -20,6 +20,9 @@ inputs:
   convco:
     description: convco
     default: "false"
+  editorconfig-checker:
+    description: https://github.com/editorconfig-checker/editorconfig-checker
+    default: "false"
   tombi:
     description: tombi
     default: "false"
@@ -124,6 +127,20 @@ runs:
       if: inputs.convco == 'true' && steps.cache-convco.outputs.cache-hit != 'true'
       run: |
         cargo install convco --version 0.6.2 --locked
+
+    # Cache and install editorconfig-checker
+    - uses: actions/cache@v4
+      if: inputs.editorconfig-checker == 'true'
+      id: cache-editorconfig-checker
+      with:
+        path: ~/go/bin/editorconfig-checker
+        key: editorconfig-checker-3.4.1-${{ runner.os }}-${{ runner.arch }}
+    - shell: bash
+      if: inputs.editorconfig-checker == 'true' && steps.cache-editorconfig-checker.outputs.cache-hit != 'true'
+      run: |
+        go install github.com/editorconfig-checker/editorconfig-checker/v3/cmd/editorconfig-checker@v3.4.1
+    - shell: bash
+      run: echo ~/go/bin | tee -a "$GITHUB_PATH"
 
     # Cache and install tombi
     - uses: actions/cache@v4

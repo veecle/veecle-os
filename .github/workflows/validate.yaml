@@ -155,6 +155,21 @@ jobs:
 
       - run: cargo nextest run -p workspace --no-fail-fast --run-ignored all -- miri
 
+  validate-editorconfig:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - uses: ./.github/actions/setup-tools
+        with:
+          editorconfig-checker: true
+
+      # TODO: max-line-length at least _should_ be checked, but there's many current violations to fix first.
+      # indent-size is disabled as it doesn't take into account language syntax which affects which lines it should apply to.
+      - run: editorconfig-checker -disable-max-line-length -disable-indent-size -f github-actions
+
   validate-yaml:
     runs-on: ubuntu-latest
     steps:
@@ -167,6 +182,7 @@ jobs:
     needs:
       - validate-cargo-toml
       - validate-commits
+      - validate-editorconfig
       - validate-miri
       - validate-rust
       - validate-rust-clippy-doc
