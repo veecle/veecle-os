@@ -44,7 +44,6 @@ where
         self.slot.read(f)
     }
 
-    #[cfg(feature = "veecle-telemetry")]
     pub(crate) fn inner_type_name(&self) -> &'static str {
         self.slot.inner_type_name()
     }
@@ -54,19 +53,14 @@ where
             // While we are unsure about timing and such, I would at least keep a warning
             // if we miss value. We can decide later on how we handle this case more
             // properly.
-            #[cfg(feature = "veecle-telemetry")]
             let type_name = self.slot.inner_type_name();
 
-            #[cfg(feature = "veecle-telemetry")]
             veecle_telemetry::warn!(
                 "Missed update for type",
                 type_name = type_name,
                 current = current as i64,
                 expected = expected as i64
             );
-
-            #[cfg(not(feature = "veecle-telemetry"))]
-            let _ = (current, expected);
         }
     }
 }

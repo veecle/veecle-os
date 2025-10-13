@@ -104,7 +104,7 @@ where
     T: Storable + 'static,
 {
     /// Writes a new value and notifies readers.
-    #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
+    #[veecle_telemetry::instrument]
     pub async fn write(&mut self, item: T::DataType) {
         self.modify(|slot| {
             let _ = slot.insert(item);
@@ -121,19 +121,17 @@ where
     }
 
     /// Updates the value in-place and notifies readers.
-    #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
+    #[veecle_telemetry::instrument]
     pub async fn modify(&mut self, f: impl FnOnce(&mut Option<T::DataType>)) {
         self.ready().await;
         self.waiter.update_generation();
 
-        #[cfg(feature = "veecle-telemetry")]
         let type_name = self.slot.inner_type_name();
 
         self.slot.modify(|value| {
             f(value);
 
             // TODO(DEV-532): add debug format
-            #[cfg(feature = "veecle-telemetry")]
             veecle_telemetry::trace!("Slot modified", type_name);
         });
         self.slot.increment_generation();
@@ -142,14 +140,12 @@ where
     /// Reads the current value of a type.
     ///
     /// This method takes a closure to ensure the reference is not held across await points.
-    #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
+    #[veecle_telemetry::instrument]
     pub fn read<U>(&self, f: impl FnOnce(Option<&T::DataType>) -> U) -> U {
-        #[cfg(feature = "veecle-telemetry")]
         let type_name = self.slot.inner_type_name();
         self.slot.read(|value| {
             let value = value.as_ref();
             // TODO(DEV-532): add debug format
-            #[cfg(feature = "veecle-telemetry")]
             veecle_telemetry::trace!("Slot read", type_name);
             f(value)
         })

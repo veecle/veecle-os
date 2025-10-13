@@ -44,7 +44,7 @@ veecle-telemetry-server-protocol = { workspace = true }
 
 [dev-dependencies]
 rand = { workspace = true, features = ["thread_rng"] }
-veecle-os-runtime = { workspace = true, features = ["veecle-telemetry"] }
+veecle-os-runtime = { workspace = true }
 veecle-osal-std = { workspace = true }
 veecle-telemetry = { workspace = true, features = ["enable", "std"] }
 

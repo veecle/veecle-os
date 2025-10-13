@@ -74,25 +74,23 @@ where
     /// Can be combined with [`Self::wait_for_update`] to wait for the value to be updated before reading it.
     ///
     /// This method takes a closure to ensure the reference is not held across await points.
-    #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
+    #[veecle_telemetry::instrument]
     pub fn read<U>(&self, f: impl FnOnce(Option<&T::DataType>) -> U) -> U {
         self.waiter.read(|value| {
             let value = value.as_ref();
 
             // TODO(DEV-532): add debug format
-            #[cfg(feature = "veecle-telemetry")]
             veecle_telemetry::trace!("Slot read", type_name = self.waiter.inner_type_name());
             f(value)
         })
     }
 
     /// Takes the current value of the type, leaving behind `None`.
-    #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
+    #[veecle_telemetry::instrument]
     pub fn take(&mut self) -> Option<T::DataType> {
         let value = self.waiter.take();
 
         // TODO(DEV-532): add debug format
-        #[cfg(feature = "veecle-telemetry")]
         veecle_telemetry::trace!(
             "Slot value taken.",
             type_name = self.waiter.inner_type_name()
@@ -119,7 +117,7 @@ where
     ///
     /// This returns `&mut Self` to allow chaining a call to methods accessing the value, for example
     /// [`read`][Self::read`].
-    #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
+    #[veecle_telemetry::instrument]
     pub async fn wait_for_update(&mut self) -> &mut Self {
         self.waiter.wait().await;
         self.waiter.update_generation();

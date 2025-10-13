@@ -7,7 +7,3 @@ It provides the actor-based programming model where applications are composed of
 The `veecle-os` crate re-exports this functionality and provides a more complete API for building Veecle OS applications.
 
 For examples and more detailed usage information, please refer to the [repository](https://github.com/veecle/veecle-os).
-
-## Features
-
-- `veecle-telemetry` - Enables telemetry support for runtime instrumentation.

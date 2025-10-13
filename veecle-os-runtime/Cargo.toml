@@ -21,7 +21,7 @@ pin-cell.workspace = true
 pin-project.workspace = true
 typenum = { workspace = true, features = ["const-generics"] }
 veecle-os-runtime-macros = { workspace = true }
-veecle-telemetry = { workspace = true, optional = true }
+veecle-telemetry = { workspace = true }
 wakerset.workspace = true
 
 [dev-dependencies]
@@ -34,7 +34,6 @@ walkdir = { workspace = true }
 
 [features]
 default = []
-veecle-telemetry = ["dep:veecle-telemetry"]
 
 [lints]
 workspace = true

@@ -6,7 +6,6 @@ use core::cell::{Cell, Ref, RefCell, RefMut};
 use core::pin::Pin;
 
 use pin_project::pin_project;
-#[cfg(feature = "veecle-telemetry")]
 use veecle_telemetry::SpanContext;
 
 #[pin_project]
@@ -18,7 +17,6 @@ where
     source: generational::Source,
     writer_taken: Cell<bool>,
 
-    #[cfg(feature = "veecle-telemetry")]
     writer_context: Cell<Option<SpanContext>>,
 
     item: RefCell<Option<T::DataType>>,
@@ -33,10 +31,7 @@ where
 
         debug.field("source", &self.source);
         debug.field("writer_taken", &self.writer_taken);
-
-        #[cfg(feature = "veecle-telemetry")]
         debug.field("writer_context", &self.writer_context.get());
-
         debug.field("item", &"<opaque>");
 
         debug.finish()
@@ -52,14 +47,12 @@ where
             item: RefCell::new(None),
             source: generational::Source::new(),
             writer_taken: Cell::new(false),
-
-            #[cfg(feature = "veecle-telemetry")]
             writer_context: Cell::new(None),
         }
     }
 
     /// Takes the current value of the slot, leaving behind `None`.
-    #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
+    #[veecle_telemetry::instrument]
     pub(crate) fn take(&self) -> Option<T::DataType> {
         self.borrow_mut().take()
     }
@@ -92,7 +85,6 @@ where
     }
 
     pub(crate) fn borrow(&self) -> Ref<'_, Option<T::DataType>> {
-        #[cfg(feature = "veecle-telemetry")]
         if let Some(writer_context) = self.writer_context.get() {
             veecle_telemetry::CurrentSpan::add_link(writer_context);
         }
@@ -101,7 +93,6 @@ where
     }
 
     pub(super) fn borrow_mut(&self) -> RefMut<'_, Option<T::DataType>> {
-        #[cfg(feature = "veecle-telemetry")]
         {
             // TODO(DEV-531): this should be added, but only for an in place update
             // if let Some(writer_context) = self.writer_context.get() {
@@ -114,12 +105,12 @@ where
         self.item.borrow_mut()
     }
 
-    #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
+    #[veecle_telemetry::instrument]
     pub(crate) fn read<U>(&self, f: impl FnOnce(&Option<T::DataType>) -> U) -> U {
         f(&*self.borrow())
     }
 
-    #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
+    #[veecle_telemetry::instrument]
     pub(crate) fn modify(&self, f: impl FnOnce(&mut Option<T::DataType>)) {
         f(&mut *self.borrow_mut())
     }

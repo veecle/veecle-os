@@ -349,7 +349,6 @@ where
 {
     let future = A::new(A::StoreRequest::request(store).await, init_context).run();
 
-    #[cfg(feature = "veecle-telemetry")]
     let future = veecle_telemetry::future::FutureExt::with_span(
         future,
         veecle_telemetry::root_span!("actor", actor = core::any::type_name::<A>()),
