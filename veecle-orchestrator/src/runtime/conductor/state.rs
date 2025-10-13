@@ -6,9 +6,11 @@ use camino::Utf8Path;
 use eyre::{OptionExt, Result, bail};
 use futures::stream::StreamExt;
 use tempfile::TempDir;
+use tokio::sync::mpsc;
 use veecle_orchestrator_protocol::{InstanceId, RuntimeInfo};
 
 use crate::distributor::Distributor;
+use crate::runtime::conductor::Command;
 use crate::telemetry::Exporter;
 
 use crate::runtime::{BinarySource, RuntimeInstance};
@@ -49,6 +51,7 @@ impl State {
         id: InstanceId,
         binary: BinarySource,
         privileged: bool,
+        command_tx: mpsc::Sender<Command>,
     ) -> Result<()> {
         if self.runtimes.contains_key(&id) {
             bail!("instance id {id} already registered");
@@ -57,10 +60,17 @@ impl State {
         let ipc_tx = self.distributor.sender();
         let ipc_rx = self.distributor.channel(id).await?;
         let socket_dir = self.ipc_socket_dir_utf8();
-        let exporter = self.exporter.clone();
 
-        let instance =
-            RuntimeInstance::new(id, socket_dir, binary, ipc_tx, ipc_rx, exporter, privileged)?;
+        let instance = RuntimeInstance::new(
+            id,
+            socket_dir,
+            binary,
+            ipc_tx,
+            ipc_rx,
+            self.exporter.clone(),
+            privileged,
+            command_tx,
+        )?;
 
         self.runtimes.insert(id, instance);
 

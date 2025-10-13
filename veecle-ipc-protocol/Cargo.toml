@@ -19,6 +19,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["std"] }
 thiserror = { workspace = true, features = ["std"] }
 tokio-util = { workspace = true, features = ["codec"] }
+uuid = { workspace = true, features = ["serde"] }
 veecle-telemetry = { workspace = true, features = ["std"] }
 
 [lints]

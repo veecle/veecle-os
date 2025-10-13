@@ -8,13 +8,14 @@ use futures::sink::SinkExt;
 use futures::stream::StreamExt;
 use tempfile::TempPath;
 use tokio::process::Child;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, oneshot};
 use tokio::time::timeout;
 use tokio_util::codec::Framed;
 use tokio_util::sync::CancellationToken;
-use veecle_ipc_protocol::EncodedStorable;
+use veecle_ipc_protocol::{ControlRequest, ControlResponse, EncodedStorable};
 use veecle_orchestrator_protocol::InstanceId;
 
+use crate::runtime::conductor::Command;
 use crate::telemetry::Exporter;
 use veecle_net_utils::AsyncUnixListener;
 
@@ -73,6 +74,58 @@ impl Drop for RuntimeInstance {
     }
 }
 
+/// Helps send a [`Command`] over the given channel and receive the response `T` over the
+/// command-specific one-shot channel.
+async fn send_command<T>(
+    command_tx: &mpsc::Sender<Command>,
+    make_command: impl FnOnce(oneshot::Sender<eyre::Result<T>>) -> Command,
+) -> eyre::Result<T> {
+    let (response_tx, response_rx) = oneshot::channel();
+    command_tx
+        .send(make_command(response_tx))
+        .await
+        .map_err(|_| eyre::Error::msg("conductor unavailable"))?;
+
+    response_rx
+        .await
+        .map_err(|_| eyre::Error::msg("conductor unavailable"))?
+}
+
+/// Handles a single [`ControlRequest`].
+async fn handle_control_request(
+    request: veecle_ipc_protocol::ControlRequest,
+    command_tx: &mpsc::Sender<Command>,
+) -> veecle_ipc_protocol::ControlResponse {
+    let response: eyre::Result<_> = async {
+        match request {
+            ControlRequest::StartRuntime { id } => {
+                let id = InstanceId(id);
+                send_command(command_tx, |response_tx| Command::StartInstance {
+                    id,
+                    response_tx,
+                })
+                .await?;
+                Ok(ControlResponse::Started)
+            }
+            ControlRequest::StopRuntime { id } => {
+                let id = InstanceId(id);
+                send_command(command_tx, |response_tx| Command::StopInstance {
+                    id,
+                    response_tx,
+                })
+                .await?;
+                Ok(ControlResponse::Stopped)
+            }
+        }
+    }
+    .await;
+
+    match response {
+        Ok(response) => response,
+        Err(error) => ControlResponse::Error(error.to_string()),
+    }
+}
+
 /// Handles the IPC for a single runtime instance.
 ///
 /// This expects to have the runtime instance connect using `veecle-ipc` to the provided `socket` (only one client at a
@@ -80,6 +133,7 @@ impl Drop for RuntimeInstance {
 /// Any messages arriving on `ipc_rx` will be encoded and sent to the instance.
 /// Any `Storable` messages arriving from the instance will be decoded and forwarded to `ipc_tx`.
 #[tracing::instrument(skip_all, fields(%id))]
+#[expect(clippy::too_many_arguments)]
 async fn handle_instance_ipc(
     id: InstanceId,
     socket: tempfile::NamedTempFile<AsyncUnixListener>,
@@ -88,6 +142,7 @@ async fn handle_instance_ipc(
     shutdown: CancellationToken,
     exporter: Option<Arc<Exporter>>,
     privileged: bool,
+    command_tx: mpsc::Sender<Command>,
 ) -> Result<()> {
     let socket = socket.as_file();
     loop {
@@ -115,8 +170,7 @@ async fn handle_instance_ipc(
                                 }
                                 veecle_ipc_protocol::Message::ControlRequest(request) => {
                                     let response = if privileged {
-                                        match request {
-                                        }
+                                        handle_control_request(request, &command_tx).await
                                     } else {
                                         tracing::warn!("non-privileged runtime attempted to send control request");
                                         veecle_ipc_protocol::ControlResponse::Error("no control privileges".to_owned())
@@ -141,6 +195,7 @@ async fn handle_instance_ipc(
 
 impl RuntimeInstance {
     /// Returns a new `RuntimeInstance` instance.
+    #[expect(clippy::too_many_arguments)]
     pub(crate) fn new(
         id: InstanceId,
         socket_dir: &Utf8Path,
@@ -149,6 +204,7 @@ impl RuntimeInstance {
         ipc_rx: mpsc::Receiver<EncodedStorable>,
         exporter: Option<Arc<Exporter>>,
         privileged: bool,
+        command_tx: mpsc::Sender<Command>,
     ) -> Result<Self> {
         let socket = tempfile::Builder::new()
             .prefix(&format!("{id}-"))
@@ -173,6 +229,7 @@ impl RuntimeInstance {
             ipc_shutdown.clone(),
             exporter,
             privileged,
+            command_tx,
         ));
 
         Ok(Self {

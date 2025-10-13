@@ -22,7 +22,7 @@ use uuid::Uuid;
 ///
 /// The same runtime binary may be added multiple times with unique ids.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct InstanceId(Uuid);
+pub struct InstanceId(pub Uuid);
 
 impl InstanceId {
     /// Creates a new randomized id.

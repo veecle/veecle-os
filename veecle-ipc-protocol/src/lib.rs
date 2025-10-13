@@ -6,15 +6,36 @@ use std::borrow::Cow;
 
 use tokio_util::bytes::BytesMut;
 use tokio_util::codec::{Decoder, Encoder, LinesCodec, LinesCodecError};
+pub use uuid::Uuid;
 use veecle_telemetry::to_static::ToStatic;
 
 /// A control request sent from a runtime to the orchestrator.
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub enum ControlRequest {}
+pub enum ControlRequest {
+    /// Request to start a runtime instance.
+    StartRuntime {
+        /// The runtime instance to start.
+        // This is `veecle_orchestrator_protocol::InstanceId` but we don't want the dependency.
+        id: Uuid,
+    },
+
+    /// Request to stop a runtime instance.
+    StopRuntime {
+        /// The runtime instance to stop.
+        // This is `veecle_orchestrator_protocol::InstanceId` but we don't want the dependency.
+        id: Uuid,
+    },
+}
 
 /// Response to a control request.
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum ControlResponse {
+    /// Runtime started successfully.
+    Started,
+
+    /// Runtime stopped successfully.
+    Stopped,
+
     /// Error occurred while processing the control request.
     Error(String),
 }
