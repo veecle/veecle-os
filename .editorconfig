@@ -32,3 +32,6 @@ indent_size = 2
 
 [Justfile]
 indent_size = 4
+
+[.gitmodules]
+indent_style = tab

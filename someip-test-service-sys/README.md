@@ -15,10 +15,10 @@ The reason of having this package is to provide bindings to the reference SOME/I
 2. Install dependencies required by [`bindgen`](https://rust-lang.github.io/rust-bindgen/requirements.html).
 3. Make sure `COMMONAPI_CONFIG` environment variable is set and points to the valid Common API configuration file.
    Minimal configuration example can be found in [tests](./tests).
-   Read `./cpp/interface.hpp` for more details. 
+   Read `./cpp/interface.hpp` for more details.
 4. Optionally, make sure `VSOMEIP_CONFIGURATION` environment variable is set and points to the valid vsomeip configuration file.
    Minimal configuration example can be found in [tests](./tests).
-   Read `./cpp/interface.hpp` for more details. 
+   Read `./cpp/interface.hpp` for more details.
 
 ## Usage
 

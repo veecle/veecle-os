@@ -202,7 +202,7 @@ protected:
     class COMMONAPI_EXPORT_CLASS_EXPLICIT RemoteEventHandler: public virtual TestServiceStubRemoteEvent {
     public:
         COMMONAPI_EXPORT RemoteEventHandler(TestServiceStubDefault *_defaultStub)
-            : 
+            :
               defaultStub_(_defaultStub) {
         }
 

@@ -75,7 +75,7 @@ Where:
 - `etc/vsomeip/` - reference configuration files.
 - `include/` - C/C++ include headers.
 - `lib/*.so` - framework's libraries.
-- `lib/cmake/` - CMake configuration files. 
+- `lib/cmake/` - CMake configuration files.
 - `lib/pkgconfig/` - pkg-config configuration files.
 
 You can then use these files in your build script to build your SOME/IP application.
