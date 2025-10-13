@@ -68,6 +68,9 @@ pub enum Request {
 
         /// The path to the binary that defines the instance.
         path: Utf8PathBuf,
+
+        /// Whether this runtime is privileged and can send control messages.
+        privileged: bool,
     },
 
     /// Add a new runtime instance with binary data sent after this command.
@@ -86,6 +89,9 @@ pub enum Request {
 
         /// The SHA-256 hash of the expected binary data for validation.
         hash: [u8; 32],
+
+        /// Whether this runtime is privileged and can send control messages.
+        privileged: bool,
     },
 
     /// Remove the runtime instance with the passed id.
@@ -176,11 +182,12 @@ impl Request {
     /// Creates a new `AddWithBinary` request from binary data.
     ///
     /// Automatically calculates the length and SHA-256 hash of the provided data.
-    pub fn add_with_binary(id: InstanceId, data: &[u8]) -> Self {
+    pub fn add_with_binary(id: InstanceId, data: &[u8], privileged: bool) -> Self {
         Self::AddWithBinary {
             id,
             length: data.len(),
             hash: Sha256::digest(data).into(),
+            privileged,
         }
     }
 }
@@ -273,6 +280,9 @@ pub struct RuntimeInfo {
 
     /// The path to the binary for this instance.
     pub binary: Utf8PathBuf,
+
+    /// Whether this runtime is privileged and can send control messages.
+    pub privileged: bool,
 }
 
 /// Information about the current orchestrator state.

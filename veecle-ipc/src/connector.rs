@@ -69,6 +69,12 @@ impl Connector {
                                 veecle_ipc_protocol::Message::Telemetry(_) => {
                                     veecle_telemetry::error!("received unexpected ipc message variant", message = format!("{message:?}"));
                                 }
+                                veecle_ipc_protocol::Message::ControlRequest(_) => {
+                                    veecle_telemetry::error!("unimplemented", message = format!("{message:?}"));
+                                }
+                                veecle_ipc_protocol::Message::ControlResponse(_) => {
+                                    veecle_telemetry::error!("unimplemented", message = format!("{message:?}"));
+                                }
                             }
                         }
                     }

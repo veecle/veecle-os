@@ -48,6 +48,7 @@ impl State {
         &mut self,
         id: InstanceId,
         binary: BinarySource,
+        privileged: bool,
     ) -> Result<()> {
         if self.runtimes.contains_key(&id) {
             bail!("instance id {id} already registered");
@@ -58,7 +59,8 @@ impl State {
         let socket_dir = self.ipc_socket_dir_utf8();
         let exporter = self.exporter.clone();
 
-        let instance = RuntimeInstance::new(id, socket_dir, binary, ipc_tx, ipc_rx, exporter)?;
+        let instance =
+            RuntimeInstance::new(id, socket_dir, binary, ipc_tx, ipc_rx, exporter, privileged)?;
 
         self.runtimes.insert(id, instance);
 
@@ -111,6 +113,7 @@ impl State {
                     RuntimeInfo {
                         running: instance.is_running(),
                         binary: instance.binary().path().to_path_buf(),
+                        privileged: instance.privileged(),
                     },
                 )
             })

@@ -38,13 +38,14 @@ async fn handle_add_with_binary(
     id: InstanceId,
     length: usize,
     hash: [u8; 32],
+    privileged: bool,
 ) -> eyre::Result<()> {
     let path = read_binary_to_temp_file(stream, length, hash)
         .await
         .wrap_err("reading binary data")?;
 
     conductor
-        .add(id, path.into())
+        .add(id, path.into(), privileged)
         .await
         .wrap_err("adding binary instance")?;
 
@@ -139,14 +140,23 @@ async fn handle_request(
 
     let response = match request {
         Request::Version => encode(env!("CARGO_PKG_VERSION"))?,
-        Request::Add { id, path } => {
+        Request::Add {
+            id,
+            path,
+            privileged,
+        } => {
             conductor
-                .add(id, path.into())
+                .add(id, path.into(), privileged)
                 .await
                 .wrap_err("adding instance")?;
             encode(())?
         }
-        Request::AddWithBinary { id, length, hash } => {
+        Request::AddWithBinary {
+            id,
+            length,
+            hash,
+            privileged,
+        } => {
             let conductor = Arc::clone(conductor);
 
             let responder: Responder = Box::new(move |mut stream| {
@@ -158,8 +168,15 @@ async fn handle_request(
                     //  * the client sends the binary data
                     // As long as the client waits to receive the response line we shouldn't have
                     // received any of the binary data into the read buffer.
-                    match handle_add_with_binary(stream.get_mut(), conductor, id, length, hash)
-                        .await
+                    match handle_add_with_binary(
+                        stream.get_mut(),
+                        conductor,
+                        id,
+                        length,
+                        hash,
+                        privileged,
+                    )
+                    .await
                     {
                         Ok(()) => Ok(ControlFlow::Continue((stream, encode(())?))),
                         Err(error) => {

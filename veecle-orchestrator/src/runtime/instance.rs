@@ -62,6 +62,7 @@ pub(crate) struct RuntimeInstance {
     ipc_task: Option<tokio::task::JoinHandle<Result<()>>>,
     ipc_shutdown: CancellationToken,
     socket_path: Utf8PathBuf,
+    privileged: bool,
 }
 
 impl Drop for RuntimeInstance {
@@ -86,6 +87,7 @@ async fn handle_instance_ipc(
     mut ipc_rx: mpsc::Receiver<EncodedStorable>,
     shutdown: CancellationToken,
     exporter: Option<Arc<Exporter>>,
+    privileged: bool,
 ) -> Result<()> {
     let socket = socket.as_file();
     loop {
@@ -111,6 +113,20 @@ async fn handle_instance_ipc(
                                         exporter.export(message);
                                     }
                                 }
+                                veecle_ipc_protocol::Message::ControlRequest(request) => {
+                                    let response = if privileged {
+                                        match request {
+                                        }
+                                    } else {
+                                        tracing::warn!("non-privileged runtime attempted to send control request");
+                                        veecle_ipc_protocol::ControlResponse::Error("no control privileges".to_owned())
+                                    };
+
+                                    stream.send(&veecle_ipc_protocol::Message::ControlResponse(response)).await?;
+                                }
+                                veecle_ipc_protocol::Message::ControlResponse(_) => {
+                                    tracing::warn!("received unexpected ControlResponse");
+                                }
                             }
                         }
                     }
@@ -132,6 +148,7 @@ impl RuntimeInstance {
         ipc_tx: mpsc::Sender<EncodedStorable>,
         ipc_rx: mpsc::Receiver<EncodedStorable>,
         exporter: Option<Arc<Exporter>>,
+        privileged: bool,
     ) -> Result<Self> {
         let socket = tempfile::Builder::new()
             .prefix(&format!("{id}-"))
@@ -155,6 +172,7 @@ impl RuntimeInstance {
             ipc_rx,
             ipc_shutdown.clone(),
             exporter,
+            privileged,
         ));
 
         Ok(Self {
@@ -164,6 +182,7 @@ impl RuntimeInstance {
             ipc_task: Some(ipc_task),
             ipc_shutdown,
             socket_path,
+            privileged,
         })
     }
 
@@ -175,6 +194,11 @@ impl RuntimeInstance {
     /// Returns the binary source used for this instance.
     pub(crate) fn binary(&self) -> &BinarySource {
         &self.binary
+    }
+
+    /// Returns whether this instance has control privileges.
+    pub(crate) fn privileged(&self) -> bool {
+        self.privileged
     }
 
     /// Starts the process for this instance.

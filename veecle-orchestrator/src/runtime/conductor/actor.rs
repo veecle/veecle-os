@@ -30,6 +30,7 @@ pub(crate) enum Command {
     AddInstance {
         id: InstanceId,
         binary: BinarySource,
+        privileged: bool,
         response_tx: oneshot::Sender<eyre::Result<()>>,
     },
 
@@ -80,13 +81,19 @@ impl Conductor {
 
     /// Adds a new runtime instance with the specified binary source.
     #[tracing::instrument(skip(self))]
-    pub(crate) async fn add(&self, id: InstanceId, binary: BinarySource) -> eyre::Result<()> {
+    pub(crate) async fn add(
+        &self,
+        id: InstanceId,
+        binary: BinarySource,
+        privileged: bool,
+    ) -> eyre::Result<()> {
         let (response_tx, response_rx) = oneshot::channel();
 
         self.command_tx
             .send(Command::AddInstance {
                 id,
                 binary,
+                privileged,
                 response_tx,
             })
             .await?;
@@ -172,9 +179,10 @@ async fn run(mut state: State, mut command_rx: mpsc::Receiver<Command>) -> eyre:
             Command::AddInstance {
                 id,
                 binary,
+                privileged,
                 response_tx,
             } => {
-                let response = state.add_instance(id, binary).await;
+                let response = state.add_instance(id, binary, privileged).await;
                 let _ = response_tx.send(response);
             }
             Command::RemoveInstance { id, response_tx } => {
