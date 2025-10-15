@@ -674,6 +674,7 @@ dependencies = [
  "thiserror",
  "tokio-util",
  "uuid",
+ "veecle-os-runtime",
  "veecle-telemetry",
 ]
 

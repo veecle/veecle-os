@@ -55,6 +55,7 @@ mod actors;
 mod connector;
 mod telemetry;
 
-pub use self::actors::{Input, Output};
+pub use self::actors::{ControlHandler, Input, Output};
 pub use self::connector::Connector;
 pub use self::telemetry::Exporter;
+pub use veecle_ipc_protocol::{ControlRequest, ControlResponse, Uuid};

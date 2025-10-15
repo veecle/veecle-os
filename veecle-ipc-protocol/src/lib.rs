@@ -10,7 +10,7 @@ pub use uuid::Uuid;
 use veecle_telemetry::to_static::ToStatic;
 
 /// A control request sent from a runtime to the orchestrator.
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, veecle_os_runtime::Storable)]
 pub enum ControlRequest {
     /// Request to start a runtime instance.
     StartRuntime {
@@ -28,7 +28,7 @@ pub enum ControlRequest {
 }
 
 /// Response to a control request.
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, veecle_os_runtime::Storable)]
 pub enum ControlResponse {
     /// Runtime started successfully.
     Started,
