@@ -150,6 +150,7 @@ macro_rules! execute {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     #[veecle_os_runtime::actor]
     async fn contextual_actor<T: core::fmt::Debug>(

@@ -2,7 +2,6 @@
 
 #![no_std]
 #![forbid(unsafe_code)]
-// Set by `cargo-llvm-cov` https://github.com/taiki-e/cargo-llvm-cov?tab=readme-ov-file#exclude-code-from-coverage
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(test)]

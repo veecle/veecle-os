@@ -159,6 +159,7 @@ pub fn write_little_endian_signed(bytes: &mut [u8], offset: usize, length: usize
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use test_case::test_case;
 

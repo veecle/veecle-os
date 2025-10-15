@@ -29,6 +29,7 @@ impl Export for Exporter {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use tokio::sync::mpsc;
     use veecle_telemetry::collector::Export;

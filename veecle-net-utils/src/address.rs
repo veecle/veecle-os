@@ -263,6 +263,7 @@ impl TryFrom<MultiSocketAddress> for UnresolvedMultiSocketAddress {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use super::{
         UnresolvedMultiSocketAddress, UnresolvedSocketAddress, UnresolvedSocketAddressParseError,

@@ -421,6 +421,7 @@ pub struct SpanAddLinkMessage {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     #[cfg(feature = "alloc")]
     use alloc::string::String;

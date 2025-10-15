@@ -189,6 +189,8 @@ Code coverage is checked using [`llvm-cov`](https://github.com/taiki-e/cargo-llv
 This can be run with `just coverage`.
 CI uses a nightly version of Rust to generate the coverage data.
 To achieve the same coverage output, set the default Rust toolchain for the repository root to the toolchain defined in the `rust-toolchain-nightly.toml` file.
+`llvm-cov` sets the `coverage_nightly` `cfg` value, which is used to conditionally enable the nightly `coverage_attribute` feature.
+Test modules should have `#[cfg_attr(coverage_nightly, coverage(off))]` set, to avoid coverage data being distorted by test code.
 
 ## Adding additional workspaces
 

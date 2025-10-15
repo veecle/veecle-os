@@ -8,6 +8,7 @@
 //! - `tokio`: Enable async networking support (requires Tokio). Default: disabled.
 
 #![forbid(unsafe_code)]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 mod address;
 #[cfg(feature = "tokio")]
