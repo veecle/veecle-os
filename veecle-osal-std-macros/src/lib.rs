@@ -1,5 +1,7 @@
 //! `veecle-osal-std` macros.
 
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
 mod main_impl;
 
 use proc_macro::TokenStream;
@@ -74,6 +76,7 @@ fn crate_path(
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::fs::File;
 

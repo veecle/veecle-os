@@ -80,6 +80,7 @@
 //! ensuring zero runtime overhead in production builds where telemetry is not needed.
 
 #![no_std]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(feature = "std")]
 extern crate std;

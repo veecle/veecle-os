@@ -60,6 +60,7 @@ impl Write for BlockingSocketStream {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::io::{Read, Write};
     use std::net::TcpListener;

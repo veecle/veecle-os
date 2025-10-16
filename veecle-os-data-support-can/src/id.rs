@@ -197,6 +197,7 @@ impl<'de> serde::Deserialize<'de> for PackedId {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::format;
     use std::string::ToString;

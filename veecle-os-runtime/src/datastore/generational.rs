@@ -132,6 +132,7 @@ pub(crate) struct MissedUpdate {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::cell::Cell;
     use std::future::Future;

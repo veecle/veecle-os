@@ -309,6 +309,7 @@ impl<T> Drop for Chunk<'_, T> {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod test {
     use std::format;
     use std::sync::atomic::AtomicUsize;

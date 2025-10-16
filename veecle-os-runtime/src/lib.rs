@@ -95,6 +95,7 @@
 
 #![cfg_attr(docsrs, allow(internal_features))]
 #![cfg_attr(docsrs, feature(rustdoc_internals))]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![no_std]
 
 #[cfg(test)]

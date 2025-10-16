@@ -160,6 +160,7 @@ where
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use core::pin::pin;
     use futures::FutureExt;

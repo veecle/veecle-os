@@ -229,6 +229,7 @@ where
     S: Datastore,
 {
     #[cfg(test)]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn increment_generation(self) {
         self.source().increment_generation()
     }
@@ -388,6 +389,7 @@ impl IsActorResult for Infallible {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use core::future::Future;
     use core::pin::pin;

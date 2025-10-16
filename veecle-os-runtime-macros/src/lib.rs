@@ -1,6 +1,7 @@
 //! This crate provides runtime macros.
 
 #![forbid(unsafe_code)]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 mod actor;
 mod storable;
@@ -168,6 +169,7 @@ fn veecle_os_runtime_path() -> syn::Result<syn::Path> {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::fs::File;
 

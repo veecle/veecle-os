@@ -1,6 +1,7 @@
 //! Support for working with CAN messages within a runtime instance.
 #![no_std]
 #![forbid(unsafe_code)]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(test)]
 extern crate std;

@@ -46,6 +46,7 @@
 //! ```
 
 #![forbid(unsafe_code)]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(doc)]
 extern crate self as veecle_ipc;
