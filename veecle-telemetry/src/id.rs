@@ -10,49 +10,55 @@
 //!
 //! # Core Types
 //!
-//! - [`TraceId`]: A 128-bit globally unique identifier that groups related spans together
-//! - [`SpanId`]: A 64-bit identifier that uniquely identifies a span within a trace
-//! - [`SpanContext`]: A combination of trace ID and span ID that uniquely identifies a span
+//! - [`SpanId`]: An identifier that uniquely identifies a span within a process.
+//! - [`SpanContext`]: A combination of process id and span id that uniquely identifies a span globally.
 
 use core::fmt;
 use core::str::FromStr;
 
-use serde::{Deserialize, Serialize};
+/// A globally-unique id identifying a process.
+///
+/// A [`ProcessId`] should never be re-used as it's used to collect metadata about the execution and to generate
+/// [`SpanContext`]s which need to be globally unique.
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
+pub struct ProcessId(u128);
 
-use crate::Span;
-use crate::collector::get_collector;
-#[cfg(feature = "enable")]
-use crate::span::CURRENT_SPAN;
+impl ProcessId {
+    /// Uses a random number generator to generate the [`ProcessId`].
+    pub fn random(rng: &mut impl rand::Rng) -> Self {
+        Self(rng.random())
+    }
 
-/// An identifier for a trace, which groups a set of related spans together.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct TraceId(pub u128);
-
-impl TraceId {
-    /// Uses the state in the collector to generate a `TraceId`.
+    /// Creates a [`ProcessId`] from a raw value
     ///
-    /// Returns 0 if the collector has not been initialized via [`crate::collector::set_exporter`].
-    #[inline]
-    pub fn generate() -> Self {
-        get_collector().generate_trace_id()
+    /// Extra care needs to be taken that this is not a constant value or re-used in any way.
+    ///
+    /// When possible prefer using [`ProcessId::random`].
+    pub const fn from_raw(raw: u128) -> Self {
+        Self(raw)
+    }
+
+    /// Returns the raw value of this id.
+    pub fn to_raw(self) -> u128 {
+        self.0
     }
 }
 
-impl fmt::Display for TraceId {
+impl fmt::Display for ProcessId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:032x}", self.0)
     }
 }
 
-impl FromStr for TraceId {
+impl FromStr for ProcessId {
     type Err = core::num::ParseIntError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        u128::from_str_radix(s, 16).map(TraceId)
+        u128::from_str_radix(s, 16).map(ProcessId)
     }
 }
 
-impl serde::Serialize for TraceId {
+impl serde::Serialize for ProcessId {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -64,53 +70,29 @@ impl serde::Serialize for TraceId {
     }
 }
 
-impl<'de> serde::Deserialize<'de> for TraceId {
+impl<'de> serde::Deserialize<'de> for ProcessId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
         let bytes: [u8; size_of::<u128>()] = hex::serde::deserialize(deserializer)?;
 
-        Ok(TraceId(u128::from_le_bytes(bytes)))
+        Ok(ProcessId(u128::from_le_bytes(bytes)))
     }
 }
 
-/// An identifier for a span within a trace.
+/// A process-unique id for a span.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct SpanId(pub u64);
 
 impl SpanId {
     #[inline]
     #[doc(hidden)]
-    /// Creates a non-zero `SpanId`
-    pub fn next_id() -> SpanId {
-        #[cfg(feature = "std")]
-        {
-            std::thread_local! {
-                static LOCAL_ID_GENERATOR: core::cell::Cell<u64> = core::cell::Cell::new(rand::random::<u64>() & 0xffffffff00000000);
-            }
-
-            LOCAL_ID_GENERATOR
-                .try_with(|g| {
-                    let id = g.get().wrapping_add(1);
-                    g.set(id);
-
-                    SpanId(id)
-                })
-                .unwrap_or({
-                    // This only gets called if the TLS key has been destroyed, it should be safe to fall back to a 0
-                    // value (noop) `SpanId`
-                    SpanId(0)
-                })
-        }
-
-        #[cfg(not(feature = "std"))]
-        {
-            use core::sync::atomic;
-            // For no_std, use a simple counter approach
-            static COUNTER: atomic::AtomicU64 = atomic::AtomicU64::new(1);
-            SpanId(COUNTER.fetch_add(1, atomic::Ordering::Relaxed))
-        }
+    /// Creates a non-zero [`SpanId`].
+    pub fn next_id() -> Self {
+        use core::sync::atomic;
+        static COUNTER: atomic::AtomicU64 = atomic::AtomicU64::new(1);
+        SpanId(COUNTER.fetch_add(1, atomic::Ordering::Relaxed))
     }
 }
 
@@ -151,104 +133,143 @@ impl<'de> serde::Deserialize<'de> for SpanId {
     }
 }
 
-/// A struct representing the context of a span, including its [`TraceId`] and [`SpanId`].
-///
-/// [`TraceId`]: crate::id::TraceId
-/// [`SpanId`]: crate::id::SpanId
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+/// A struct representing the context of a span, including its [`ProcessId`] and [`SpanId`].
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct SpanContext {
-    /// The trace ID this span belongs to
-    pub trace_id: TraceId,
-    /// The unique ID of this span
+    /// The id of the process this span belongs to.
+    pub process_id: ProcessId,
+    /// The unique id of this span.
     pub span_id: SpanId,
 }
 
 impl SpanContext {
-    /// Creates a new `SpanContext` with the given [`TraceId`] and [`SpanId`].
+    /// Creates a new `SpanContext` with the given [`ProcessId`] and [`SpanId`].
     ///
     /// # Examples
     ///
     /// ```
-    /// use veecle_telemetry::id::*;
+    /// use veecle_telemetry::{ProcessId, SpanId, SpanContext};
     ///
-    /// let span_context = SpanContext::new(TraceId(12), SpanId(13));
+    /// let span_context = SpanContext::new(ProcessId::from_raw(12), SpanId(13));
     /// ```
-    ///
-    /// [`TraceId`]: crate::id::TraceId
-    /// [`SpanId`]: crate::id::SpanId
-    pub fn new(trace_id: TraceId, span_id: SpanId) -> Self {
-        Self { trace_id, span_id }
-    }
-
-    /// Creates a new `SpanContext` with a `TraceId` generated with the state in the collector.
-    ///
-    /// Returns 0 if the collector has not been initialized via [`crate::collector::set_exporter`].
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use veecle_telemetry::*;
-    ///
-    /// let random = SpanContext::generate();
-    /// ```
-    pub fn generate() -> Self {
+    pub fn new(process_id: ProcessId, span_id: SpanId) -> Self {
         Self {
-            trace_id: TraceId::generate(),
-            span_id: SpanId(0),
+            process_id,
+            span_id,
         }
     }
+}
 
-    /// Creates a `SpanContext` from the given [`Span`]. If the `Span` is a noop span,
-    /// this function will return `None`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use veecle_telemetry::*;
-    ///
-    /// let span = Span::root("root", SpanContext::generate(), &[]);
-    /// let span_context = SpanContext::from_span(&span);
-    /// ```
-    ///
-    /// [`Span`]: crate::Span
-    pub fn from_span(span: &Span) -> Option<Self> {
-        #[cfg(not(feature = "enable"))]
-        {
-            let _ = span;
-            None
-        }
+impl fmt::Display for SpanContext {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Self {
+            process_id,
+            span_id,
+        } = self;
+        write!(f, "{process_id}:{span_id}")
+    }
+}
 
-        #[cfg(feature = "enable")]
-        {
-            let inner = span.inner.as_ref()?;
+/// Errors that can occur while parsing [`SpanContext`] from a string.
+#[derive(Clone, Debug)]
+pub enum ParseSpanContextError {
+    /// The string is missing a `:` separator.
+    MissingSeparator,
 
-            Some(inner.context)
+    /// The embedded [`ProcessId`] failed to parse.
+    InvalidProcessId(core::num::ParseIntError),
+
+    /// The embedded [`SpanId`] failed to parse.
+    InvalidSpanId(core::num::ParseIntError),
+}
+
+impl fmt::Display for ParseSpanContextError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::MissingSeparator => f.write_str("missing ':' separator"),
+            Self::InvalidProcessId(_) => f.write_str("failed to parse process id"),
+            Self::InvalidSpanId(_) => f.write_str("failed to parse span id"),
         }
     }
+}
 
-    /// Creates a `SpanContext` from the current local parent span. If there is no
-    /// local parent span, this function will return `None`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use veecle_telemetry::*;
-    ///
-    /// let span = Span::root("root", SpanContext::generate(), &[]);
-    /// let _guard = span.entered();
-    ///
-    /// let span_context = SpanContext::current();
-    /// ```
-    pub fn current() -> Option<Self> {
-        #[cfg(not(feature = "enable"))]
-        {
-            None
+impl core::error::Error for ParseSpanContextError {
+    fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
+        match self {
+            Self::MissingSeparator => None,
+            Self::InvalidProcessId(error) => Some(error),
+            Self::InvalidSpanId(error) => Some(error),
+        }
+    }
+}
+
+impl FromStr for SpanContext {
+    type Err = ParseSpanContextError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let Some((process_id, span_id)) = s.split_once(":") else {
+            return Err(ParseSpanContextError::MissingSeparator);
+        };
+        let process_id =
+            ProcessId::from_str(process_id).map_err(ParseSpanContextError::InvalidProcessId)?;
+        let span_id = SpanId::from_str(span_id).map_err(ParseSpanContextError::InvalidSpanId)?;
+        Ok(Self {
+            process_id,
+            span_id,
+        })
+    }
+}
+
+impl serde::Serialize for SpanContext {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut bytes = [0u8; 49];
+
+        hex::encode_to_slice(self.process_id.to_raw().to_le_bytes(), &mut bytes[..32]).unwrap();
+        bytes[32] = b':';
+        hex::encode_to_slice(self.span_id.0.to_le_bytes(), &mut bytes[33..]).unwrap();
+
+        serializer.serialize_str(str::from_utf8(&bytes).unwrap())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for SpanContext {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        let string = <&str>::deserialize(deserializer)?;
+
+        if string.len() != 49 {
+            return Err(D::Error::invalid_length(
+                string.len(),
+                &"expected 49 byte string",
+            ));
         }
 
-        #[cfg(feature = "enable")]
-        {
-            CURRENT_SPAN.get()
+        let bytes = string.as_bytes();
+
+        if bytes[32] != b':' {
+            return Err(D::Error::invalid_value(
+                serde::de::Unexpected::Str(string),
+                &"expected : separator at byte 33",
+            ));
         }
+
+        let mut process = [0; 16];
+        hex::decode_to_slice(&bytes[..32], &mut process).map_err(D::Error::custom)?;
+
+        let mut thread = [0; 8];
+        hex::decode_to_slice(&bytes[33..], &mut thread).map_err(D::Error::custom)?;
+
+        Ok(Self {
+            process_id: ProcessId::from_raw(u128::from_le_bytes(process)),
+            span_id: SpanId(u64::from_le_bytes(thread)),
+        })
     }
 }
 
@@ -284,26 +305,6 @@ mod tests {
     }
 
     #[test]
-    fn trace_id_formatting() {
-        assert_eq!(
-            format!("{}", TraceId(0)),
-            "00000000000000000000000000000000"
-        );
-        assert_eq!(
-            format!("{}", TraceId(u128::MAX)),
-            "ffffffffffffffffffffffffffffffff"
-        );
-        assert_eq!(
-            format!("{}", TraceId(0x123456789ABCDEF0FEDCBA9876543210)),
-            "123456789abcdef0fedcba9876543210"
-        );
-        assert_eq!(
-            format!("{}", TraceId(0x123)),
-            "00000000000000000000000000000123"
-        );
-    }
-
-    #[test]
     fn span_id_formatting() {
         assert_eq!(format!("{}", SpanId(0)), "0000000000000000");
         assert_eq!(format!("{}", SpanId(u64::MAX)), "ffffffffffffffff");
@@ -312,39 +313,6 @@ mod tests {
             "fedcba9876543210"
         );
         assert_eq!(format!("{}", SpanId(0x123)), "0000000000000123");
-    }
-
-    #[test]
-    fn trace_id_from_str() {
-        assert_eq!(
-            "123456789abcdef0fedcba9876543210"
-                .parse::<TraceId>()
-                .unwrap(),
-            TraceId(0x123456789ABCDEF0FEDCBA9876543210)
-        );
-        assert_eq!(
-            "123456789ABCDEF0FEDCBA9876543210"
-                .parse::<TraceId>()
-                .unwrap(),
-            TraceId(0x123456789ABCDEF0FEDCBA9876543210)
-        );
-        assert_eq!(
-            "00000000000000000000000000000000"
-                .parse::<TraceId>()
-                .unwrap(),
-            TraceId(0)
-        );
-        assert_eq!(
-            "ffffffffffffffffffffffffffffffff"
-                .parse::<TraceId>()
-                .unwrap(),
-            TraceId(u128::MAX)
-        );
-        // Shorter hex string works as u128::from_str_radix handles it
-        assert_eq!("123".parse::<TraceId>().unwrap(), TraceId(0x123));
-
-        assert!("xyz".parse::<TraceId>().is_err());
-        assert!("".parse::<TraceId>().is_err());
     }
 
     #[test]
@@ -369,25 +337,6 @@ mod tests {
     }
 
     #[test]
-    fn trace_id_format_from_str_roundtrip() {
-        let test_cases = [
-            0u128,
-            1,
-            0x123,
-            0x123456789ABCDEF0FEDCBA9876543210,
-            u128::MAX,
-            u128::MAX - 1,
-        ];
-
-        for value in test_cases {
-            let trace_id = TraceId(value);
-            let formatted = format!("{trace_id}");
-            let parsed = formatted.parse::<TraceId>().unwrap();
-            assert_eq!(trace_id, parsed, "Failed roundtrip for value {value:#x}");
-        }
-    }
-
-    #[test]
     fn span_id_format_from_str_roundtrip() {
         let test_cases = [0u64, 1, 0x123, 0xFEDCBA9876543210, u64::MAX, u64::MAX - 1];
 
@@ -396,28 +345,6 @@ mod tests {
             let formatted = format!("{span_id}");
             let parsed = formatted.parse::<SpanId>().unwrap();
             assert_eq!(span_id, parsed, "Failed roundtrip for value {value:#x}");
-        }
-    }
-
-    #[test]
-    fn trace_id_serde_roundtrip() {
-        let test_cases = [
-            TraceId(0),
-            TraceId(1),
-            TraceId(0x123),
-            TraceId(0x123456789ABCDEF0FEDCBA9876543210),
-            TraceId(u128::MAX),
-            TraceId(u128::MAX - 1),
-        ];
-
-        for original in test_cases {
-            let json = serde_json::to_string(&original).unwrap();
-            let deserialized: TraceId = serde_json::from_str(&json).unwrap();
-            assert_eq!(
-                original, deserialized,
-                "JSON roundtrip failed for {:#x}",
-                original.0
-            );
         }
     }
 
@@ -446,43 +373,27 @@ mod tests {
     #[test]
     fn span_context_serde_roundtrip() {
         let test_cases = [
-            SpanContext::new(TraceId(0), SpanId(0)),
+            SpanContext::new(ProcessId::from_raw(0), SpanId(0)),
             SpanContext::new(
-                TraceId(0x123456789ABCDEF0FEDCBA9876543210),
+                ProcessId::from_raw(0x123456789ABCDEF0FEDCBA9876543210),
                 SpanId(0xFEDCBA9876543210),
             ),
-            SpanContext::new(TraceId(u128::MAX), SpanId(u64::MAX)),
-            SpanContext::new(TraceId(1), SpanId(1)),
+            SpanContext::new(ProcessId::from_raw(u128::MAX), SpanId(u64::MAX)),
+            SpanContext::new(ProcessId::from_raw(1), SpanId(1)),
         ];
 
         for original in test_cases {
             let json = serde_json::to_string(&original).unwrap();
             let deserialized: SpanContext = serde_json::from_str(&json).unwrap();
             assert_eq!(
-                original.trace_id, deserialized.trace_id,
-                "JSON roundtrip failed for trace_id"
+                original.process_id, deserialized.process_id,
+                "JSON roundtrip failed for process_id"
             );
             assert_eq!(
                 original.span_id, deserialized.span_id,
                 "JSON roundtrip failed for span_id"
             );
         }
-    }
-
-    #[test]
-    fn trace_id_serialization_format() {
-        let trace_id = TraceId(0x123456789ABCDEF0FEDCBA9876543210);
-        let json = serde_json::to_string(&trace_id).unwrap();
-
-        // Serialization uses little-endian bytes
-        let expected_le_bytes = 0x123456789ABCDEF0FEDCBA9876543210u128.to_le_bytes();
-        let mut expected_hex = String::new();
-        for byte in &expected_le_bytes {
-            expected_hex.push_str(&format!("{byte:02x}"));
-        }
-        let expected_json = format!("\"{expected_hex}\"");
-
-        assert_eq!(json, expected_json);
     }
 
     #[test]
@@ -502,20 +413,81 @@ mod tests {
 
     #[test]
     fn span_context_new_and_fields() {
-        let trace_id = TraceId(0x123);
+        let process_id = ProcessId::from_raw(0x123);
         let span_id = SpanId(0x456);
-        let context = SpanContext::new(trace_id, span_id);
+        let context = SpanContext::new(process_id, span_id);
 
-        assert_eq!(context.trace_id, trace_id);
+        assert_eq!(context.process_id, process_id);
         assert_eq!(context.span_id, span_id);
     }
 
     #[test]
-    fn span_context_generate_produces_non_zero_trace_id() {
-        let context = SpanContext::generate();
-        // span_id should be 0 as per the implementation
-        assert_eq!(context.span_id, SpanId(0));
-        // trace_id value depends on collector initialization
+    fn process_id_format_from_str_roundtrip() {
+        let test_cases = [
+            0u128,
+            1,
+            0x123,
+            0xFEDCBA9876543210,
+            0x123456789ABCDEF0FEDCBA9876543210,
+            u128::MAX,
+            u128::MAX - 1,
+        ];
+
+        for value in test_cases {
+            let process_id = ProcessId::from_raw(value);
+            let formatted = format!("{process_id}");
+            let parsed = formatted.parse::<ProcessId>().unwrap();
+            assert_eq!(process_id, parsed, "Failed roundtrip for value {value:#x}");
+        }
+    }
+
+    #[test]
+    fn process_id_serde_roundtrip() {
+        let test_cases = [
+            ProcessId::from_raw(0),
+            ProcessId::from_raw(1),
+            ProcessId::from_raw(0x123),
+            ProcessId::from_raw(0xFEDCBA9876543210),
+            ProcessId::from_raw(0x123456789ABCDEF0FEDCBA9876543210),
+            ProcessId::from_raw(u128::MAX),
+            ProcessId::from_raw(u128::MAX - 1),
+        ];
+
+        for original in test_cases {
+            let json = serde_json::to_string(&original).unwrap();
+            let deserialized: ProcessId = serde_json::from_str(&json).unwrap();
+            assert_eq!(
+                original,
+                deserialized,
+                "JSON roundtrip failed for {:#x}",
+                original.to_raw()
+            );
+        }
+    }
+
+    #[test]
+    fn span_context_format_from_str_roundtrip() {
+        let test_cases = [
+            SpanContext::new(ProcessId::from_raw(0), SpanId(0)),
+            SpanContext::new(
+                ProcessId::from_raw(0x123456789ABCDEF0FEDCBA9876543210),
+                SpanId(0xFEDCBA9876543210),
+            ),
+            SpanContext::new(ProcessId::from_raw(u128::MAX), SpanId(u64::MAX)),
+            SpanContext::new(ProcessId::from_raw(1), SpanId(1)),
+        ];
+
+        for context in test_cases {
+            let formatted = format!("{context}");
+            let parsed = formatted.parse::<SpanContext>().unwrap();
+            assert_eq!(
+                context,
+                parsed,
+                "Failed roundtrip for {:#x}:{:#x}",
+                context.process_id.to_raw(),
+                context.span_id.0
+            );
+        }
     }
 
     #[test]

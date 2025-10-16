@@ -121,22 +121,43 @@ where
     }
 
     /// Updates the value in-place and notifies readers.
-    #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
     pub async fn modify(&mut self, f: impl FnOnce(&mut Option<T::DataType>)) {
-        self.ready().await;
-        self.waiter.update_generation();
+        #[cfg(not(feature = "veecle-telemetry"))]
+        {
+            self.ready().await;
+            self.waiter.update_generation();
+
+            self.slot.modify(|value| {
+                f(value);
+            });
+            self.slot.increment_generation();
+        }
 
         #[cfg(feature = "veecle-telemetry")]
-        let type_name = self.slot.inner_type_name();
+        {
+            use veecle_telemetry::future::FutureExt;
+            let span = veecle_telemetry::span!("modify");
+            let span_context = span.context();
+            (async move {
+                self.ready().await;
+                self.waiter.update_generation();
 
-        self.slot.modify(|value| {
-            f(value);
+                let type_name = self.slot.inner_type_name();
 
-            // TODO(DEV-532): add debug format
-            #[cfg(feature = "veecle-telemetry")]
-            veecle_telemetry::trace!("Type update.", type_name);
-        });
-        self.slot.increment_generation();
+                self.slot.modify(
+                    |value| {
+                        f(value);
+
+                        // TODO(DEV-532): add debug format
+                        veecle_telemetry::trace!("Type update.", type_name);
+                    },
+                    span_context,
+                );
+                self.slot.increment_generation();
+            })
+            .with_span(span)
+            .await;
+        }
     }
 
     /// Reads the current value of a type.

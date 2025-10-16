@@ -70,7 +70,7 @@ fn impl_main(
         quote!(
             // Initialize `veecle-telemetry` with a random execution ID and console JSON exporter.
             #veecle_telemetry_path::collector::set_exporter(
-                #veecle_telemetry_path::protocol::ExecutionId::random(
+                #veecle_telemetry_path::collector::ProcessId::random(
                     &mut #veecle_osal_std_path::reexports::rand::rng(),
                 ),
                 &#veecle_telemetry_path::collector::ConsoleJsonExporter
