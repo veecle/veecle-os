@@ -12,9 +12,9 @@ fn simple_validation() {
                 NS_ :
 
                 BO_ 1 SomeMessage: 8 Vector__XXX
-                 SG_ Signal1 : 0|16@1+ (1,0) [0|0] "" Vector__XXX
-                 SG_ Signal2 : 16|32@1+ (1,0) [0|0] "" Vector__XXX
-                 SG_ CRC : 52|8@1+ (1,0) [0|0] "" Vector__XXX
+                    SG_ Signal1 : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+                    SG_ Signal2 : 16|32@1+ (1,0) [0|0] "" Vector__XXX
+                    SG_ CRC : 52|8@1+ (1,0) [0|0] "" Vector__XXX
             "#]
 
             use veecle_os_data_support_can::CanDecodeError;

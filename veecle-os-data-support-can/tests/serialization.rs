@@ -21,10 +21,10 @@ make_tests! {
             NS_ :
 
             BO_ 2364540158 EEC1: 8 Vector__XXX
-             SG_ EngineSpeed : 24|16@1+ (0.125,0) [0|8031.875] "rpm" Vector__XXX
+                SG_ EngineSpeed : 24|16@1+ (0.125,0) [0|8031.875] "rpm" Vector__XXX
 
             BO_ 2566844926 CCVS1: 8 Vector__XXX
-             SG_ WheelBasedVehicleSpeed : 8|16@1+ (0.00390625,0) [0|250.996] "km/h" Vector__XXX
+                SG_ WheelBasedVehicleSpeed : 8|16@1+ (0.00390625,0) [0|250.996] "km/h" Vector__XXX
         "#,
 
         eec1 {
@@ -64,11 +64,11 @@ make_tests! {
             BU_: TestNode
 
             BO_ 1024 Message1: 8 TestNode
-             SG_ Signal1 : 0|64@1- (1,0) [0|0] "" Vector__XXX
+                SG_ Signal1 : 0|64@1- (1,0) [0|0] "" Vector__XXX
 
             BO_ 1025 Message2: 8 TestNode
-             SG_ Signal2 : 32|32@1- (1,0) [0|0] "" Vector__XXX
-             SG_ Signal1 : 0|32@1- (1,0) [0|0] "" Vector__XXX
+                SG_ Signal2 : 32|32@1- (1,0) [0|0] "" Vector__XXX
+                SG_ Signal1 : 0|32@1- (1,0) [0|0] "" Vector__XXX
 
             SIG_VALTYPE_ 1024 Signal1 : 2;
             SIG_VALTYPE_ 1025 Signal2 : 1;
@@ -96,36 +96,36 @@ make_tests! {
             NS_ :
 
             BO_ 1024 Message1: 8 Vector__XXX
-             SG_ u64 : 0|64@1+ (1,0) [0|0] "" Vector__XXX
+                SG_ u64 : 0|64@1+ (1,0) [0|0] "" Vector__XXX
 
             BO_ 1025 Message2: 8 Vector_XXX
-             SG_ u32 : 0|32@1+ (1,0) [0|0] "" Vector__XXX
-             SG_ u16 : 32|16@1+ (1,0) [0|0] "" Vector__XXX
-             SG_ u8 : 48|8@1+ (1,0) [0|0] "" Vector__XXX
+                SG_ u32 : 0|32@1+ (1,0) [0|0] "" Vector__XXX
+                SG_ u16 : 32|16@1+ (1,0) [0|0] "" Vector__XXX
+                SG_ u8 : 48|8@1+ (1,0) [0|0] "" Vector__XXX
 
             BO_ 1026 Message3: 8 Vector__XXX
-             SG_ i64 : 0|64@1- (1,0) [0|0] "" Vector__XXX
+                SG_ i64 : 0|64@1- (1,0) [0|0] "" Vector__XXX
 
             BO_ 1027 Message4: 8 Vector_XXX
-             SG_ i32 : 0|32@1- (1,0) [0|0] "" Vector__XXX
-             SG_ i16 : 32|16@1- (1,0) [0|0] "" Vector__XXX
-             SG_ i8 : 48|8@1- (1,0) [0|0] "" Vector__XXX
+                SG_ i32 : 0|32@1- (1,0) [0|0] "" Vector__XXX
+                SG_ i16 : 32|16@1- (1,0) [0|0] "" Vector__XXX
+                SG_ i8 : 48|8@1- (1,0) [0|0] "" Vector__XXX
 
             BO_ 2024 Message1BE: 8 Vector__XXX
-             SG_ u64 : 7|64@0+ (1,0) [0|200000000000000] "" Vector__XXX
+                SG_ u64 : 7|64@0+ (1,0) [0|200000000000000] "" Vector__XXX
 
             BO_ 2025 Message2BE: 8 Vector_XXX
-             SG_ u32 : 7|32@0+ (1,0) [0|4294967295] "" Vector__XXX
-             SG_ u16 : 39|16@0+ (1,0) [0|65535] "" Vector__XXX
-             SG_ u8 : 55|8@0+ (1,0) [0|255] "" Vector__XXX
+                SG_ u32 : 7|32@0+ (1,0) [0|4294967295] "" Vector__XXX
+                SG_ u16 : 39|16@0+ (1,0) [0|65535] "" Vector__XXX
+                SG_ u8 : 55|8@0+ (1,0) [0|255] "" Vector__XXX
 
             BO_ 2026 Message3BE: 8 Vector__XXX
-             SG_ i64 : 7|64@0- (1,0) [-200000000000000|200000000000000] "" Vector__XXX
+                SG_ i64 : 7|64@0- (1,0) [-200000000000000|200000000000000] "" Vector__XXX
 
             BO_ 2027 Message4BE: 8 Vector_XXX
-             SG_ i32 : 7|32@0- (1,0) [-2147483648|2147483647] "" Vector__XXX
-             SG_ i16 : 39|16@0- (1,0) [-32768|32767] "" Vector__XXX
-             SG_ i8 : 55|8@0- (1,0) [-128|127] "" Vector__XXX
+                SG_ i32 : 7|32@0- (1,0) [-2147483648|2147483647] "" Vector__XXX
+                SG_ i16 : 39|16@0- (1,0) [-32768|32767] "" Vector__XXX
+                SG_ i8 : 55|8@0- (1,0) [-128|127] "" Vector__XXX
 
             SIG_VALTYPE_ 1024 u64 : 0;
             SIG_VALTYPE_ 1025 u32 : 0;
@@ -230,30 +230,30 @@ make_tests! {
             NS_ :
 
             BO_ 2024 Message1BE: 8 Vector__XXX
-             SG_ u64 : 7|64@0+ (1,0) [0|200000000000000] "" Vector__XXX
+                SG_ u64 : 7|64@0+ (1,0) [0|200000000000000] "" Vector__XXX
 
             BO_ 2025 Message2BE: 8 Vector_XXX
-             SG_ u32 : 7|32@0+ (1,0) [0|4294967295] "" Vector__XXX
-             SG_ u16 : 39|16@0+ (1,0) [0|65535] "" Vector__XXX
-             SG_ u8 : 55|8@0+ (1,0) [0|255] "" Vector__XXX
+                SG_ u32 : 7|32@0+ (1,0) [0|4294967295] "" Vector__XXX
+                SG_ u16 : 39|16@0+ (1,0) [0|65535] "" Vector__XXX
+                SG_ u8 : 55|8@0+ (1,0) [0|255] "" Vector__XXX
 
             BO_ 2026 Message3BE: 8 Vector__XXX
-             SG_ i64 : 7|64@0- (1,0) [-200000000000000|200000000000000] "" Vector__XXX
+                SG_ i64 : 7|64@0- (1,0) [-200000000000000|200000000000000] "" Vector__XXX
 
             BO_ 2027 Message4BE: 8 Vector_XXX
-             SG_ i32 : 7|32@0- (1,0) [-2147483648|2147483647] "" Vector__XXX
-             SG_ i16 : 39|16@0- (1,0) [-32768|32767] "" Vector__XXX
-             SG_ i8 : 55|8@0- (1,0) [-128|127] "" Vector__XXX
+                SG_ i32 : 7|32@0- (1,0) [-2147483648|2147483647] "" Vector__XXX
+                SG_ i16 : 39|16@0- (1,0) [-32768|32767] "" Vector__XXX
+                SG_ i8 : 55|8@0- (1,0) [-128|127] "" Vector__XXX
 
             BO_ 10 Message378910: 8 Vector__XXX
-             SG_ s3big : 39|3@0- (1,0) [0|0] "" Vector__XXX
-             SG_ s3 : 34|3@1- (1,0) [0|0] "" Vector__XXX
-             SG_ s10big : 40|10@0- (1,0) [0|0] "" Vector__XXX
-             SG_ s8big : 0|8@0- (1,0) [0|0] "" Vector__XXX
-             SG_ s7big : 62|7@0- (1,0) [0|0] "" Vector__XXX
-             SG_ s9 : 17|9@1- (1,0) [0|0] "" Vector__XXX
-             SG_ s8 : 26|8@1- (1,0) [0|0] "" Vector__XXX
-             SG_ s7 : 1|7@1- (1,0) [0|0] "" Vector__XXX
+                SG_ s3big : 39|3@0- (1,0) [0|0] "" Vector__XXX
+                SG_ s3 : 34|3@1- (1,0) [0|0] "" Vector__XXX
+                SG_ s10big : 40|10@0- (1,0) [0|0] "" Vector__XXX
+                SG_ s8big : 0|8@0- (1,0) [0|0] "" Vector__XXX
+                SG_ s7big : 62|7@0- (1,0) [0|0] "" Vector__XXX
+                SG_ s9 : 17|9@1- (1,0) [0|0] "" Vector__XXX
+                SG_ s8 : 26|8@1- (1,0) [0|0] "" Vector__XXX
+                SG_ s7 : 1|7@1- (1,0) [0|0] "" Vector__XXX
 
             SIG_VALTYPE_ 2024 u64 : 0;
             SIG_VALTYPE_ 2025 u32 : 0;
@@ -324,64 +324,64 @@ make_tests! {
             NS_ :
 
             BO_ 8 Message631: 8 Vector__XXX
-             SG_ s63 : 1|63@1- (1,0) [0|0] "" Vector__XXX
+                SG_ s63 : 1|63@1- (1,0) [0|0] "" Vector__XXX
 
             BO_ 6 Message63: 8 Vector__XXX
-             SG_ s63 : 0|63@1- (1,0) [0|0] "" Vector__XXX
+                SG_ s63 : 0|63@1- (1,0) [0|0] "" Vector__XXX
 
             BO_ 2 Message64: 8 Vector__XXX
-             SG_ s64 : 0|64@1- (1,0) [0|0] "" Vector__XXX
+                SG_ s64 : 0|64@1- (1,0) [0|0] "" Vector__XXX
 
             BO_ 1 Message33: 8 Vector__XXX
-             SG_ s33 : 0|33@1- (1,0) [0|0] "" Vector__XXX
+                SG_ s33 : 0|33@1- (1,0) [0|0] "" Vector__XXX
 
             BO_ 0 Message32: 8 Vector__XXX
-             SG_ s32 : 0|32@1- (1,0) [0|0] "" Vector__XXX
+                SG_ s32 : 0|32@1- (1,0) [0|0] "" Vector__XXX
         "#,
 
         message631 {
-             "0a00000000000000" => Message631 {
-                 s63: S63(5),
-             }
-             "f6ffffffffffffff" => Message631 {
-                 s63: S63(-5),
-             }
+            "0a00000000000000" => Message631 {
+                s63: S63(5),
+            }
+            "f6ffffffffffffff" => Message631 {
+                s63: S63(-5),
+            }
         }
 
         message63 {
-             "0500000000000000" => Message63 {
-                 s63: S63(5),
-             }
-             "fbffffffffffff7f" => Message63 {
-                 s63: S63(-5),
-             }
+            "0500000000000000" => Message63 {
+                s63: S63(5),
+            }
+            "fbffffffffffff7f" => Message63 {
+                s63: S63(-5),
+            }
         }
 
         message64 {
-             "0500000000000000" => Message64 {
-                 s64: S64(5),
-             }
-             "fbffffffffffffff" => Message64 {
-                 s64: S64(-5),
-             }
+            "0500000000000000" => Message64 {
+                s64: S64(5),
+            }
+            "fbffffffffffffff" => Message64 {
+                s64: S64(-5),
+            }
         }
 
         message33 {
-             "0500000000000000" => Message33 {
-                 s33: S33(5),
-             }
-             "fbffffff01000000" => Message33 {
-                 s33: S33(-5),
-             }
+            "0500000000000000" => Message33 {
+                s33: S33(5),
+            }
+            "fbffffff01000000" => Message33 {
+                s33: S33(-5),
+            }
         }
 
         message32 {
-             "0500000000000000" => Message32 {
-                 s32: S32(5),
-             }
-             "fbffffff00000000" => Message32 {
-                 s32: S32(-5),
-             }
+            "0500000000000000" => Message32 {
+                s32: S32(5),
+            }
+            "fbffffff00000000" => Message32 {
+                s32: S32(-5),
+            }
         }
     }
 
@@ -392,7 +392,7 @@ make_tests! {
             NS_ :
 
             BO_ 1 Message: 1 Vector__XXX
-             SG_ value : 0|8@1+ (0.1,0) [0|0] "" Vector__XXX
+                SG_ value : 0|8@1+ (0.1,0) [0|0] "" Vector__XXX
         "#,
 
         message {
@@ -421,7 +421,7 @@ make_tests! {
             NS_ :
 
             BO_ 0 Foo: 1 Vector__XXX
-             SG_ Foo : 0|8@1- (1,0) [-128|127] "" Vector__XXX
+                SG_ Foo : 0|8@1- (1,0) [-128|127] "" Vector__XXX
 
             VAL_ 0 Foo 6 "reserved" 5 "reserved" 4 "unused 2" 3 "unused" 2 "unused" 1 "#%=*ä'" 0 "With space" -5 "A negative value" ;
         "##,
