@@ -134,7 +134,7 @@ where
 
             // TODO(DEV-532): add debug format
             #[cfg(feature = "veecle-telemetry")]
-            veecle_telemetry::trace!("Type update.", type_name);
+            veecle_telemetry::trace!("Slot modified", type_name);
         });
         self.slot.increment_generation();
     }
@@ -150,7 +150,7 @@ where
             let value = value.as_ref();
             // TODO(DEV-532): add debug format
             #[cfg(feature = "veecle-telemetry")]
-            veecle_telemetry::trace!("Slot read.", type_name);
+            veecle_telemetry::trace!("Slot read", type_name);
             f(value)
         })
     }
