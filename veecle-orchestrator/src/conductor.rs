@@ -1,7 +1,7 @@
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeMap, HashMap};
 use std::process::{ExitStatus, Stdio};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Duration;
 
 use camino::{Utf8Path, Utf8PathBuf};
@@ -9,8 +9,8 @@ use eyre::WrapErr;
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
 use tempfile::{TempDir, TempPath};
-use tokio::process::{Child, Command};
-use tokio::sync::mpsc;
+use tokio::process::Child;
+use tokio::sync::{mpsc, oneshot};
 use tokio::time::timeout;
 use tokio_util::codec::Framed;
 use tokio_util::sync::CancellationToken;
@@ -169,17 +169,55 @@ impl RuntimeInstance {
     }
 }
 
-type Runtimes = Mutex<HashMap<InstanceId, RuntimeInstance>>;
+/// Operations sent to the actor.
+#[derive(Debug)]
+enum Command {
+    AddInstance {
+        id: InstanceId,
+        binary: BinarySource,
+        response_tx: oneshot::Sender<eyre::Result<()>>,
+    },
+
+    RemoveInstance {
+        id: InstanceId,
+        response_tx: oneshot::Sender<eyre::Result<()>>,
+    },
+
+    StartInstance {
+        id: InstanceId,
+        response_tx: oneshot::Sender<eyre::Result<()>>,
+    },
+
+    StopInstance {
+        id: InstanceId,
+        response_tx: oneshot::Sender<eyre::Result<()>>,
+    },
+
+    GetInfo {
+        response_tx: oneshot::Sender<BTreeMap<InstanceId, RuntimeInfo>>,
+    },
+
+    Shutdown {
+        response_tx: oneshot::Sender<()>,
+    },
+
+    Clear {
+        response_tx: oneshot::Sender<()>,
+    },
+}
 
 /// The `Conductor` manages a set of [`RuntimeInstance`]s.
-///
-/// It expects to be shared and uses internal locking to manage access.
-#[derive(Debug)]
 pub(crate) struct Conductor {
-    ipc_socket_dir: TempDir,
-    runtimes: Runtimes,
-    distributor: Arc<Distributor>,
-    exporter: Option<Arc<Exporter>>,
+    command_tx: mpsc::Sender<Command>,
+    _task: tokio::task::JoinHandle<eyre::Result<()>>,
+}
+
+impl std::fmt::Debug for Conductor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Conductor")
+            .field("task", &self._task)
+            .finish()
+    }
 }
 
 impl Conductor {
@@ -188,13 +226,121 @@ impl Conductor {
         distributor: Arc<Distributor>,
         exporter: Option<Arc<Exporter>>,
     ) -> eyre::Result<Self> {
+        let (command_tx, command_rx) = mpsc::channel(crate::ARBITRARY_CHANNEL_BUFFER);
+
+        let _task =
+            tokio::task::spawn(
+                async move { Inner::new(distributor, exporter)?.run(command_rx).await },
+            );
+
+        Ok(Self { command_tx, _task })
+    }
+
+    /// Adds a new runtime instance with the specified binary source.
+    #[tracing::instrument(skip(self))]
+    pub(crate) async fn add(&self, id: InstanceId, binary: BinarySource) -> eyre::Result<()> {
+        let (response_tx, response_rx) = oneshot::channel();
+
+        self.command_tx
+            .send(Command::AddInstance {
+                id,
+                binary,
+                response_tx,
+            })
+            .await?;
+
+        response_rx.await?
+    }
+
+    /// Removes the runtime instance with the passed id.
+    #[tracing::instrument(skip(self))]
+    pub(crate) async fn remove(&self, id: InstanceId) -> eyre::Result<()> {
+        let (response_tx, response_rx) = oneshot::channel();
+
+        self.command_tx
+            .send(Command::RemoveInstance { id, response_tx })
+            .await?;
+
+        response_rx.await?
+    }
+
+    /// Starts the runtime instance with the passed id.
+    #[tracing::instrument(skip(self))]
+    pub(crate) async fn start(&self, id: InstanceId) -> eyre::Result<()> {
+        let (response_tx, response_rx) = oneshot::channel();
+
+        self.command_tx
+            .send(Command::StartInstance { id, response_tx })
+            .await?;
+
+        response_rx.await?
+    }
+
+    /// Stops the runtime instance with the passed id.
+    #[tracing::instrument(skip(self))]
+    pub(crate) async fn stop(&self, id: InstanceId) -> eyre::Result<()> {
+        let (response_tx, response_rx) = oneshot::channel();
+
+        self.command_tx
+            .send(Command::StopInstance { id, response_tx })
+            .await?;
+
+        response_rx.await?
+    }
+
+    /// Returns info about the current state.
+    pub(crate) async fn info(&self) -> eyre::Result<BTreeMap<InstanceId, RuntimeInfo>> {
+        let (response_tx, response_rx) = oneshot::channel();
+
+        self.command_tx
+            .send(Command::GetInfo { response_tx })
+            .await?;
+
+        response_rx.await.map_err(Into::into)
+    }
+
+    /// Stops all runtime instances.
+    #[tracing::instrument(skip(self))]
+    pub(crate) async fn shutdown(&self) {
+        let (response_tx, response_rx) = oneshot::channel();
+
+        let _ = self
+            .command_tx
+            .send(Command::Shutdown { response_tx })
+            .await;
+
+        let _ = response_rx.await;
+    }
+
+    /// Stops and removes all runtime instances.
+    #[tracing::instrument(skip(self))]
+    pub(crate) async fn clear(&self) {
+        let (response_tx, response_rx) = oneshot::channel();
+
+        let _ = self.command_tx.send(Command::Clear { response_tx }).await;
+
+        let _ = response_rx.await;
+    }
+}
+
+/// The actual [`Conductor`] state machine, running in a background task and accepting commands over channels from its
+/// façade.
+struct Inner {
+    ipc_socket_dir: TempDir,
+    runtimes: HashMap<InstanceId, RuntimeInstance>,
+    distributor: Arc<Distributor>,
+    exporter: Option<Arc<Exporter>>,
+}
+
+impl Inner {
+    fn new(distributor: Arc<Distributor>, exporter: Option<Arc<Exporter>>) -> eyre::Result<Self> {
         let ipc_socket_dir = tempfile::TempDir::with_prefix("veecle-orchestrator-ipc-sockets")?;
         let _ = Utf8Path::from_path(ipc_socket_dir.path())
             .ok_or_else(|| eyre::eyre!("non utf8 tempdir"))?
             .to_owned();
         Ok(Self {
             ipc_socket_dir,
-            runtimes: Runtimes::default(),
+            runtimes: HashMap::new(),
             distributor,
             exporter,
         })
@@ -204,40 +350,27 @@ impl Conductor {
         Utf8Path::from_path(self.ipc_socket_dir.path()).expect("checked in constructor")
     }
 
-    /// Adds a new runtime instance with the specified binary source.
     #[tracing::instrument(skip(self))]
-    pub(crate) async fn add(&self, id: InstanceId, binary: BinarySource) -> eyre::Result<()> {
-        if self.runtimes.lock().unwrap().get(&id).is_some() {
+    async fn add_instance(&mut self, id: InstanceId, binary: BinarySource) -> eyre::Result<()> {
+        if self.runtimes.contains_key(&id) {
             eyre::bail!("instance id {id} already registered");
         }
 
         let ipc_tx = self.distributor.sender();
         let ipc_rx = self.distributor.channel(id).await?;
+        let socket_dir = self.ipc_socket_dir_utf8();
+        let exporter = self.exporter.clone();
 
-        match self.runtimes.lock().unwrap().entry(id) {
-            Entry::Occupied(_) => eyre::bail!("instance id {id} already registered"),
-            Entry::Vacant(entry) => {
-                let socket_dir = self.ipc_socket_dir_utf8();
-                entry.insert(RuntimeInstance::new(
-                    id,
-                    socket_dir,
-                    binary,
-                    ipc_tx,
-                    ipc_rx,
-                    self.exporter.clone(),
-                )?)
-            }
-        };
+        let instance = RuntimeInstance::new(id, socket_dir, binary, ipc_tx, ipc_rx, exporter)?;
+
+        self.runtimes.insert(id, instance);
 
         Ok(())
     }
 
-    /// Removes the runtime instance with the passed id.
     #[tracing::instrument(skip(self))]
-    pub(crate) fn remove(&self, id: InstanceId) -> eyre::Result<()> {
-        let mut runtimes = self.runtimes.lock().unwrap();
-
-        let Entry::Occupied(entry) = runtimes.entry(id) else {
+    fn remove_instance(&mut self, id: InstanceId) -> eyre::Result<()> {
+        let Entry::Occupied(entry) = self.runtimes.entry(id) else {
             eyre::bail!("instance id {id} was not registered");
         };
 
@@ -250,12 +383,9 @@ impl Conductor {
         Ok(())
     }
 
-    /// Starts the runtime instance with the passed id.
     #[tracing::instrument(skip(self))]
-    pub(crate) fn start(&self, id: InstanceId) -> eyre::Result<()> {
-        let mut runtimes = self.runtimes.lock().unwrap();
-
-        let Some(instance) = runtimes.get_mut(&id) else {
+    fn start_instance(&mut self, id: InstanceId) -> eyre::Result<()> {
+        let Some(instance) = self.runtimes.get_mut(&id) else {
             eyre::bail!("instance id {id} was not registered");
         };
 
@@ -264,7 +394,7 @@ impl Conductor {
         }
 
         let binary = instance.binary.path();
-        let process = Command::new(binary)
+        let process = tokio::process::Command::new(binary)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
@@ -277,23 +407,14 @@ impl Conductor {
         Ok(())
     }
 
-    /// Stops the runtime instance with the passed id.
     #[tracing::instrument(skip(self))]
-    pub(crate) async fn stop(&self, id: InstanceId) -> eyre::Result<()> {
-        let process = {
-            let mut runtimes = self.runtimes.lock().unwrap();
+    async fn stop_instance(&mut self, id: InstanceId) -> eyre::Result<()> {
+        let Some(instance) = self.runtimes.get_mut(&id) else {
+            eyre::bail!("instance id {id} was not registered");
+        };
 
-            let Some(instance) = runtimes.get_mut(&id) else {
-                eyre::bail!("instance id {id} was not registered");
-            };
-
-            // By taking here before we stop it's possible for another client to request a concurrent start, we
-            // currently assume that is fine.
-            let Some(process) = instance.process.take() else {
-                eyre::bail!("instance id {id} is not running");
-            };
-
-            process
+        let Some(process) = instance.process.take() else {
+            eyre::bail!("instance id {id} is not running");
         };
 
         let status = kill_child(process).await?;
@@ -303,11 +424,8 @@ impl Conductor {
         Ok(())
     }
 
-    /// Returns info about the current state.
-    pub(crate) fn info(&self) -> BTreeMap<InstanceId, RuntimeInfo> {
+    fn get_info(&self) -> BTreeMap<InstanceId, RuntimeInfo> {
         self.runtimes
-            .lock()
-            .unwrap()
             .iter()
             .map(|(&id, instance)| {
                 (
@@ -321,13 +439,10 @@ impl Conductor {
             .collect()
     }
 
-    /// Stops all runtime instances.
     #[tracing::instrument(skip(self))]
-    pub(crate) async fn shutdown(&self) {
+    async fn shutdown(&mut self) {
         let processes = Vec::from_iter(
             self.runtimes
-                .lock()
-                .unwrap()
                 .iter_mut()
                 .filter_map(|(&id, runtime)| runtime.process.take().map(|process| (id, process))),
         );
@@ -340,17 +455,14 @@ impl Conductor {
             .await;
     }
 
-    /// Stops and removes all runtime instances.
     #[tracing::instrument(skip(self))]
-    pub(crate) async fn clear(&self) {
+    async fn clear(&mut self) {
         self.shutdown().await;
 
-        let ipc_tasks = Vec::from_iter(self.runtimes.lock().unwrap().drain().filter_map(
-            |(id, mut runtime)| {
-                runtime.ipc_shutdown.cancel();
-                runtime.ipc_task.take().map(|task| (id, task))
-            },
-        ));
+        let ipc_tasks = Vec::from_iter(self.runtimes.drain().filter_map(|(id, mut runtime)| {
+            runtime.ipc_shutdown.cancel();
+            runtime.ipc_task.take().map(|task| (id, task))
+        }));
 
         for (id, task) in ipc_tasks {
             match task.await {
@@ -359,6 +471,52 @@ impl Conductor {
                 Err(error) => tracing::warn!("IPC task {id} join failed: {error}"),
             }
         }
+    }
+
+    /// Applies the given command to this state.
+    async fn apply_command(&mut self, command: Command) {
+        match command {
+            Command::AddInstance {
+                id,
+                binary,
+                response_tx,
+            } => {
+                let response = self.add_instance(id, binary).await;
+                let _ = response_tx.send(response);
+            }
+            Command::RemoveInstance { id, response_tx } => {
+                let response = self.remove_instance(id);
+                let _ = response_tx.send(response);
+            }
+            Command::StartInstance { id, response_tx } => {
+                let response = self.start_instance(id);
+                let _ = response_tx.send(response);
+            }
+            Command::StopInstance { id, response_tx } => {
+                let response = self.stop_instance(id).await;
+                let _ = response_tx.send(response);
+            }
+            Command::GetInfo { response_tx } => {
+                let _ = response_tx.send(self.get_info());
+            }
+            Command::Shutdown { response_tx } => {
+                self.shutdown().await;
+                let _ = response_tx.send(());
+            }
+            Command::Clear { response_tx } => {
+                self.clear().await;
+                let _ = response_tx.send(());
+            }
+        }
+    }
+
+    /// Runs a loop applying all received commands to this state.
+    async fn run(&mut self, mut command_rx: mpsc::Receiver<Command>) -> eyre::Result<()> {
+        while let Some(command) = command_rx.recv().await {
+            self.apply_command(command).await;
+        }
+
+        Ok(())
     }
 }
 

@@ -175,11 +175,11 @@ async fn handle_request(
             return Ok((encode(())?, Some(responder)));
         }
         Request::Remove(id) => {
-            conductor.remove(id).wrap_err("removing instance")?;
+            conductor.remove(id).await.wrap_err("removing instance")?;
             encode(())?
         }
         Request::Start(id) => {
-            conductor.start(id).wrap_err("starting instance")?;
+            conductor.start(id).await.wrap_err("starting instance")?;
             encode(())?
         }
         Request::Stop(id) => {
@@ -194,7 +194,7 @@ async fn handle_request(
             encode(())?
         }
         Request::Info => encode(Info {
-            runtimes: conductor.info(),
+            runtimes: conductor.info().await?,
             links: distributor.info().await?,
         })?,
         Request::Clear => {
