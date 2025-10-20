@@ -9,6 +9,7 @@ extern crate std;
 mod error;
 pub mod log;
 pub mod net;
+pub mod thread;
 pub mod time;
 
 pub use error::{Error, Result};
