@@ -15,7 +15,6 @@ veecle-os = { path = "../../veecle-os", default-features = false, features = [
 ] }
 veecle-os-examples-common = { path = "../common", default-features = false, features = [
   "alloc",
-  "telemetry",
 ] }
 veecle-telemetry = { path = "../../veecle-telemetry", default-features = false, features = [
   "enable",
