@@ -203,8 +203,7 @@ pub fn impl_actor(
                 } else {
                     let type_error = Err(Error::new(
                         typed_argument.ty.span(),
-                        "only \"Reader\", \"ExclusiveReader\", \"InitializedReader\" and \"Writer\" arguments are \
-                         allowed",
+                        "only \"Reader\", \"ExclusiveReader\", \"InitializedReader\" and \"Writer\" arguments are allowed",
                     ));
 
                     let Type::Path(argument_type) = typed_argument.ty.as_ref() else {
@@ -308,14 +307,14 @@ pub fn impl_actor(
                 request: Self::StoreRequest,
                 #context_name: Self::InitContext
             ) -> Self {
-                 Self {
-                      request,
-                      #context_name,
-                      __phantom_data_private_to_avoid_name_collisions_veecle:  (
-                          core::marker::PhantomData,
-                          (#(#phantom_generic_values,)*),
-                      ),
-                 }
+                Self {
+                    request,
+                    #context_name,
+                    __phantom_data_private_to_avoid_name_collisions_veecle:  (
+                        core::marker::PhantomData,
+                        (#(#phantom_generic_values,)*),
+                    ),
+                }
             }
 
             async fn run(self) -> core::result::Result<core::convert::Infallible, Self::Error> {
