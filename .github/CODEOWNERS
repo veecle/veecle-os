@@ -9,6 +9,8 @@
 /veecle-ipc*                      @Nemo157
 /veecle-orchestrator*             @Nemo157
 
-/veecle-os-runtime/               @arctic-alpaca @Nemo157
+/veecle-os-runtime*               @arctic-alpaca @Nemo157
 
 /veecle-telemetry*                @ForsakenHarmony
+
+**/Cargo.lock
