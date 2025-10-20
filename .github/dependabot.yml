@@ -21,6 +21,11 @@ updates:
       # Embassy doesn't support heapless versions >=0.9.0.
       - dependency-name: "heapless"
         versions: [">=0.9.0"]
+
       # DEV-1037, updating requires API breaking changes.
+      - dependency-name: "embedded-io"
+        versions: [">=0.7.0"]
+      - dependency-name: "embedded-io-adapters"
+        versions: [">=0.7.0"]
       - dependency-name: "embedded-io-async"
         versions: [">=0.7.0"]
