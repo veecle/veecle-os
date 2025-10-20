@@ -16,4 +16,4 @@ veecle-os = { path = "../../veecle-os", default-features = false }
 [features]
 # Enables features that require `alloc`.
 alloc = ["veecle-os/alloc"]
-telemetry = ["alloc", "veecle-os/telemetry"]
+telemetry = ["alloc"]

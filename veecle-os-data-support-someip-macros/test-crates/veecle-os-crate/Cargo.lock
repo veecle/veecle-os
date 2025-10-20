@@ -404,6 +404,7 @@ dependencies = [
  "veecle-os-data-support-someip",
  "veecle-os-runtime",
  "veecle-osal-api",
+ "veecle-telemetry",
 ]
 
 [[package]]
