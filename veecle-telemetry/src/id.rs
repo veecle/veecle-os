@@ -79,6 +79,7 @@ impl<'de> serde::Deserialize<'de> for TraceId {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct SpanId(pub u64);
 
+#[cfg(feature = "enable")]
 impl SpanId {
     #[inline]
     #[doc(hidden)]

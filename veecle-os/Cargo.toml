@@ -35,7 +35,7 @@ data-support-someip = ["dep:veecle-os-data-support-someip"]
 osal-embassy = ["dep:veecle-osal-embassy"]
 osal-freertos = ["dep:veecle-osal-freertos", "veecle-telemetry?/freertos"]
 osal-std = ["dep:veecle-osal-std", "veecle-telemetry?/std"]
-telemetry = ["dep:veecle-telemetry", "veecle-os-runtime/veecle-telemetry"]
+telemetry = ["dep:veecle-telemetry"]
 telemetry-enable = ["telemetry", "veecle-telemetry/enable"]
 
 [lints]

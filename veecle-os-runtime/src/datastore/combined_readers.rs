@@ -64,7 +64,7 @@ macro_rules! impl_combined_reader_helper {
                 );
 
                 #[allow(non_snake_case)]
-                #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
+                #[veecle_telemetry::instrument]
                 fn read<A>(&self, f: impl FnOnce(Self::ToBeRead<'_>) -> A) -> A {
                     let ($($generic_type,)*) = self;
                     let ($($generic_type,)*) = ($({
@@ -74,7 +74,7 @@ macro_rules! impl_combined_reader_helper {
                 }
 
                 #[allow(non_snake_case)]
-                #[cfg_attr(feature = "veecle-telemetry", veecle_telemetry::instrument)]
+                #[veecle_telemetry::instrument]
                 async fn wait_for_update(&mut self) -> &mut Self {
                     {
                         let ($($generic_type,)*) = self;
