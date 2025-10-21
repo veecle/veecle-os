@@ -5,6 +5,7 @@ use core::fmt::Debug;
 use futures::future::FutureExt;
 use serde::{Deserialize, Serialize};
 use veecle_os::runtime::{InitializedReader, Reader, Storable, Writer};
+use veecle_os::telemetry::{error, info};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Storable, Deserialize, Serialize)]
 pub struct Ping {
@@ -21,24 +22,19 @@ pub struct Pong {
 #[veecle_os::runtime::actor]
 pub async fn ping_actor(mut ping: Writer<'_, Ping>, pong: Reader<'_, Pong>) -> Infallible {
     let mut value = 0;
-    #[cfg(feature = "telemetry")]
-    veecle_os::telemetry::info!("[PING TASK] Sending initial", ping = i64::from(value));
+    info!("[PING TASK] Sending initial", ping = i64::from(value));
     ping.write(Ping { value }).await;
     value += 1;
 
-    #[cfg(feature = "telemetry")]
-    veecle_os::telemetry::info!("[PING TASK] Waiting for pong");
+    info!("[PING TASK] Waiting for pong");
     let mut pong = pong.wait_init().await;
     loop {
-        #[cfg(feature = "telemetry")]
-        veecle_os::telemetry::info!("[PING TASK] Waiting for pong");
+        info!("[PING TASK] Waiting for pong");
         pong.wait_for_update().await.read(|pong| {
-            #[cfg(feature = "telemetry")]
-            veecle_os::telemetry::info!("[PING TASK] Pong received", pong = i64::from(pong.value));
+            info!("[PING TASK] Pong received", pong = i64::from(pong.value));
             assert_eq!(pong.value, value);
         });
-        #[cfg(feature = "telemetry")]
-        veecle_os::telemetry::info!("[PING TASK] Sending", ping = i64::from(value));
+        info!("[PING TASK] Sending", ping = i64::from(value));
         ping.write(Ping { value }).await;
         value += 1;
     }
@@ -51,18 +47,15 @@ pub async fn pong_actor(
     mut ping: InitializedReader<'_, Ping>,
 ) -> Infallible {
     loop {
-        #[cfg(feature = "telemetry")]
-        veecle_os::telemetry::info!("[PONG TASK] Waiting for ping");
+        info!("[PONG TASK] Waiting for ping");
 
         let value = ping.wait_for_update().await.read(|ping| {
-            #[cfg(feature = "telemetry")]
-            veecle_os::telemetry::info!("[PONG TASK] Ping received", ping = i64::from(ping.value));
+            info!("[PONG TASK] Ping received", ping = i64::from(ping.value));
             ping.value + 1
         });
 
         let data = Pong { value };
-        #[cfg(feature = "telemetry")]
-        veecle_os::telemetry::info!("[PONG TASK] Sending", pong = i64::from(data.value));
+        info!("[PONG TASK] Sending", pong = i64::from(data.value));
         pong.write(data).await;
     }
 }
@@ -79,8 +72,7 @@ pub async fn trace_actor(
                 ping_reader.read(|ping| {
                     if let Some(ping) = ping {
                         let _ = ping;
-                        #[cfg(feature = "telemetry")]
-                        veecle_os::telemetry::error!("[TRACE TASK]", ping = i64::from(ping.value));
+                        error!("[TRACE TASK]", ping = i64::from(ping.value));
                     }
                 });
             }
@@ -88,8 +80,7 @@ pub async fn trace_actor(
                 pong_reader.read(|pong| {
                     if let Some(pong) = pong {
                         let _ = pong;
-                        #[cfg(feature = "telemetry")]
-                        veecle_os::telemetry::error!("[TRACE TASK]", pong = i64::from(pong.value));
+                        error!("[TRACE TASK]", pong = i64::from(pong.value));
                     }
                 });
             }

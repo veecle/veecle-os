@@ -12,11 +12,9 @@ rand = { version = "0.9.2", default-features = false, features = ["std_rng"] }
 veecle-ipc = { path = "../../veecle-ipc", default-features = false }
 veecle-os = { path = "../../veecle-os", default-features = false, features = [
   "osal-std",
-  "telemetry",
 ] }
 veecle-os-examples-common = { path = "../common", default-features = false, features = [
   "alloc",
-  "telemetry",
 ] }
 veecle-telemetry = { path = "../../veecle-telemetry", default-features = false, features = [
   "enable",

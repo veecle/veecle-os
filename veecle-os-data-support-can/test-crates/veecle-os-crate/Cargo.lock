@@ -472,6 +472,7 @@ dependencies = [
  "veecle-os-data-support-can",
  "veecle-os-runtime",
  "veecle-osal-api",
+ "veecle-telemetry",
 ]
 
 [[package]]

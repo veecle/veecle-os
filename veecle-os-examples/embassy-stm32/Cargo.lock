@@ -1003,6 +1003,7 @@ dependencies = [
  "veecle-os-runtime",
  "veecle-osal-api",
  "veecle-osal-embassy",
+ "veecle-telemetry",
 ]
 
 [[package]]

@@ -26,17 +26,16 @@ veecle-osal-api = { workspace = true }
 veecle-osal-embassy = { workspace = true, optional = true }
 veecle-osal-freertos = { workspace = true, optional = true }
 veecle-osal-std = { workspace = true, optional = true }
-veecle-telemetry = { workspace = true, optional = true }
+veecle-telemetry = { workspace = true }
 
 [features]
-alloc = ["veecle-telemetry?/alloc"]
+alloc = ["veecle-telemetry/alloc"]
 data-support-can = ["dep:veecle-os-data-support-can"]
 data-support-someip = ["dep:veecle-os-data-support-someip"]
 osal-embassy = ["dep:veecle-osal-embassy"]
-osal-freertos = ["dep:veecle-osal-freertos", "veecle-telemetry?/freertos"]
-osal-std = ["dep:veecle-osal-std", "veecle-telemetry?/std"]
-telemetry = ["dep:veecle-telemetry"]
-telemetry-enable = ["telemetry", "veecle-telemetry/enable"]
+osal-freertos = ["dep:veecle-osal-freertos", "veecle-telemetry/freertos"]
+osal-std = ["dep:veecle-osal-std", "veecle-telemetry/std"]
+telemetry-enable = ["veecle-telemetry/enable"]
 
 [lints]
 workspace = true

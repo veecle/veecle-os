@@ -23,10 +23,8 @@ pub mod osal {
 }
 
 #[doc(inline)]
-#[cfg(feature = "telemetry")]
 pub use veecle_telemetry as telemetry;
 #[doc(inline)]
-#[cfg(feature = "telemetry")]
 pub use veecle_telemetry::{debug, error, event, fatal, info, log, span, trace};
 
 /// Support modules for working with various data formats.

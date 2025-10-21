@@ -377,6 +377,7 @@ version = "0.1.0"
 dependencies = [
  "veecle-os-runtime",
  "veecle-osal-api",
+ "veecle-telemetry",
 ]
 
 [[package]]
