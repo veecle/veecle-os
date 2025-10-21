@@ -247,7 +247,7 @@ impl TimeRangeUi {
 impl TraceTimelinePanel {
     /// Show the timeline panel.
     pub fn show(&mut self, ui: &mut egui::Ui, store: &Store, app_state: &AppState) {
-        let window_height = ui.ctx().screen_rect().height();
+        let window_height = ui.ctx().content_rect().height();
 
         let min_height = 150.0;
         let min_top_space = 150.0;
