@@ -113,8 +113,7 @@ fn trace_macro() {
     let exporter = set_exporter();
 
     {
-        let context = SpanContext::generate();
-        let root = Span::root("root", context, &[]);
+        let root = Span::new("root", &[]);
 
         let runtime = Builder::new_multi_thread()
             .worker_threads(4)
@@ -180,8 +179,7 @@ fn trace_macro_example() {
     let exporter = set_exporter();
 
     {
-        let context = SpanContext::generate();
-        let _root_guard = Span::root("root", context, &[]).entered();
+        let _root_guard = Span::new("root", &[]).entered();
 
         let runtime = Builder::new_current_thread().enable_all().build().unwrap();
 
@@ -210,12 +208,7 @@ fn span_property() {
     let exporter = set_exporter();
 
     {
-        let context = SpanContext::generate();
-        let root = Span::root(
-            "root",
-            context,
-            &[KeyValue::new("k1", "v1"), KeyValue::new("k2", 2)],
-        );
+        let root = Span::new("root", &[KeyValue::new("k1", "v1"), KeyValue::new("k2", 2)]);
         root.set_attribute(KeyValue::new("k3", "v3"));
 
         let _g = root.enter();
@@ -251,8 +244,7 @@ fn current_span_integration() {
     let exporter = set_exporter();
 
     {
-        let context = SpanContext::generate();
-        let root = Span::root("root", context, &[]);
+        let root = Span::new("root", &[]);
 
         let _guard = root.entered();
 
@@ -326,15 +318,10 @@ fn log_without_span_context() {
 #[test]
 #[serial]
 fn log_with_span_context() {
-    use veecle_telemetry::{SpanId, TraceId};
-
     let exporter = set_exporter();
 
     {
-        let trace_id = TraceId(0x123);
-        let span_id = SpanId(0);
-        let span_context = SpanContext::new(trace_id, span_id);
-        let span = Span::root("test_span", span_context, &[]);
+        let span = Span::new("test_span", &[]);
 
         let _guard = span.entered();
         veecle_telemetry::log::log(Severity::Error, "error message", &[]);
@@ -431,9 +418,6 @@ fn test_trailing_comma_support() {
         let _span = veecle_telemetry::span!("test span", span_attr = "value");
         let _span = veecle_telemetry::span!("test span", span_attr = "value",);
 
-        let _root_span = veecle_telemetry::root_span!("root span", root_attr = 123);
-        let _root_span = veecle_telemetry::root_span!("root span", root_attr = 123,);
-
         veecle_telemetry::event!("test event", event_attr = true);
         veecle_telemetry::event!("test event", event_attr = true,);
 
@@ -448,8 +432,10 @@ fn test_trailing_comma_support() {
     assert_eq!(
         graph,
         indoc! {r#"
-            root span [root_attr=123]
-            root span [root_attr=123]
+            test span [span_attr="value"]
+            test span [span_attr="value"]
+            empty span []
+            empty span []
             + log: [Trace] empty log []
             + log: [Trace] empty log []
             + log: [Info] single attr [value=1]

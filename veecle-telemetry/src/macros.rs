@@ -55,24 +55,6 @@ macro_rules! span {
     };
 }
 
-/// Creates a new root span.
-///
-/// See [span].
-///
-/// # Examples
-///
-/// ```rust
-/// use veecle_telemetry::root_span;
-///
-/// let span = root_span!("request");
-/// ```
-#[macro_export]
-macro_rules! root_span {
-    ($name:literal $(, $($attributes:tt)*)?) => {
-        $crate::Span::root($name, $crate::id::SpanContext::generate(), $crate::attributes!($($($attributes)*)?))
-    };
-}
-
 /// Adds an event to the current span.
 ///
 /// Events are timestamped occurrences that happen during the execution of a span.
@@ -329,8 +311,7 @@ macro_rules! fatal {
 
 /// Constructs a slice of `KeyValue` attributes.
 ///
-/// This macro is primarily used when manually constructing spans, such as root spans
-/// that don't have a convenience macro.
+/// This macro is primarily used when manually constructing spans.
 ///
 /// # Syntax
 ///
@@ -364,15 +345,14 @@ macro_rules! fatal {
 /// );
 /// ```
 ///
-/// Root span construction with attributes:
+/// Span construction with attributes:
 /// ```rust
 /// use veecle_telemetry::{Span, SpanContext, attributes};
 ///
 /// let operation = "user_login";
 /// let user_id = 456;
-/// let span = Span::root(
+/// let span = Span::new(
 ///     "authentication",
-///     SpanContext::generate(),
 ///     attributes!(operation = operation, user_id = user_id, "security_level" = "high"),
 /// );
 /// ```

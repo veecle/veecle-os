@@ -206,10 +206,11 @@ impl SpanContext {
     /// ```
     /// use veecle_telemetry::*;
     ///
-    /// let span = Span::root("root", SpanContext::generate(), &[]);
+    /// let span = Span::new("root", &[]);
     /// let _guard = span.entered();
     ///
     /// let span_context = SpanContext::current();
+    /// assert!(span_context.is_some());
     /// ```
     pub fn current() -> Option<Self> {
         #[cfg(not(feature = "enable"))]
