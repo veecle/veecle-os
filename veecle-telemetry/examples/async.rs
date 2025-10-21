@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use veecle_telemetry::collector::ConsoleJsonExporter;
 use veecle_telemetry::protocol::ExecutionId;
-use veecle_telemetry::{CurrentSpan, Span, SpanContext};
+use veecle_telemetry::{CurrentSpan, Span};
 
 #[tokio::main]
 async fn main() {
@@ -12,7 +12,7 @@ async fn main() {
     veecle_telemetry::collector::set_exporter(execution_id, &ConsoleJsonExporter)
         .expect("exporter was not set yet");
 
-    let _span = Span::root("main", SpanContext::generate(), &[]).entered();
+    let _span = Span::new("main", &[]).entered();
 
     tokio::join!(async_a(), async_b());
 }

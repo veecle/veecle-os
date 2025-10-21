@@ -58,6 +58,7 @@ use std::thread_local;
 use crate::SpanContext;
 #[cfg(feature = "enable")]
 use crate::collector::get_collector;
+#[cfg(feature = "enable")]
 use crate::id::SpanId;
 #[cfg(feature = "enable")]
 use crate::protocol::{
@@ -148,8 +149,7 @@ impl Span {
 
     /// Creates a new span as a child of the current span.
     ///
-    /// If there is no current span, this returns a no-op span.
-    /// Uses [`Span::root`] to create a root span with a specific context.
+    /// If there is no current span, this returns a new root span.
     ///
     /// # Arguments
     ///
@@ -172,44 +172,8 @@ impl Span {
 
         #[cfg(feature = "enable")]
         {
-            if let Some(parent) = CURRENT_SPAN.get() {
-                Self::new_inner(name, parent, attributes)
-            } else {
-                Self::noop()
-            }
-        }
-    }
-
-    /// Creates a new root span with the given context.
-    ///
-    /// Unlike `new()`, this method does not use the current span from `CURRENT_SPAN`
-    /// and creates a true root span with no parent using the provided `SpanContext` directly.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use veecle_telemetry::{Span, SpanContext};
-    ///
-    /// let context = SpanContext::generate();
-    /// let span = Span::root("root_span", context, &[]);
-    /// ```
-    pub fn root(
-        name: &'static str,
-        mut span_context: SpanContext,
-        attributes: &'_ [KeyValue<'static>],
-    ) -> Self {
-        // Ensure no parent_id will be set.
-        span_context.span_id = SpanId(0);
-
-        #[cfg(not(feature = "enable"))]
-        {
-            let _ = (name, attributes);
-            Self::noop()
-        }
-
-        #[cfg(feature = "enable")]
-        {
-            Self::new_inner(name, span_context, attributes)
+            let parent = CURRENT_SPAN.get().unwrap_or_else(SpanContext::generate);
+            Self::new_inner(name, parent, attributes)
         }
     }
 
@@ -221,8 +185,7 @@ impl Span {
     /// ```
     /// use veecle_telemetry::{Span, SpanContext};
     ///
-    /// let context = SpanContext::generate();
-    /// let span = Span::root("root_span", context, &[]);
+    /// let span = Span::new("root_span", &[]);
     /// assert!(span.context().is_some());
     /// ```
     pub fn context(&self) -> Option<SpanContext> {
@@ -745,7 +708,7 @@ mod tests {
         CURRENT_SPAN.set(None);
 
         let span = Span::new("test_span", &[]);
-        assert!(span.inner.is_none());
+        assert!(span.inner.is_some());
     }
 
     #[test]
@@ -763,23 +726,9 @@ mod tests {
 
     #[test]
     fn span_root() {
-        let root_context = SpanContext::generate();
-        assert_eq!(root_context.span_id, SpanId(0));
-
-        let span = Span::root("root_span", root_context, &[]);
+        let span = Span::new("root_span", &[]);
         let inner = span.inner.as_ref().unwrap();
-        assert_eq!(inner.context.trace_id, root_context.trace_id);
         assert_ne!(inner.context.span_id, SpanId(0));
-    }
-
-    #[test]
-    fn span_context_from_span() {
-        let root_context = SpanContext::generate();
-        let span = Span::root("test_span", root_context, &[]);
-
-        let extracted_context = span.context();
-        let context = extracted_context.unwrap();
-        assert_eq!(context.trace_id, root_context.trace_id);
     }
 
     #[test]
@@ -795,14 +744,11 @@ mod tests {
 
         assert!(SpanContext::current().is_none());
 
-        let root_context = SpanContext::generate();
-        let span = Span::root("test_span", root_context, &[]);
+        let span = Span::new("test_span", &[]);
 
         {
             let _guard = span.enter();
-            let current_context = SpanContext::current();
-            let context = current_context.unwrap();
-            assert_eq!(context.trace_id, root_context.trace_id);
+            assert_eq!(SpanContext::current().unwrap(), span.context().unwrap());
         }
 
         // After guard is dropped, should be back to no current context
@@ -813,8 +759,7 @@ mod tests {
     fn span_entered_guard() {
         CURRENT_SPAN.set(None);
 
-        let root_context = SpanContext::generate();
-        let span = Span::root("test_span", root_context, &[]);
+        let span = Span::new("test_span", &[]);
 
         {
             let _guard = span.entered();
@@ -844,19 +789,21 @@ mod tests {
     fn nested_spans() {
         CURRENT_SPAN.set(None);
 
-        let root_context = SpanContext::generate();
-        let _root_guard = Span::root("test_span", root_context, &[]).entered();
+        let root_span = Span::new("test_span", &[]);
+        let root_context = root_span.context().unwrap();
+        let _root_guard = root_span.entered();
 
         let child_span = Span::new("child", &[]);
-        let child_inner = child_span.inner.as_ref().unwrap();
-        assert_eq!(child_inner.context.trace_id, root_context.trace_id);
-        assert_ne!(child_inner.context.span_id, root_context.span_id);
+        assert_eq!(
+            child_span.context().unwrap().trace_id,
+            root_context.trace_id
+        );
+        assert_ne!(child_span.context().unwrap().span_id, root_context.span_id);
     }
 
     #[test]
     fn span_event() {
-        let context = SpanContext::generate();
-        let span = Span::root("test_span", context, &[]);
+        let span = Span::new("test_span", &[]);
 
         let event_attributes = [KeyValue::new("event_key", "event_value")];
 
@@ -868,8 +815,7 @@ mod tests {
 
     #[test]
     fn span_link() {
-        let context = SpanContext::generate();
-        let span = Span::root("test_span", context, &[]);
+        let span = Span::new("test_span", &[]);
 
         let link_context = SpanContext::new(TraceId(0), SpanId(0));
         span.add_link(link_context);
@@ -880,8 +826,7 @@ mod tests {
 
     #[test]
     fn span_attribute() {
-        let context = SpanContext::generate();
-        let span = Span::root("test_span", context, &[]);
+        let span = Span::new("test_span", &[]);
 
         let attribute = KeyValue::new("test_key", "test_value");
         span.set_attribute(attribute.clone());
@@ -892,8 +837,7 @@ mod tests {
 
     #[test]
     fn span_methods_with_entered_span() {
-        let context = SpanContext::generate();
-        let span = Span::root("test_span", context, &[]);
+        let span = Span::new("test_span", &[]);
 
         let _guard = span.enter();
 
@@ -907,8 +851,7 @@ mod tests {
     fn current_span_event_with_active_span() {
         CURRENT_SPAN.set(None);
 
-        let context = SpanContext::generate();
-        let _root_guard = Span::root("test_span", context, &[]).entered();
+        let _root_guard = Span::new("test_span", &[]).entered();
 
         let event_attributes = [KeyValue::new("current_event_key", "current_event_value")];
         CurrentSpan::add_event("current_test_event", &event_attributes);
@@ -918,8 +861,7 @@ mod tests {
     fn current_span_link_with_active_span() {
         CURRENT_SPAN.set(None);
 
-        let context = SpanContext::generate();
-        let _root_guard = Span::root("test_span", context, &[]).entered();
+        let _root_guard = Span::new("test_span", &[]).entered();
 
         let link_context = SpanContext::new(TraceId(0), SpanId(0));
         CurrentSpan::add_link(link_context);
@@ -929,8 +871,7 @@ mod tests {
     fn current_span_attribute_with_active_span() {
         CURRENT_SPAN.set(None);
 
-        let context = SpanContext::generate();
-        let span = Span::root("test_span", context, &[]);
+        let span = Span::new("test_span", &[]);
 
         let _guard = span.enter();
         let attribute = KeyValue::new("current_attr_key", "current_attr_value");
