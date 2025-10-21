@@ -18,4 +18,4 @@ veecle-os-examples-common = { path = "../common", default-features = false, feat
 ] }
 
 [dev-dependencies]
-tokio = { version = "1.47.1", features = ["macros", "rt"] }
+tokio = { version = "1.48.0", features = ["macros", "rt"] }
