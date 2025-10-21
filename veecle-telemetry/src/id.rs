@@ -19,7 +19,6 @@ use core::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-use crate::Span;
 use crate::collector::get_collector;
 #[cfg(feature = "enable")]
 use crate::span::CURRENT_SPAN;
@@ -196,34 +195,6 @@ impl SpanContext {
         Self {
             trace_id: TraceId::generate(),
             span_id: SpanId(0),
-        }
-    }
-
-    /// Creates a `SpanContext` from the given [`Span`]. If the `Span` is a noop span,
-    /// this function will return `None`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use veecle_telemetry::*;
-    ///
-    /// let span = Span::root("root", SpanContext::generate(), &[]);
-    /// let span_context = SpanContext::from_span(&span);
-    /// ```
-    ///
-    /// [`Span`]: crate::Span
-    pub fn from_span(span: &Span) -> Option<Self> {
-        #[cfg(not(feature = "enable"))]
-        {
-            let _ = span;
-            None
-        }
-
-        #[cfg(feature = "enable")]
-        {
-            let inner = span.inner.as_ref()?;
-
-            Some(inner.context)
         }
     }
 
