@@ -56,6 +56,10 @@ where
     /// Stores the provided `span_context` to connect this write to the next read operation.
     #[veecle_telemetry::instrument]
     pub(crate) fn take(&self, span_context: Option<SpanContext>) -> Option<T::DataType> {
+        if let Some(writer_context) = self.writer_context.get() {
+            veecle_telemetry::CurrentSpan::add_link(writer_context);
+        }
+
         self.borrow_mut(span_context).take()
     }
 }
