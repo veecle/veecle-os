@@ -3,6 +3,11 @@ compile_error!(
 failed to parse `fragment.dbc`
 
 Caused by:
-    parser error around line 40
+      --> 40:51
+   |
+40 |  SG_ EngineSpeed : 24|16@1+ (0.125,0) [0|8031.875]␊
+   |                                                   ^---
+   |
+   = expected unit
 "#
 );
