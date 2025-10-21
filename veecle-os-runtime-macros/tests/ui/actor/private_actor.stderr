@@ -7,6 +7,6 @@ error[E0603]: struct `MacroTestActor` is private
 note: the struct `MacroTestActor` is defined here
   --> tests/ui/actor/private_actor.rs:5:5
    |
-5  |     #[veecle_os_runtime_macros::actor]
+ 5 |     #[veecle_os_runtime_macros::actor]
    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    = note: this error originates in the attribute macro `veecle_os_runtime_macros::actor` (in Nightly builds, run with -Z macro-backtrace for more info)

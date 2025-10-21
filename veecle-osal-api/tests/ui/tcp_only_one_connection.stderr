@@ -1,7 +1,7 @@
 error[E0499]: cannot borrow `input` as mutable more than once at a time
   --> tests/ui/tcp_only_one_connection.rs:10:24
    |
-6  |     let connection1 = input
+ 6 |     let connection1 = input
    |                       ----- first mutable borrow occurs here
 ...
 10 |     let _connection2 = input

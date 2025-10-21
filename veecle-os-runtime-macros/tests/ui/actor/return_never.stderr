@@ -7,10 +7,10 @@ error[E0658]: the `!` type is experimental
   = note: see issue #35121 <https://github.com/rust-lang/rust/issues/35121> for more information
 
 error[E0277]: #[veecle_os_runtime::actor] functions should return either a `Result<Infallible, _>` or `Infallible`
- --> tests/ui/actor/return_never.rs:4:1
+ --> tests/ui/actor/return_never.rs:8:6
   |
-4 | #[veecle_os_runtime_macros::actor]
-  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not a valid actor return type
+8 | ) -> ! {
+  |      ^ not a valid actor return type
   |
   = help: the trait `IsActorResult` is not implemented for `!`
   = help: the following other types implement trait `IsActorResult`:
@@ -18,10 +18,10 @@ error[E0277]: #[veecle_os_runtime::actor] functions should return either a `Resu
             Result<Infallible, E>
 
 error[E0277]: #[veecle_os_runtime::actor] functions should return either a `Result<Infallible, _>` or `Infallible`
- --> tests/ui/actor/return_never.rs:8:6
+ --> tests/ui/actor/return_never.rs:4:1
   |
-8 | ) -> ! {
-  |      ^ not a valid actor return type
+4 | #[veecle_os_runtime_macros::actor]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not a valid actor return type
   |
   = help: the trait `IsActorResult` is not implemented for `!`
   = help: the following other types implement trait `IsActorResult`:

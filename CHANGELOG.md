@@ -7,6 +7,7 @@
   Use the `telemetry-enable` feature flag on `veecle-os` to control telemetry behavior.
 * **breaking** Replaced `SpanContext::from_span` with `Span::context` method.
 * Added `ThreadAbstraction` trait to OSAL for querying current thread id.
+* Updated MSRV to 1.90.
 * Fixed `veecle_os::telemetry::instrument` macro to automatically resolve correct crate paths for the facade.
 
 ## Veecle Telemetry VSCode Extension
