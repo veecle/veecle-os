@@ -6,12 +6,14 @@
 
 #![forbid(unsafe_code)]
 #![cfg_attr(not(test), no_std)]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(not(target_os = "none"))]
 extern crate std;
 
 pub mod log;
 pub mod net;
+pub mod thread;
 pub mod time;
 
 pub use veecle_osal_api::{Error, Result};

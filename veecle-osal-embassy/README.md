@@ -12,6 +12,11 @@ The `veecle-os` crate re-exports this functionality and provides a more complete
 
 For examples and more detailed usage information, please refer to the [repository](https://github.com/veecle/veecle-os).
 
+## Limitations
+
+The Embassy OSAL only supports running on a single core (and thread) on `no_std` systems.
+Using the OSAL on any `no_std` system that uses multiple cores or threads may lead to undefined behavior.
+
 ## Testing
 
 ### Time
