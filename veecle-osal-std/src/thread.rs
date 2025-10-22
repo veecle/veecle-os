@@ -1,6 +1,6 @@
 //! Thread-related abstractions.
 
-use std::cell::Cell;
+use std::cell::LazyCell;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 pub use veecle_osal_api::thread::ThreadAbstraction;
@@ -14,24 +14,17 @@ static NEXT_THREAD_ID: AtomicU64 = AtomicU64::new(1);
 
 thread_local! {
     /// Thread-local storage for the current thread's id.
-    static THREAD_ID: Cell<u64> = const { Cell::new(0) };
+    static THREAD_ID: LazyCell<u64> = const { LazyCell::new(||{
+        // `Relaxed` is enough, we don't care about what specific value a thread sees.
+        // We just ensure that every value is unique.
+        // This assumes that creating 2^64 threads is impractical and no overflow occurs.
+        NEXT_THREAD_ID.fetch_add(1, Ordering::Relaxed)
+    }) };
 }
 
 impl ThreadAbstraction for Thread {
     fn current_thread_id() -> u64 {
-        THREAD_ID.with(|id| {
-            let current = id.get();
-            if current == 0 {
-                // `Relaxed` here is enough because we don't care about what values various threads
-                // see, just that they're unique (assuming that creating 2^64 threads is impractical
-                // so overflow can't happen).
-                let new_id = NEXT_THREAD_ID.fetch_add(1, Ordering::Relaxed);
-                id.set(new_id);
-                new_id
-            } else {
-                current
-            }
-        })
+        THREAD_ID.with(|thread_id| **thread_id)
     }
 }
 
