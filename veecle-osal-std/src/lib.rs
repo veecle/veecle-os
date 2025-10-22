@@ -3,6 +3,7 @@
 //! This provides the primitives that we need to use in Veecle OS, using the std library.
 
 #![forbid(unsafe_code)]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 pub mod log;
 pub mod net;
