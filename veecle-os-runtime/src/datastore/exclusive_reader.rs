@@ -86,9 +86,11 @@ where
     }
 
     /// Takes the current value of the type, leaving behind `None`.
-    #[veecle_telemetry::instrument]
     pub fn take(&mut self) -> Option<T::DataType> {
-        let value = self.waiter.take();
+        let span = veecle_telemetry::span!("take");
+        let _guard = span.enter();
+
+        let value = self.waiter.take(span.context());
 
         // TODO(DEV-532): add debug format
         veecle_telemetry::trace!(

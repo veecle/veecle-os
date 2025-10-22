@@ -70,7 +70,12 @@ where
     T: Storable + 'static,
 {
     /// Takes the current value of the slot, leaving behind `None`.
-    pub(crate) fn take(&mut self) -> Option<T::DataType> {
-        self.slot.take()
+    ///
+    /// Stores the provided `span_context` to connect this write to the next read operation.
+    pub(crate) fn take(
+        &mut self,
+        span_context: Option<veecle_telemetry::SpanContext>,
+    ) -> Option<T::DataType> {
+        self.slot.take(span_context)
     }
 }

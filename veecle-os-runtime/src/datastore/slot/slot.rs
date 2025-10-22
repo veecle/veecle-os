@@ -52,9 +52,11 @@ where
     }
 
     /// Takes the current value of the slot, leaving behind `None`.
+    ///
+    /// Stores the provided `span_context` to connect this write to the next read operation.
     #[veecle_telemetry::instrument]
-    pub(crate) fn take(&self) -> Option<T::DataType> {
-        self.borrow_mut().take()
+    pub(crate) fn take(&self, span_context: Option<SpanContext>) -> Option<T::DataType> {
+        self.borrow_mut(span_context).take()
     }
 }
 
@@ -92,15 +94,16 @@ where
         self.item.borrow()
     }
 
-    pub(super) fn borrow_mut(&self) -> RefMut<'_, Option<T::DataType>> {
-        {
-            // TODO(DEV-531): this should be added, but only for an in place update
-            // if let Some(writer_context) = self.writer_context.get() {
-            //     veecle_telemetry::CurrentSpan::add_link(writer_context);
-            // }
-            self.writer_context
-                .set(veecle_telemetry::SpanContext::current());
-        }
+    /// Stores the provided `span_context` to connect this write to the next read operation.
+    pub(super) fn borrow_mut(
+        &self,
+        span_context: Option<SpanContext>,
+    ) -> RefMut<'_, Option<T::DataType>> {
+        // TODO(DEV-531): this should be added, but only for an in place update
+        // if let Some(writer_context) = self.writer_context.get() {
+        //     veecle_telemetry::CurrentSpan::add_link(writer_context);
+        // }
+        self.writer_context.set(span_context);
 
         self.item.borrow_mut()
     }
@@ -110,9 +113,14 @@ where
         f(&*self.borrow())
     }
 
+    /// Stores the provided `span_context` to connect this write to the next read operation.
     #[veecle_telemetry::instrument]
-    pub(crate) fn modify(&self, f: impl FnOnce(&mut Option<T::DataType>)) {
-        f(&mut *self.borrow_mut())
+    pub(crate) fn modify(
+        &self,
+        f: impl FnOnce(&mut Option<T::DataType>),
+        span_context: Option<SpanContext>,
+    ) {
+        f(&mut *self.borrow_mut(span_context))
     }
 
     pub(crate) fn increment_generation(self: Pin<&Self>) {
