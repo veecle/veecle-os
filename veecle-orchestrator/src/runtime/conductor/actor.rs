@@ -30,6 +30,7 @@ pub(crate) enum Command {
     AddInstance {
         id: InstanceId,
         binary: BinarySource,
+        privileged: bool,
         response_tx: oneshot::Sender<eyre::Result<()>>,
     },
 
@@ -69,10 +70,10 @@ impl Conductor {
     ) -> eyre::Result<Self> {
         let (command_tx, command_rx) = mpsc::channel(crate::ARBITRARY_CHANNEL_BUFFER);
 
+        let command_tx_weak = command_tx.downgrade();
         let _task = tokio::task::spawn(async move {
             let state = State::new(distributor, exporter)?;
-            run(state, command_rx).await?;
-            Ok(())
+            run(state, command_rx, command_tx_weak).await
         });
 
         Ok(Self { command_tx, _task })
@@ -80,13 +81,19 @@ impl Conductor {
 
     /// Adds a new runtime instance with the specified binary source.
     #[tracing::instrument(skip(self))]
-    pub(crate) async fn add(&self, id: InstanceId, binary: BinarySource) -> eyre::Result<()> {
+    pub(crate) async fn add(
+        &self,
+        id: InstanceId,
+        binary: BinarySource,
+        privileged: bool,
+    ) -> eyre::Result<()> {
         let (response_tx, response_rx) = oneshot::channel();
 
         self.command_tx
             .send(Command::AddInstance {
                 id,
                 binary,
+                privileged,
                 response_tx,
             })
             .await?;
@@ -166,15 +173,25 @@ impl Conductor {
 }
 
 /// Runs a loop applying all received commands to the state.
-async fn run(mut state: State, mut command_rx: mpsc::Receiver<Command>) -> eyre::Result<()> {
+async fn run(
+    mut state: State,
+    mut command_rx: mpsc::Receiver<Command>,
+    command_tx_weak: mpsc::WeakSender<Command>,
+) -> eyre::Result<()> {
     while let Some(command) = command_rx.recv().await {
         match command {
             Command::AddInstance {
                 id,
                 binary,
+                privileged,
                 response_tx,
             } => {
-                let response = state.add_instance(id, binary).await;
+                let response = match command_tx_weak.upgrade() {
+                    Some(command_tx) => {
+                        state.add_instance(id, binary, privileged, command_tx).await
+                    }
+                    None => Err(eyre::eyre!("conductor has been dropped")),
+                };
                 let _ = response_tx.send(response);
             }
             Command::RemoveInstance { id, response_tx } => {

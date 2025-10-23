@@ -15,6 +15,24 @@ then
   exit 1
 fi
 
+if [ $# -eq 0 ]
+then
+  echo "missing subset to run ('ping-pong' or 'useless')"
+  exit 1
+fi
+
+subset="$1"
+case "$subset"
+in
+  ping-pong | useless)
+    true
+  ;;
+  * )
+    echo "unknown subset '$subset', use 'ping-pong' or 'useless'"
+    exit 1
+  ;;
+esac
+
 # Cleanly kill background processes when exiting for any reason.
 typeset -a pids
 shutdown() {
@@ -83,11 +101,21 @@ UI_WEBSOCKET_PORT=42817
 PING_ID=$(uuidgen -r)
 PONG_ID=$(uuidgen -r)
 TRACE_ID=$(uuidgen -r)
+USELESS_MACHINE_ID=$(uuidgen -r)
 
 # Build the binaries that will be used
-PING="$(cd veecle-os-examples/orchestrator-ipc && build ping)"
-PONG="$(cd veecle-os-examples/orchestrator-ipc && build pong)"
-TRACE="$(cd veecle-os-examples/orchestrator-ipc && build trace)"
+case "$subset"
+in
+  ping-pong)
+    PING="$(cd veecle-os-examples/orchestrator-ipc && build ping)"
+    PONG="$(cd veecle-os-examples/orchestrator-ipc && build pong)"
+    TRACE="$(cd veecle-os-examples/orchestrator-ipc && build trace)"
+  ;;
+
+  useless)
+    USELESS_MACHINE="$(cd veecle-os-examples/orchestrator-ipc && build useless-machine)"
+  ;;
+esac
 
 ORCHESTRATOR="$(build veecle-orchestrator)"
 CLI="$(build veecle-orchestrator-cli)"
@@ -99,6 +127,7 @@ echo 'Starting veecle-telemetry-server and orchestrators'
 echo
 
 export VEECLE_ORCHESTRATOR_LOG=debug
+export USELESS_MACHINE_ID
 
 run-background "$UI_SERVER" --bind "$EXAMPLE_IP" --port "$UI_WEBSOCKET_PORT" --telemetry-socket "$TELEMETRY_SOCKET"
 run-background "$ORCHESTRATOR" --control-socket "$CONTROL1" --ipc-socket $IPC1 --telemetry-socket "$TELEMETRY_SOCKET"
@@ -110,33 +139,40 @@ echo
 echo 'Configuring runtimes on orchestrators'
 echo
 
-run "$CLI" --socket "$CONTROL1" runtime add "$PING" --id $PING_ID
-run "$CLI" --socket "$CONTROL2" runtime add "$PONG" --id $PONG_ID --copy
-run "$CLI" --socket "$CONTROL1" runtime add "$TRACE" --id $TRACE_ID
+case "$subset"
+in
+  ping-pong)
+    run "$CLI" --socket "$CONTROL1" runtime add "$PING" --id $PING_ID
+    run "$CLI" --socket "$CONTROL2" runtime add "$PONG" --id $PONG_ID --copy
+    run "$CLI" --socket "$CONTROL1" runtime add "$TRACE" --id $TRACE_ID
 
-mod=veecle_os_examples_common::actors::ping_pong
+    mod=veecle_os_examples_common::actors::ping_pong
 
-run "$CLI" --socket "$CONTROL1" link add --type $mod::Ping --to $TRACE_ID
-run "$CLI" --socket "$CONTROL1" link add --type $mod::Ping --to $IPC2
-run "$CLI" --socket "$CONTROL2" link add --type $mod::Ping --to $PONG_ID
-run "$CLI" --socket "$CONTROL1" link add --type $mod::Pong --to $TRACE_ID
-run "$CLI" --socket "$CONTROL2" link add --type $mod::Pong --to $IPC1
-run "$CLI" --socket "$CONTROL1" link add --type $mod::Pong --to $PING_ID
+    run "$CLI" --socket "$CONTROL1" link add --type $mod::Ping --to $TRACE_ID
+    run "$CLI" --socket "$CONTROL1" link add --type $mod::Ping --to $IPC2
+    run "$CLI" --socket "$CONTROL2" link add --type $mod::Ping --to $PONG_ID
+    run "$CLI" --socket "$CONTROL1" link add --type $mod::Pong --to $TRACE_ID
+    run "$CLI" --socket "$CONTROL2" link add --type $mod::Pong --to $IPC1
+    run "$CLI" --socket "$CONTROL1" link add --type $mod::Pong --to $PING_ID
 
-run "$CLI" --socket "$CONTROL1" runtime list
-run "$CLI" --socket "$CONTROL1" link list
+  ;;
 
-run "$CLI" --socket "$CONTROL2" runtime list
-run "$CLI" --socket "$CONTROL2" link list
+  useless)
+    # Because it's registered without privileges on orchestrator1 it will fail to shut itself down.
+    run "$CLI" --socket "$CONTROL1" runtime add "$USELESS_MACHINE" --id $USELESS_MACHINE_ID
+    run "$CLI" --socket "$CONTROL2" runtime add "$USELESS_MACHINE" --id $USELESS_MACHINE_ID --privileged
 
-run "$CLI" --socket "$CONTROL2" clear
+    run "$CLI" --socket "$CONTROL2" runtime list
+    run "$CLI" --socket "$CONTROL2" link list
 
-run "$CLI" --socket "$CONTROL2" runtime list
-run "$CLI" --socket "$CONTROL2" link list
+    run "$CLI" --socket "$CONTROL2" clear
 
-run "$CLI" --socket "$CONTROL2" runtime add "$PONG" --id $PONG_ID --copy
-run "$CLI" --socket "$CONTROL2" link add --type $mod::Ping --to $PONG_ID
-run "$CLI" --socket "$CONTROL2" link add --type $mod::Pong --to $IPC1
+    run "$CLI" --socket "$CONTROL2" runtime list
+    run "$CLI" --socket "$CONTROL2" link list
+
+    run "$CLI" --socket "$CONTROL2" runtime add "$USELESS_MACHINE" --id $USELESS_MACHINE_ID --privileged
+  ;;
+esac
 
 run "$CLI" --socket "$CONTROL2" runtime list
 run "$CLI" --socket "$CONTROL2" link list
@@ -147,9 +183,19 @@ echo
 
 sleep 1
 
-run "$CLI" --socket "$CONTROL1" runtime start $TRACE_ID
-run "$CLI" --socket "$CONTROL2" runtime start $PONG_ID
-run "$CLI" --socket "$CONTROL1" runtime start $PING_ID
+case "$subset"
+in
+  ping-pong)
+    run "$CLI" --socket "$CONTROL1" runtime start $TRACE_ID
+    run "$CLI" --socket "$CONTROL2" runtime start $PONG_ID
+    run "$CLI" --socket "$CONTROL1" runtime start $PING_ID
+  ;;
+
+  useless)
+    run "$CLI" --socket "$CONTROL1" runtime start $USELESS_MACHINE_ID
+    run "$CLI" --socket "$CONTROL2" runtime start $USELESS_MACHINE_ID
+  ;;
+esac
 
 echo
 echo 'Starting veecle-telemetry-ui (will run until closed)'

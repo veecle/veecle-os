@@ -55,6 +55,10 @@ enum Runtime {
         /// Send the binary file content instead of just the path (useful for remote orchestrators).
         #[arg(long)]
         copy: bool,
+
+        /// Mark this runtime as privileged, allowing it to send control messages.
+        #[arg(long, default_value_t = false)]
+        privileged: bool,
     },
 
     /// Remove the runtime instance with the passed id.
@@ -130,8 +134,9 @@ fn send_add_with_binary(
     stream: &mut BufReader<BlockingSocketStream>,
     id: InstanceId,
     data: &[u8],
+    privileged: bool,
 ) -> anyhow::Result<()> {
-    let () = send(stream, Request::add_with_binary(id, data))
+    let () = send(stream, Request::add_with_binary(id, data, privileged))
         .context("sending AddWithBinary request, receiving initial response")?;
 
     stream
@@ -158,15 +163,27 @@ impl Arguments {
                 let version: String = send(&mut stream, Request::Version)?;
                 println!("server version: {version}");
             }
-            Command::Runtime(Runtime::Add { path, id, copy }) => {
+            Command::Runtime(Runtime::Add {
+                path,
+                id,
+                copy,
+                privileged,
+            }) => {
                 let id = id.unwrap_or_else(InstanceId::new);
                 if copy {
                     let data = std::fs::read(&path)
                         .with_context(|| format!("reading binary file '{path}'"))?;
-                    send_add_with_binary(&mut stream, id, &data)?;
+                    send_add_with_binary(&mut stream, id, &data, privileged)?;
                     println!("added instance {id} (sent {} bytes)", data.len());
                 } else {
-                    let () = send(&mut stream, Request::Add { path, id })?;
+                    let () = send(
+                        &mut stream,
+                        Request::Add {
+                            path,
+                            id,
+                            privileged,
+                        },
+                    )?;
                     println!("added instance {id}");
                 }
             }

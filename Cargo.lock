@@ -4652,6 +4652,8 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.17",
  "tokio-util",
+ "uuid",
+ "veecle-os-runtime",
  "veecle-telemetry",
 ]
 

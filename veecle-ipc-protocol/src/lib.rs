@@ -6,7 +6,39 @@ use std::borrow::Cow;
 
 use tokio_util::bytes::BytesMut;
 use tokio_util::codec::{Decoder, Encoder, LinesCodec, LinesCodecError};
+pub use uuid::Uuid;
 use veecle_telemetry::to_static::ToStatic;
+
+/// A control request sent from a runtime to the orchestrator.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, veecle_os_runtime::Storable)]
+pub enum ControlRequest {
+    /// Request to start a runtime instance.
+    StartRuntime {
+        /// The runtime instance to start.
+        // This is `veecle_orchestrator_protocol::InstanceId` but we don't want the dependency.
+        id: Uuid,
+    },
+
+    /// Request to stop a runtime instance.
+    StopRuntime {
+        /// The runtime instance to stop.
+        // This is `veecle_orchestrator_protocol::InstanceId` but we don't want the dependency.
+        id: Uuid,
+    },
+}
+
+/// Response to a control request.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, veecle_os_runtime::Storable)]
+pub enum ControlResponse {
+    /// Runtime started successfully.
+    Started,
+
+    /// Runtime stopped successfully.
+    Stopped,
+
+    /// Error occurred while processing the control request.
+    Error(String),
+}
 
 /// A message between a runtime instance and the `veecle-orchestrator`.
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -17,6 +49,12 @@ pub enum Message<'a> {
     /// A telemetry message from `veecle-telemetry` system.
     #[serde(borrow)]
     Telemetry(veecle_telemetry::protocol::InstanceMessage<'a>),
+
+    /// A control request sent from a runtime to the orchestrator.
+    ControlRequest(ControlRequest),
+
+    /// A response to a control request sent from the orchestrator to a runtime.
+    ControlResponse(ControlResponse),
 }
 
 impl<'a> Message<'a> {
@@ -25,6 +63,8 @@ impl<'a> Message<'a> {
         match self {
             Message::Storable(storable) => Message::Storable(storable),
             Message::Telemetry(message) => Message::Telemetry(message.to_static()),
+            Message::ControlRequest(request) => Message::ControlRequest(request),
+            Message::ControlResponse(response) => Message::ControlResponse(response),
         }
     }
 }
