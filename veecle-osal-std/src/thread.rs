@@ -1,6 +1,7 @@
 //! Thread-related abstractions.
 
 use std::cell::LazyCell;
+use std::num::NonZeroU64;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 pub use veecle_osal_api::thread::ThreadAbstraction;
@@ -23,8 +24,8 @@ thread_local! {
 }
 
 impl ThreadAbstraction for Thread {
-    fn current_thread_id() -> u64 {
-        THREAD_ID.with(|thread_id| **thread_id)
+    fn current_thread_id() -> NonZeroU64 {
+        NonZeroU64::new(THREAD_ID.with(|thread_id| **thread_id)).expect("overflow should not occur")
     }
 }
 
@@ -65,11 +66,5 @@ mod tests {
             thread1_id, thread2_id,
             "Thread 1 and thread 2 should have different ids"
         );
-    }
-
-    #[test]
-    fn test_thread_id_non_zero() {
-        let id = Thread::current_thread_id();
-        assert_ne!(id, 0, "Thread id should never be zero");
     }
 }

@@ -1,5 +1,6 @@
 //! Thread-related abstractions.
 
+use core::num::NonZeroU64;
 pub use veecle_osal_api::thread::ThreadAbstraction;
 
 /// Implements the [`ThreadAbstraction`] trait for Embassy.
@@ -11,7 +12,7 @@ pub struct Thread;
 
 impl ThreadAbstraction for Thread {
     #[cfg(not(target_os = "none"))]
-    fn current_thread_id() -> u64 {
+    fn current_thread_id() -> NonZeroU64 {
         use std::cell::LazyCell;
         use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -28,12 +29,12 @@ impl ThreadAbstraction for Thread {
             }) };
         }
 
-        THREAD_ID.with(|thread_id| **thread_id)
+        NonZeroU64::new(THREAD_ID.with(|thread_id| **thread_id)).expect("overflow should not occur")
     }
 
     #[cfg(target_os = "none")]
-    fn current_thread_id() -> u64 {
-        1
+    fn current_thread_id() -> NonZeroU64 {
+        NonZeroU64::new(1).unwrap()
     }
 }
 
@@ -75,11 +76,5 @@ mod tests {
             thread1_id, thread2_id,
             "Thread 1 and thread 2 should have different ids"
         );
-    }
-
-    #[test]
-    fn test_thread_id_non_zero() {
-        let id = Thread::current_thread_id();
-        assert_ne!(id, 0, "Thread id should never be zero");
     }
 }
