@@ -41,7 +41,7 @@ async fn useless_machine_actor(
 /// of the orchestrator privileged control messages.
 #[veecle_os::osal::std::main]
 async fn main() {
-    let connector = veecle_ipc::jsonl::Connector::connect().await;
+    let connector = veecle_ipc::iceoryx2::Connector::connect().await;
 
     veecle_os::telemetry::collector::set_exporter(
         veecle_os::telemetry::protocol::ProcessId::random(&mut rand::rng()),
@@ -53,7 +53,7 @@ async fn main() {
         store: [ControlRequest, ControlResponse],
         actors: [
             UselessMachineActor: connector.runtime_id(),
-            veecle_ipc::jsonl::ControlHandler: &connector,
+            veecle_ipc::iceoryx2::ControlHandler: &connector,
         ],
     }
     .await;

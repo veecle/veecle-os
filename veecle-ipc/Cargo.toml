@@ -16,12 +16,14 @@ workspace-checks.miri = false
 [dependencies]
 anyhow = { workspace = true }
 futures = { workspace = true }
+iceoryx2 = { version = "0.7.0", default-features = false, optional = true }
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, features = ["std"], optional = true }
 tokio = { workspace = true, features = ["macros", "net", "rt", "sync"] }
 tokio-util = { workspace = true, features = ["codec"], optional = true }
 veecle-ipc-protocol = { workspace = true }
 veecle-os-runtime = { workspace = true }
+veecle-osal-std = { workspace = true }
 veecle-telemetry = { workspace = true, features = ["alloc"] }
 
 [dev-dependencies]
@@ -34,6 +36,12 @@ veecle-os = { workspace = true, features = ["telemetry-enable"] }
 veecle-telemetry = { workspace = true, features = ["alloc", "enable"] }
 
 [features]
+iceoryx2 = [
+  "dep:iceoryx2",
+  "dep:serde",
+  "dep:serde_json",
+  "veecle-ipc-protocol/iceoryx2",
+]
 jsonl = [
   "dep:serde",
   "dep:serde_json",

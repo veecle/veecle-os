@@ -2,7 +2,7 @@ use veecle_os_examples_common::actors::ping_pong::{Ping, Pong, TraceActor};
 
 #[veecle_os::osal::std::main]
 async fn main() {
-    let connector = veecle_ipc::jsonl::Connector::connect().await;
+    let connector = veecle_ipc::iceoryx2::Connector::connect().await;
 
     veecle_os::telemetry::collector::set_exporter(
         veecle_os::telemetry::collector::ProcessId::random(&mut rand::rng()),
@@ -14,8 +14,8 @@ async fn main() {
         store: [Ping, Pong],
         actors: [
             TraceActor,
-            veecle_ipc::jsonl::Input::<Ping>: &connector,
-            veecle_ipc::jsonl::Input::<Pong>: &connector,
+            veecle_ipc::iceoryx2::Input::<Ping>: &connector,
+            veecle_ipc::iceoryx2::Input::<Pong>: &connector,
         ],
     }
     .await;

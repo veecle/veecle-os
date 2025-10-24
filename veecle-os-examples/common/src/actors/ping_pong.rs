@@ -3,16 +3,19 @@
 use core::convert::Infallible;
 use core::fmt::Debug;
 use futures::future::FutureExt;
+use iceoryx2::prelude::ZeroCopySend;
 use serde::{Deserialize, Serialize};
 use veecle_os::runtime::{InitializedReader, Reader, Storable, Writer};
 use veecle_os::telemetry::{error, info};
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Storable, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Storable, Deserialize, Serialize, ZeroCopySend)]
+#[repr(C)]
 pub struct Ping {
     value: u32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Storable, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Storable, Deserialize, Serialize, ZeroCopySend)]
+#[repr(C)]
 pub struct Pong {
     value: u32,
 }
