@@ -18,6 +18,7 @@ camino = { workspace = true }
 clap = { workspace = true, features = ["default", "derive", "env"] }
 eyre = { workspace = true }
 futures = { workspace = true, features = ["async-await", "std"] }
+iceoryx2 = { version = "0.7.0", default-features = false }
 libc = { workspace = true }
 nix = { workspace = true, features = ["signal"] }
 serde = { workspace = true }
@@ -35,7 +36,7 @@ tracing-subscriber = { workspace = true, features = [
   "env-filter",
   "std",
 ] }
-veecle-ipc-protocol = { workspace = true, features = ["jsonl"] }
+veecle-ipc-protocol = { workspace = true, features = ["iceoryx2", "jsonl"] }
 veecle-net-utils = { path = "../veecle-net-utils", version = "0.1.0", default-features = false, features = [
   "tokio",
 ] }

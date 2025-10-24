@@ -13,7 +13,10 @@ pub use jsonl::{Codec, CodecError, EncodedStorable};
 
 /// A control request sent from a runtime to the orchestrator.
 #[derive(Clone, Debug, veecle_os_runtime::Storable)]
-#[cfg_attr(feature = "jsonl", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    any(feature = "jsonl", feature = "iceoryx2"),
+    derive(serde::Serialize, serde::Deserialize)
+)]
 pub enum ControlRequest {
     /// Request to start a runtime instance.
     StartRuntime {
@@ -32,7 +35,10 @@ pub enum ControlRequest {
 
 /// Response to a control request.
 #[derive(Clone, Debug, veecle_os_runtime::Storable)]
-#[cfg_attr(feature = "jsonl", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    any(feature = "jsonl", feature = "iceoryx2"),
+    derive(serde::Serialize, serde::Deserialize)
+)]
 pub enum ControlResponse {
     /// Runtime started successfully.
     Started,

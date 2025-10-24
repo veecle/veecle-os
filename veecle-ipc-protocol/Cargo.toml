@@ -24,6 +24,7 @@ veecle-os-runtime = { workspace = true }
 veecle-telemetry = { workspace = true, features = ["std"] }
 
 [features]
+iceoryx2 = ["dep:serde", "dep:serde_json"]
 jsonl = ["dep:serde", "dep:serde_json", "dep:tokio-util"]
 
 [lints]

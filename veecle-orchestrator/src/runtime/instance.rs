@@ -6,6 +6,12 @@ use camino::{Utf8Path, Utf8PathBuf};
 use eyre::{OptionExt, Result, WrapErr, bail};
 use futures::sink::SinkExt;
 use futures::stream::StreamExt;
+use iceoryx2::node::NodeBuilder;
+use iceoryx2::port::server::Server;
+use iceoryx2::port::subscriber::Subscriber;
+use iceoryx2::port::unable_to_deliver_strategy::UnableToDeliverStrategy;
+use iceoryx2::service::ipc;
+use iceoryx2::service::service_name::ServiceName;
 use tempfile::TempPath;
 use tokio::process::Child;
 use tokio::sync::{mpsc, oneshot};
@@ -62,13 +68,18 @@ pub(crate) struct RuntimeInstance {
     process: Option<Child>,
     ipc_task: Option<tokio::task::JoinHandle<Result<()>>>,
     ipc_shutdown: CancellationToken,
+    iceoryx2_task: Option<tokio::task::JoinHandle<Result<()>>>,
     socket_path: Utf8PathBuf,
     privileged: bool,
 }
 
 impl Drop for RuntimeInstance {
     fn drop(&mut self) {
+        self.ipc_shutdown.cancel();
         if let Some(task) = &self.ipc_task {
+            task.abort();
+        }
+        if let Some(task) = &self.iceoryx2_task {
             task.abort();
         }
     }
@@ -193,6 +204,121 @@ async fn handle_instance_ipc(
     }
 }
 
+/// Handles telemetry messages from a runtime instance via iceoryx2.
+///
+/// This subscribes to the telemetry topic for the given runtime instance and forwards
+/// any received telemetry messages to the exporter.
+///
+/// TODO: This could be implemented via `async`, but it's `!Send` so would need to run a
+/// `LocalSet`/`LocalRuntime`.
+#[tracing::instrument(skip_all, fields(%id))]
+fn handle_iceoryx2(
+    id: InstanceId,
+    exporter: Option<Arc<Exporter>>,
+    privileged: bool,
+    command_tx: mpsc::Sender<Command>,
+    shutdown: CancellationToken,
+) -> Result<()> {
+    let node = NodeBuilder::new()
+        .create::<ipc::Service>()
+        .wrap_err("failed to create iceoryx2 node")?;
+
+    let telemetry_service_name = ServiceName::new(&format!("veecle/runtime/{id}/telemetry"))
+        .wrap_err("invalid telemetry service name")?;
+    let telemetry_service = node
+        .service_builder(&telemetry_service_name)
+        .publish_subscribe::<[u8]>()
+        .open_or_create()
+        .wrap_err("failed to create telemetry service")?;
+    let telemetry_subscriber = telemetry_service
+        .subscriber_builder()
+        .create()
+        .wrap_err("failed to create telemetry subscriber")?;
+
+    let control_service_name = ServiceName::new(&format!("veecle/runtime/{id}/control"))
+        .wrap_err("invalid control service name")?;
+    let control_service = node
+        .service_builder(&control_service_name)
+        .request_response::<[u8], [u8]>()
+        .open_or_create()
+        .wrap_err("failed to create control service")?;
+    let control_server = control_service
+        .server_builder()
+        .initial_max_slice_len(4096)
+        .unable_to_deliver_strategy(UnableToDeliverStrategy::Block)
+        .create()
+        .wrap_err("failed to create control server")?;
+
+    let runtime = tokio::runtime::Handle::current();
+
+    loop {
+        if shutdown.is_cancelled() {
+            return Ok(());
+        }
+
+        while let Ok(Some(request)) = Server::<_, [u8], (), [u8], ()>::receive(&control_server) {
+            if shutdown.is_cancelled() {
+                return Ok(());
+            }
+
+            match serde_json::from_slice::<ControlRequest>(&request) {
+                Ok(control_request) => {
+                    tracing::info!(?control_request, "received control request");
+                    let response = if privileged {
+                        runtime.block_on(handle_control_request(control_request, &command_tx))
+                    } else {
+                        tracing::warn!("non-privileged runtime attempted to send control request");
+                        ControlResponse::Error("no control privileges".to_owned())
+                    };
+
+                    match serde_json::to_vec(&response) {
+                        Ok(json) => {
+                            if let Ok(resp) = request.loan_slice_uninit(json.len()) {
+                                let resp = resp.write_from_slice(&json);
+                                if let Err(error) = resp.send() {
+                                    tracing::error!(?error, "failed to send control response");
+                                }
+                            } else {
+                                tracing::error!("failed to loan buffer for control response");
+                            }
+                        }
+                        Err(error) => {
+                            tracing::error!(?error, "failed to serialize control response");
+                        }
+                    }
+                }
+                Err(error) => {
+                    tracing::error!(?error, "failed to deserialize control request");
+                }
+            }
+        }
+
+        while let Ok(Some(sample)) = Subscriber::<_, [u8], _>::receive(&telemetry_subscriber) {
+            if shutdown.is_cancelled() {
+                return Ok(());
+            }
+
+            let Some(exporter) = &exporter else {
+                continue;
+            };
+
+            match serde_json::from_slice::<veecle_telemetry::protocol::InstanceMessage<'_>>(&sample)
+            {
+                Ok(message) => {
+                    exporter.export(message);
+                }
+                Err(error) => {
+                    tracing::error!(?error, "failed to deserialize telemetry message");
+                }
+            }
+        }
+
+        // There is no way to register interest for new values, so we just busy-poll with a slight
+        // delay.
+        std::thread::sleep(Duration::from_millis(1));
+    }
+}
+
 impl RuntimeInstance {
     /// Returns a new `RuntimeInstance` instance.
     #[expect(clippy::too_many_arguments)]
@@ -227,10 +353,15 @@ impl RuntimeInstance {
             ipc_tx,
             ipc_rx,
             ipc_shutdown.clone(),
-            exporter,
+            exporter.clone(),
             privileged,
-            command_tx,
+            command_tx.clone(),
         ));
+
+        let iceoryx2_task = tokio::task::spawn_blocking({
+            let shutdown = ipc_shutdown.clone();
+            move || handle_iceoryx2(id, exporter, privileged, command_tx, shutdown)
+        });
 
         Ok(Self {
             id,
@@ -238,6 +369,7 @@ impl RuntimeInstance {
             process: None,
             ipc_task: Some(ipc_task),
             ipc_shutdown,
+            iceoryx2_task: Some(iceoryx2_task),
             socket_path,
             privileged,
         })
@@ -267,8 +399,8 @@ impl RuntimeInstance {
         let binary = self.binary.path();
         let process = tokio::process::Command::new(binary)
             .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
             .env("VEECLE_IPC_SOCKET", &self.socket_path)
             .env("VEECLE_RUNTIME_ID", self.id.to_string())
             .spawn()
@@ -304,6 +436,12 @@ impl RuntimeInstance {
             .await
             .wrap_err("joining IPC task failed")?
             .wrap_err("IPC task failed")?;
+        self.iceoryx2_task
+            .take()
+            .ok_or_eyre("iceoryx2 task missing")?
+            .await
+            .wrap_err("joining iceoryx2 task failed")?
+            .wrap_err("iceoryx2 task failed")?;
         Ok(())
     }
 }

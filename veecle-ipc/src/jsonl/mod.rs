@@ -1,5 +1,4 @@
 //! JSONL over Unix Socket protocol
-
 mod actors;
 mod connector;
 mod telemetry;

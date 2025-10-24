@@ -54,6 +54,9 @@ extern crate self as veecle_ipc;
 #[cfg(feature = "jsonl")]
 pub mod jsonl;
 
+#[cfg(feature = "iceoryx2")]
+pub mod iceoryx2;
+
 mod send_policy;
 
 pub use self::send_policy::SendPolicy;
