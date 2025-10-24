@@ -3,7 +3,8 @@ use core::convert::Infallible;
 use futures::future::join;
 use veecle_os_runtime::{Reader, Writer};
 
-use crate::{Connector, ControlRequest, ControlResponse};
+use crate::jsonl::Connector;
+use crate::{ControlRequest, ControlResponse};
 
 /// An actor that forwards [`ControlRequest`] from the store to the orchestrator and routes
 /// [`ControlResponse`] back.

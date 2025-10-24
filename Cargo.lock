@@ -4707,6 +4707,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tokio-util",
+ "veecle-ipc",
  "veecle-ipc-protocol",
  "veecle-os 0.1.0",
  "veecle-os-runtime 0.1.0",

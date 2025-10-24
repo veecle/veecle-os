@@ -24,7 +24,7 @@ async fn test_drop_policy_behavior() {
 
     for index in 0..2 {
         sender
-            .send(Message::Storable(
+            .send(Message::EncodedStorable(
                 veecle_ipc_protocol::EncodedStorable::new(&TestData { value: index }).unwrap(),
             ))
             .await
@@ -32,7 +32,7 @@ async fn test_drop_policy_behavior() {
     }
 
     // Verify channel is full - `try_send` should return `Err`.
-    let result = sender.try_send(Message::Storable(
+    let result = sender.try_send(Message::EncodedStorable(
         veecle_ipc_protocol::EncodedStorable::new(&TestData { value: 100 }).unwrap(),
     ));
     assert!(result.is_err(), "try_send should fail when channel is full");
@@ -40,7 +40,7 @@ async fn test_drop_policy_behavior() {
     // Verify original messages are intact.
     for index in 0..2 {
         let message = receiver.recv().await.unwrap();
-        if let Message::Storable(data) = message {
+        if let Message::EncodedStorable(data) = message {
             let parsed: TestData = serde_json::from_str(&data.value).unwrap();
             assert_eq!(parsed.value, index);
         }

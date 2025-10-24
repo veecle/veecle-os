@@ -11,7 +11,7 @@ use tokio::task::JoinHandle;
 use tokio_util::codec::Framed;
 use veecle_ipc_protocol::{Codec, ControlRequest, ControlResponse, EncodedStorable, Message, Uuid};
 
-use crate::Exporter;
+use super::Exporter;
 
 type Inputs = Arc<Mutex<HashMap<&'static str, mpsc::Sender<String>>>>;
 
@@ -41,7 +41,7 @@ impl OutputRx {
         Some(tokio::select! {
             biased; // Polls all branches in order to guarantee prioritization.
             Some(control) = self.control.recv() => Message::ControlRequest(control),
-            Some(storable) = self.storable.recv() => Message::Storable(storable),
+            Some(storable) = self.storable.recv() => Message::EncodedStorable(storable),
             Some(telemetry) = self.telemetry.recv() => Message::Telemetry(telemetry),
             else => return None, // Only reached when all channels are closed.
         })
@@ -125,20 +125,17 @@ impl Connector {
                                 }
                             };
                             match message {
-                                Message::Storable(storable) => {
+                                Message::EncodedStorable(storable) => {
                                     let Some(sender) = inputs.lock().unwrap().get(&*storable.type_name).cloned() else {
                                         continue
                                     };
                                     let _ = sender.send(storable.value).await;
                                 }
-                                Message::Telemetry(_) => {
-                                    veecle_telemetry::error!("received unexpected ipc message variant", message = format!("{message:?}"));
-                                }
-                                Message::ControlRequest(_) => {
-                                    veecle_telemetry::error!("received unexpected ipc message variant", message = format!("{message:?}"));
-                                }
                                 Message::ControlResponse(response) => {
                                     let _ = control_response_tx.send(response).await;
+                                }
+                                _ => {
+                                    veecle_telemetry::error!("received unexpected ipc message variant", message = format!("{message:?}"));
                                 }
                             }
                         }

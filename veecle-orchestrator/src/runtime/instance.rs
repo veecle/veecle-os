@@ -154,13 +154,13 @@ async fn handle_instance_ipc(
                     tokio::select! {
                         storable = ipc_rx.recv() => {
                             let Some(storable) = storable else { break };
-                            let message = veecle_ipc_protocol::Message::Storable(storable);
+                            let message = veecle_ipc_protocol::Message::EncodedStorable(storable);
                             stream.send(&message).await?;
                         }
                         message = stream.next() => {
                             let Some(message) = message.transpose()? else { break };
                             match message {
-                                veecle_ipc_protocol::Message::Storable(storable) => {
+                                veecle_ipc_protocol::Message::EncodedStorable(storable) => {
                                     ipc_tx.send(storable).await?;
                                 }
                                 veecle_ipc_protocol::Message::Telemetry(message) => {
@@ -178,8 +178,8 @@ async fn handle_instance_ipc(
 
                                     stream.send(&veecle_ipc_protocol::Message::ControlResponse(response)).await?;
                                 }
-                                veecle_ipc_protocol::Message::ControlResponse(_) => {
-                                    tracing::warn!("received unexpected ControlResponse");
+                                veecle_ipc_protocol::Message::ControlResponse(_) | _ => {
+                                    tracing::warn!(?message, "received unexpected ipc message variant");
                                 }
                             }
                         }
