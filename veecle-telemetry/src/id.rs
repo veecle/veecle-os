@@ -23,6 +23,40 @@ use crate::collector::get_collector;
 #[cfg(feature = "enable")]
 use crate::span::CURRENT_SPAN;
 
+/// A globally-unique id identifying a process.
+///
+/// The primary purpose of this id is to provide a globally-unique context within which
+/// [`ThreadId`]s and [`SpanContext`]s are guaranteed to be unique. On a normal operating system
+/// that is the process, on other systems it should be whatever is the closest equivalent, e.g. for
+/// most embedded setups it should be unique for each time the system is restarted.
+///
+/// [`ThreadId`]: crate::protocol::ThreadId
+#[derive(
+    Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Default, Serialize, Deserialize,
+)]
+pub struct ProcessId(u128);
+
+impl ProcessId {
+    /// Uses a random number generator to generate the [`ProcessId`].
+    pub fn random(rng: &mut impl rand::Rng) -> Self {
+        Self(rng.random())
+    }
+
+    /// Creates a [`ProcessId`] from a raw value
+    ///
+    /// Extra care needs to be taken that this is not a constant value or re-used in any way.
+    ///
+    /// When possible prefer using [`ProcessId::random`].
+    pub const fn from_raw(raw: u128) -> Self {
+        Self(raw)
+    }
+
+    /// Returns the raw value of this id.
+    pub fn to_raw(self) -> u128 {
+        self.0
+    }
+}
+
 /// An identifier for a trace, which groups a set of related spans together.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct TraceId(pub u128);

@@ -27,11 +27,11 @@
 //!
 //! ```rust
 //! use veecle_telemetry::collector::{ConsoleJsonExporter, set_exporter};
-//! use veecle_telemetry::protocol::ExecutionId;
+//! use veecle_telemetry::ProcessId;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let execution_id = ExecutionId::random(&mut rand::rng());
-//! set_exporter(execution_id, &ConsoleJsonExporter)?;
+//! let process_id = ProcessId::random(&mut rand::rng());
+//! set_exporter(process_id, &ConsoleJsonExporter)?;
 //! # Ok(())
 //! # }
 //! ```
@@ -111,7 +111,7 @@ pub mod to_static;
 pub mod types;
 pub mod value;
 
-pub use id::{SpanContext, SpanId, TraceId};
+pub use id::{ProcessId, SpanContext, SpanId, TraceId};
 pub use span::{CurrentSpan, Span, SpanGuard, SpanGuardRef};
 pub use value::{KeyValue, Value};
 pub use veecle_telemetry_macros::instrument;

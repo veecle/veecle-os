@@ -169,8 +169,8 @@ impl Store {
         self.ensure_program_span();
 
         let InstanceMessage {
-            // TODO(DEV-605): support filtering by execution.
-            execution: _,
+            // TODO(DEV-605): support filtering by thread.
+            thread: _,
             message,
         } = instance_message;
 
