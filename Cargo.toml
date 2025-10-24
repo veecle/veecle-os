@@ -142,6 +142,7 @@ unicode-ident = { version = "1.0.22", default-features = false }
 uuid = { version = "1.18.1", default-features = false }
 veecle-freertos-integration = { version = "0.1.1", default-features = false }
 veecle-freertos-sys = { version = "0.1.1", default-features = false }
+veecle-ipc = { path = "veecle-ipc", version = "0.1.0", default-features = false }
 veecle-ipc-protocol = { path = "veecle-ipc-protocol", version = "0.1.0", default-features = false }
 veecle-orchestrator-cli = { path = "veecle-orchestrator-cli", version = "0.1.0", default-features = false }
 veecle-orchestrator-protocol = { path = "veecle-orchestrator-protocol", version = "0.1.0", default-features = false }

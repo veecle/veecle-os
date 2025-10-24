@@ -16,10 +16,10 @@ workspace-checks.miri = false
 [dependencies]
 anyhow = { workspace = true }
 futures = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true, features = ["std"] }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, features = ["std"], optional = true }
 tokio = { workspace = true, features = ["macros", "net", "rt", "sync"] }
-tokio-util = { workspace = true, features = ["codec"] }
+tokio-util = { workspace = true, features = ["codec"], optional = true }
 veecle-ipc-protocol = { workspace = true }
 veecle-os-runtime = { workspace = true }
 veecle-telemetry = { workspace = true, features = ["alloc"] }
@@ -27,8 +27,19 @@ veecle-telemetry = { workspace = true, features = ["alloc"] }
 [dev-dependencies]
 rand = { workspace = true, features = ["std_rng"] }
 serde = { workspace = true, features = ["derive"] }
-veecle-os = { workspace = true }
+# Requires the `jsonl` feature for documentation examples.
+veecle-ipc = { workspace = true, features = ["jsonl"] }
+# Telemetry is used in documentation examples.
+veecle-os = { workspace = true, features = ["telemetry-enable"] }
 veecle-telemetry = { workspace = true, features = ["alloc", "enable"] }
+
+[features]
+jsonl = [
+  "dep:serde",
+  "dep:serde_json",
+  "dep:tokio-util",
+  "veecle-ipc-protocol/jsonl",
+]
 
 [lints]
 workspace = true

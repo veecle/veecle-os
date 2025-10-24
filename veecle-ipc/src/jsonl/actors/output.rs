@@ -4,7 +4,8 @@ use serde::Serialize;
 use veecle_ipc_protocol::EncodedStorable;
 use veecle_os_runtime::{InitializedReader, Storable};
 
-use crate::{Connector, SendPolicy};
+use crate::SendPolicy;
+use crate::jsonl::Connector;
 
 /// An actor that will take any values of type `T` written by other actors and send them out via
 /// the provided [`Connector`].
@@ -29,16 +30,16 @@ use crate::{Connector, SendPolicy};
 /// # #[derive(Debug, Storable, Serialize, Deserialize)]
 /// # struct TelemetryData;
 /// # async fn example() {
-/// # let connector: &'static veecle_ipc::Connector = todo!();
+/// # let connector: &'static veecle_ipc::jsonl::Connector = todo!();
 /// use veecle_ipc::SendPolicy;
 ///
 /// veecle_os::runtime::execute! {
 ///     store: [CriticalData, TelemetryData],
 ///     actors: [
 ///         // Default: panics on full buffer (for testing/critical paths)
-///         veecle_ipc::Output::<CriticalData>: connector.into(),
+///         veecle_ipc::jsonl::Output::<CriticalData>: connector.into(),
 ///         // Explicitly drop telemetry when buffer is full
-///         veecle_ipc::Output::<TelemetryData>: (connector, SendPolicy::Drop).into(),
+///         veecle_ipc::jsonl::Output::<TelemetryData>: (connector, SendPolicy::Drop).into(),
 ///     ],
 /// }
 /// # .await;

@@ -3,7 +3,7 @@ use core::convert::Infallible;
 use serde::de::DeserializeOwned;
 use veecle_os_runtime::{Storable, Writer};
 
-use crate::Connector;
+use crate::jsonl::Connector;
 
 /// An actor that will receive values of type `T` from the provided [`Connector`] and send them to other actors.
 #[veecle_os_runtime::actor]

@@ -15,13 +15,16 @@ workspace-checks.miri = false
 
 [dependencies]
 displaydoc = { workspace = true }
-serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true, features = ["std"] }
+serde = { workspace = true, features = ["derive"], optional = true }
+serde_json = { workspace = true, features = ["std"], optional = true }
 thiserror = { workspace = true, features = ["std"] }
-tokio-util = { workspace = true, features = ["codec"] }
+tokio-util = { workspace = true, features = ["codec"], optional = true }
 uuid = { workspace = true, features = ["serde"] }
 veecle-os-runtime = { workspace = true }
 veecle-telemetry = { workspace = true, features = ["std"] }
+
+[features]
+jsonl = ["dep:serde", "dep:serde_json", "dep:tokio-util"]
 
 [lints]
 workspace = true

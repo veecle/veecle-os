@@ -35,7 +35,7 @@ tracing-subscriber = { workspace = true, features = [
   "env-filter",
   "std",
 ] }
-veecle-ipc-protocol = { workspace = true }
+veecle-ipc-protocol = { workspace = true, features = ["jsonl"] }
 veecle-net-utils = { path = "../veecle-net-utils", version = "0.1.0", default-features = false, features = [
   "tokio",
 ] }

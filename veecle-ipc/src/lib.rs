@@ -32,13 +32,13 @@
 //! }
 //!
 //! async fn main() {
-//!     let connector = veecle_ipc::Connector::connect().await;
+//!     let connector = veecle_ipc::jsonl::Connector::connect().await;
 //!
 //!     veecle_os_runtime::execute! {
 //!         store: [Ping, Pong],
 //!         actors: [
-//!             veecle_ipc::Input<Ping>: &connector,
-//!             veecle_ipc::Output<Pong>: (&connector).into(),
+//!             veecle_ipc::jsonl::Input<Ping>: &connector,
+//!             veecle_ipc::jsonl::Output<Pong>: &connector,
 //!         ],
 //!     }.await;
 //! }
@@ -51,13 +51,10 @@
 #[cfg(doc)]
 extern crate self as veecle_ipc;
 
-mod actors;
-mod connector;
-mod send_policy;
-mod telemetry;
+#[cfg(feature = "jsonl")]
+pub mod jsonl;
 
-pub use self::actors::{ControlHandler, Input, Output, OutputConfig};
-pub use self::connector::Connector;
+mod send_policy;
+
 pub use self::send_policy::SendPolicy;
-pub use self::telemetry::Exporter;
 pub use veecle_ipc_protocol::{ControlRequest, ControlResponse, Uuid};
