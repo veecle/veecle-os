@@ -38,9 +38,10 @@ impl Connector {
         let stream = UnixStream::connect(&socket).await.unwrap();
         let mut stream = Framed::new(stream, Codec::new());
 
-        // TODO: if this fills up then we currently panic when trying to write to it, we need to
-        // make some decisions around reliability guarantees for whether we can just drop messages
-        // instead.
+        // The output channel capacity (128) determines buffering for IPC messages.
+        // The `Output` actor uses `SendPolicy` to control behavior when this fills up:
+        // - `SendPolicy::Panic` (default): panics to make buffer exhaustion visible
+        // - `SendPolicy::Drop`: drops messages and logs a warning
         let (output, mut output_rx) = mpsc::channel(128);
         let inputs = Inputs::default();
         let (control_request_tx, mut control_request_rx) = mpsc::channel(16);
@@ -106,16 +107,19 @@ impl Connector {
     /// Returns an [`Exporter`] that will forward [`veecle-telemetry`][veecle_telemetry] data over this IPC connection to
     /// be gathered by the `veecle-orchestrator`.
     ///
+    /// # Example
+    ///
     /// ```no_run
-    /// # async move {
+    /// # #[cfg(feature = "enable")]
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let connector = veecle_ipc::Connector::connect().await;
     ///
     /// veecle_os::telemetry::collector::set_exporter(
     ///     veecle_os::telemetry::protocol::ExecutionId::random(&mut rand::rng()),
     ///     Box::leak(Box::new(connector.exporter())),
     /// )?;
-    /// # Ok::<(), Box<dyn std::error::Error>>(())
-    /// # };
+    /// # Ok(())
+    /// # }
     /// ```
     pub fn exporter(&self) -> Exporter {
         Exporter::new(self.output.clone())
