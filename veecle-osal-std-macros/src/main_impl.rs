@@ -89,7 +89,7 @@ fn impl_main(
                 async {
                     #telemetry_setup
 
-                    #input_block
+                    #veecle_osal_std_path::reexports::tokio::task::coop::cooperative(async { #input_block }).await
                 }
             );
         }
