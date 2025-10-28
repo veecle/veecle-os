@@ -285,7 +285,7 @@ version = "0.23.0"
 criteria = "safe-to-run"
 
 [[exemptions.cc]]
-version = "1.2.41"
+version = "1.2.43"
 criteria = "safe-to-deploy"
 
 [[exemptions.cesu8]]
@@ -809,7 +809,7 @@ version = "0.14.7"
 criteria = "safe-to-run"
 
 [[exemptions.generic-array]]
-version = "1.3.4"
+version = "1.3.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.gethostname]]
@@ -957,7 +957,7 @@ version = "2.12.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.indoc]]
-version = "2.0.6"
+version = "2.0.7"
 criteria = "safe-to-run"
 
 [[exemptions.is_terminal_polyfill]]
@@ -1393,7 +1393,7 @@ version = "3.4.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.proc-macro2]]
-version = "1.0.101"
+version = "1.0.103"
 criteria = "safe-to-deploy"
 
 [[exemptions.profiling]]
@@ -1441,7 +1441,7 @@ version = "0.6.2"
 criteria = "safe-to-run"
 
 [[exemptions.re_log]]
-version = "0.26.0"
+version = "0.26.2"
 criteria = "safe-to-run"
 
 [[exemptions.redox_syscall]]
@@ -1685,7 +1685,7 @@ version = "1.0.109"
 criteria = "safe-to-deploy"
 
 [[exemptions.syn]]
-version = "2.0.107"
+version = "2.0.108"
 criteria = "safe-to-deploy"
 
 [[exemptions.synstructure]]
