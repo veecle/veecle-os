@@ -267,8 +267,8 @@ impl RuntimeInstance {
         let binary = self.binary.path();
         let process = tokio::process::Command::new(binary)
             .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
             .env("VEECLE_IPC_SOCKET", &self.socket_path)
             .spawn()
             .wrap_err_with(|| format!("starting runtime process '{binary}'"))?;
