@@ -28,6 +28,7 @@ veecle-telemetry = { workspace = true, features = ["alloc"] }
 rand = { workspace = true, features = ["std_rng"] }
 serde = { workspace = true, features = ["derive"] }
 veecle-os = { workspace = true }
+veecle-telemetry = { workspace = true, features = ["alloc", "enable"] }
 
 [lints]
 workspace = true
