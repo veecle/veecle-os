@@ -3,6 +3,7 @@ resolver = "3"
 members = [
   "capicxx-someip-sys",
   "docs/generate-markdown-index",
+  "readme-example",
   "someip-test-service",
   "someip-test-service-macro",
   "someip-test-service-sys",
