@@ -13,6 +13,10 @@
 * Updated MSRV to 1.91.
 * Fixed `veecle_os::telemetry::instrument` macro to automatically resolve correct crate paths for the facade.
 
+## Veecle Telemetry
+
+* Added `ConsolePrettyExporter` for pretty printed telemetry output for non-production use-cases.
+
 ## Veecle Telemetry VSCode Extension
 
 * **breaking** Removed.
