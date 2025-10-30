@@ -25,6 +25,8 @@
 #[cfg(feature = "std")]
 mod json_exporter;
 #[cfg(feature = "std")]
+mod pretty_exporter;
+#[cfg(feature = "std")]
 mod test_exporter;
 
 use core::fmt::Debug;
@@ -34,6 +36,8 @@ use core::{error, fmt};
 
 #[cfg(feature = "std")]
 pub use json_exporter::ConsoleJsonExporter;
+#[cfg(feature = "std")]
+pub use pretty_exporter::ConsolePrettyExporter;
 #[cfg(feature = "std")]
 #[doc(hidden)]
 pub use test_exporter::TestExporter;
