@@ -46,7 +46,7 @@ use crate::{Connector, SendPolicy};
 /// ```
 #[veecle_os_runtime::actor]
 pub async fn output<T>(
-    #[init_context] config: OutputConfig,
+    #[init_context] config: OutputConfig<'_>,
     mut reader: InitializedReader<'_, T>,
 ) -> Infallible
 where
@@ -81,20 +81,20 @@ where
 
 /// Configuration for the [`Output`] actor.
 #[derive(Debug, Clone, Copy)]
-pub struct OutputConfig {
-    connector: &'static Connector,
+pub struct OutputConfig<'a> {
+    connector: &'a Connector,
     policy: SendPolicy,
 }
 
-impl OutputConfig {
+impl<'a> OutputConfig<'a> {
     /// Creates a new output configuration.
-    pub fn new(connector: &'static Connector, policy: SendPolicy) -> Self {
+    pub fn new(connector: &'a Connector, policy: SendPolicy) -> Self {
         Self { connector, policy }
     }
 }
 
-impl From<&'static Connector> for OutputConfig {
-    fn from(connector: &'static Connector) -> Self {
+impl<'a> From<&'a Connector> for OutputConfig<'a> {
+    fn from(connector: &'a Connector) -> Self {
         Self {
             connector,
             policy: SendPolicy::default(),
@@ -102,8 +102,8 @@ impl From<&'static Connector> for OutputConfig {
     }
 }
 
-impl From<(&'static Connector, SendPolicy)> for OutputConfig {
-    fn from((connector, policy): (&'static Connector, SendPolicy)) -> Self {
+impl<'a> From<(&'a Connector, SendPolicy)> for OutputConfig<'a> {
+    fn from((connector, policy): (&'a Connector, SendPolicy)) -> Self {
         Self { connector, policy }
     }
 }

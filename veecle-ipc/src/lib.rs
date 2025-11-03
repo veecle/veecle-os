@@ -32,13 +32,13 @@
 //! }
 //!
 //! async fn main() {
-//!     let connector: &'static veecle_ipc::Connector = Box::leak(Box::new(veecle_ipc::Connector::connect().await));
+//!     let connector = veecle_ipc::Connector::connect().await;
 //!
 //!     veecle_os_runtime::execute! {
 //!         store: [Ping, Pong],
 //!         actors: [
-//!             veecle_ipc::Input<Ping>: connector,
-//!             veecle_ipc::Output<Pong>: connector.into(),
+//!             veecle_ipc::Input<Ping>: &connector,
+//!             veecle_ipc::Output<Pong>: (&connector).into(),
 //!         ],
 //!     }.await;
 //! }
