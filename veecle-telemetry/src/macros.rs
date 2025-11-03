@@ -373,6 +373,7 @@ macro_rules! attributes {
         $crate::attributes_inner!(@ { }, { $($kvs)* })
     };
 }
+pub use crate::attributes;
 
 /// The actual implementation of `attributes!`, separated out to avoid accidentally recursing into
 /// the `$($tt)*` case from the inner cases.
