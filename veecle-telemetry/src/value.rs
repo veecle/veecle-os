@@ -155,7 +155,10 @@ impl ToStatic for Value<'_> {
 impl<'a> core::fmt::Display for Value<'a> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Value::String(value) => write!(f, "{value}"),
+            // For strings, debug print so they will get delimiters, since we are explicitly
+            // representing strings rather than directly human-targeted text, and they will be used
+            // in situations where knowing where the string ends is important.
+            Value::String(value) => write!(f, "{value:?}"),
             Value::Bool(value) => write!(f, "{value}"),
             Value::I64(value) => write!(f, "{value}"),
             Value::F64(value) => write!(f, "{value}"),

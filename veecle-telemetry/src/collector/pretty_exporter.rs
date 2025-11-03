@@ -24,7 +24,7 @@ use std::string::String;
 pub struct ConsolePrettyExporter(());
 
 impl ConsolePrettyExporter {
-    /// A `const` version of `ConsolePrettyExporter::default()` to allow use as an `&'static`.
+    /// A `const` version of `ConsolePrettyExporter::default()` to allow use as a `&'static`.
     pub const DEFAULT: Self = ConsolePrettyExporter(());
 }
 
@@ -52,13 +52,21 @@ fn format_message(message: TelemetryMessage, mut output: impl std::io::Write) {
         // Millisecond accuracy is probably enough for a console logger.
         let time = time_unix_nano / 1_000_000;
 
-        let attributes = attributes
-            .iter()
-            .fold(String::new(), |mut formatted, key_value| {
-                formatted.push_str(", ");
-                formatted.push_str(&std::format!("{}", key_value));
-                formatted
-            });
+        let attributes = if attributes.is_empty() {
+            String::new()
+        } else {
+            let mut attributes =
+                attributes
+                    .iter()
+                    .fold(String::from(" ["), |mut formatted, key_value| {
+                        use std::fmt::Write;
+                        write!(formatted, "{key_value}, ").unwrap();
+                        formatted
+                    });
+            // Remove trailing `, `.
+            attributes.truncate(attributes.len() - 2);
+            attributes + "]"
+        };
 
         // `Debug` doesn't apply padding, so pre-render to allow padding below.
         let severity = std::format!("{severity:?}");
@@ -69,7 +77,7 @@ fn format_message(message: TelemetryMessage, mut output: impl std::io::Write) {
         // consistently 6 digits wide until ~15 minutes have passed, after that it changes
         // slowly enough to not be distracting.
         // For Unix time it will already be 13 digits wide until 2286.
-        std::writeln!(output, "[{severity:>5}:{time:6}] {body}: \"{attributes}\"",).unwrap();
+        std::writeln!(output, "[{severity:>5}:{time:6}] {body}{attributes}").unwrap();
     }
 }
 
@@ -161,18 +169,18 @@ mod tests {
         assert_eq!(
             str::from_utf8(&output).unwrap(),
             indoc! { r#"
-            [Trace:     1] booting: ""
-            [Debug:     5] booted: ", truth: true, lies: false"
-            [ Info:  5000] running: ", mille: 1000, milli: 0.001"
-            [ Warn: 60000] running late: ""
-            [Error: 61000] really late: ""
-            [Fatal:3600000] terminating: ""
-            [Trace:2703621600000] Then are _we_ inhabited by history: ""
-            [Debug:2821816800000] Light dawns and marble heads, what the hell does this mean: ""
-            [ Info:2860956000000] This terror that hunts: ", Typed: true, date: 1960-08-29"
-            [ Warn:3118950000000] I have no words, the finest cenotaph: ""
-            [Error:3119036400000] A sun to read the dark: ", or: A son to rend the dark"
-            [Fatal:3122146800000] _Tirer comme des lapins_: ", translated: Shot like rabbits"
+            [Trace:     1] booting
+            [Debug:     5] booted [truth: true, lies: false]
+            [ Info:  5000] running [mille: 1000, milli: 0.001]
+            [ Warn: 60000] running late
+            [Error: 61000] really late
+            [Fatal:3600000] terminating
+            [Trace:2703621600000] Then are _we_ inhabited by history
+            [Debug:2821816800000] Light dawns and marble heads, what the hell does this mean
+            [ Info:2860956000000] This terror that hunts [Typed: true, date: "1960-08-29"]
+            [ Warn:3118950000000] I have no words, the finest cenotaph
+            [Error:3119036400000] A sun to read the dark [or: "A son to rend the dark"]
+            [Fatal:3122146800000] _Tirer comme des lapins_ [translated: "Shot like rabbits"]
         "# }
         );
     }
