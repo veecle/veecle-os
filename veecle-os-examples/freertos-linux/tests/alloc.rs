@@ -1,9 +1,6 @@
-use assert_cmd::Command;
-
 #[test]
 fn test_alloc() {
-    Command::cargo_bin("alloc")
-        .unwrap()
+    assert_cmd::cargo::cargo_bin_cmd!("alloc")
         .timeout(std::time::Duration::from_secs(10))
         .assert()
         // Times out.

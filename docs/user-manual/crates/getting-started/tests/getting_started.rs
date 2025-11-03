@@ -1,5 +1,3 @@
-use assert_cmd::Command;
-
 static RAW_OUTPUT: &str = r"[sender] Sending 0
 [sender] Sending 1
 [receiver] Waiting for value
@@ -24,8 +22,7 @@ static RAW_OUTPUT: &str = r"[sender] Sending 0
 
 #[test]
 fn is_valid_output() {
-    Command::cargo_bin("getting-started")
-        .unwrap()
+    assert_cmd::cargo::cargo_bin_cmd!("getting-started")
         .assert()
         .stdout(RAW_OUTPUT)
         .success();

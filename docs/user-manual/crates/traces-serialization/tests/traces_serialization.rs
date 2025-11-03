@@ -1,9 +1,6 @@
-use assert_cmd::Command;
-
 #[test]
 fn traces_serialization_runs() {
-    Command::cargo_bin("traces-serialization")
-        .unwrap()
+    assert_cmd::cargo::cargo_bin_cmd!("traces-serialization")
         .assert()
         // TODO(DEV-532): check value logged via debug format.
         .stdout(predicates::str::contains(

@@ -1,10 +1,8 @@
-use assert_cmd::Command;
 use predicates::prelude::*;
 
 #[test]
 fn test_queues() {
-    Command::cargo_bin("queues")
-        .unwrap()
+    assert_cmd::cargo::cargo_bin_cmd!("queues")
         .timeout(std::time::Duration::from_secs(5))
         .assert()
         // Times out.
