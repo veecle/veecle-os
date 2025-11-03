@@ -8,7 +8,7 @@
 * **breaking** Removed `Span::root` method and `root_span!` macro; root spans should use `Span::new` and `span!` instead.
 * **breaking** Replaced `SpanContext::from_span` with `Span::context` method.
 * Added `ThreadAbstraction` trait to OSAL for querying current thread id.
-* Updated MSRV to 1.90.
+* Updated MSRV to 1.91.
 * Fixed `veecle_os::telemetry::instrument` macro to automatically resolve correct crate paths for the facade.
 
 ## Veecle Telemetry VSCode Extension
