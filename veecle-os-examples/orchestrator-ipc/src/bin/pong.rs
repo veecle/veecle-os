@@ -15,7 +15,7 @@ async fn main() {
         actors: [
             PongActor,
             veecle_ipc::Input::<Ping>: &connector,
-            veecle_ipc::Output::<Pong>: &connector,
+            veecle_ipc::Output::<Pong>: (&connector).into(),
         ],
     }
     .await;
