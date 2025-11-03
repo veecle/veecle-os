@@ -49,6 +49,9 @@ fn format_message(message: TelemetryMessage, mut output: impl std::io::Write) {
         ..
     }) = message
     {
+        // Millisecond accuracy is probably enough for a console logger.
+        let time = time_unix_nano / 1_000_000;
+
         let attributes = attributes
             .iter()
             .fold(String::new(), |mut formatted, key_value| {
@@ -61,11 +64,12 @@ fn format_message(message: TelemetryMessage, mut output: impl std::io::Write) {
         let severity = std::format!("{severity:?}");
 
         // Severity is up to 5 characters, pad it to stay consistent.
-        std::writeln!(
-            output,
-            "[{severity:>5}:{time_unix_nano}] {body}: \"{attributes}\"",
-        )
-        .unwrap();
+        //
+        // Using a min-width of 6 for time means that if it is boot-time it will remain
+        // consistently 6 digits wide until ~15 minutes have passed, after that it changes
+        // slowly enough to not be distracting.
+        // For Unix time it will already be 13 digits wide until 2286.
+        std::writeln!(output, "[{severity:>5}:{time:6}] {body}: \"{attributes}\"",).unwrap();
     }
 }
 
@@ -157,18 +161,18 @@ mod tests {
         assert_eq!(
             str::from_utf8(&output).unwrap(),
             indoc! { r#"
-            [Trace:1000000] booting: ""
-            [Debug:5000000] booted: ", truth: true, lies: false"
-            [ Info:5000000000] running: ", mille: 1000, milli: 0.001"
-            [ Warn:60000000000] running late: ""
-            [Error:61000000000] really late: ""
-            [Fatal:3600000000000] terminating: ""
-            [Trace:2703621600000000000] Then are _we_ inhabited by history: ""
-            [Debug:2821816800000000000] Light dawns and marble heads, what the hell does this mean: ""
-            [ Info:2860956000000000000] This terror that hunts: ", Typed: true, date: 1960-08-29"
-            [ Warn:3118950000000000000] I have no words, the finest cenotaph: ""
-            [Error:3119036400000000000] A sun to read the dark: ", or: A son to rend the dark"
-            [Fatal:3122146800000000000] _Tirer comme des lapins_: ", translated: Shot like rabbits"
+            [Trace:     1] booting: ""
+            [Debug:     5] booted: ", truth: true, lies: false"
+            [ Info:  5000] running: ", mille: 1000, milli: 0.001"
+            [ Warn: 60000] running late: ""
+            [Error: 61000] really late: ""
+            [Fatal:3600000] terminating: ""
+            [Trace:2703621600000] Then are _we_ inhabited by history: ""
+            [Debug:2821816800000] Light dawns and marble heads, what the hell does this mean: ""
+            [ Info:2860956000000] This terror that hunts: ", Typed: true, date: 1960-08-29"
+            [ Warn:3118950000000] I have no words, the finest cenotaph: ""
+            [Error:3119036400000] A sun to read the dark: ", or: A son to rend the dark"
+            [Fatal:3122146800000] _Tirer comme des lapins_: ", translated: Shot like rabbits"
         "# }
         );
     }
