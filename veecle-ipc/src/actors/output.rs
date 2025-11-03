@@ -62,11 +62,11 @@ where
 
         match policy {
             SendPolicy::Drop => {
-                if let Err(err) = output.try_send(value) {
+                if let Err(error) = output.try_send(value) {
                     veecle_telemetry::warn!(
                         "dropped ipc message due to full channel",
                         type_name = std::any::type_name::<T>(),
-                        error = format!("{err:?}")
+                        error = format!("{error:?}")
                     );
                 }
             }
@@ -87,7 +87,7 @@ pub struct OutputConfig {
 }
 
 impl OutputConfig {
-    /// creates a new output configuration.
+    /// Creates a new output configuration.
     pub fn new(connector: &'static Connector, policy: SendPolicy) -> Self {
         Self { connector, policy }
     }
