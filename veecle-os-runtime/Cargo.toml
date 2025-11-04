@@ -17,12 +17,12 @@ targets = []
 [dependencies]
 futures = { workspace = true, features = ["async-await"] }
 generic-array = { workspace = true }
-pin-cell.workspace = true
-pin-project.workspace = true
+pin-cell = { workspace = true }
+pin-project = { workspace = true }
 typenum = { workspace = true, features = ["const-generics"] }
 veecle-os-runtime-macros = { workspace = true }
 veecle-telemetry = { workspace = true }
-wakerset.workspace = true
+wakerset = { workspace = true }
 
 [dev-dependencies]
 futures = { workspace = true, features = ["executor"] }

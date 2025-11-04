@@ -16,7 +16,7 @@ workspace-checks.miri = false
 [dependencies]
 anyhow = { workspace = true }
 scraper = { workspace = true }
-walkdir.workspace = true
+walkdir = { workspace = true }
 
 [lints]
 workspace = true
