@@ -54,7 +54,6 @@ camino = { version = "1.1.12", default-features = false }
 can-dbc = { version = "6.0.0", default-features = false }
 capicxx-someip-sys = { path = "capicxx-someip-sys", version = "0.1.0", default-features = false }
 cargo_metadata = { version = "0.23.0", default-features = false }
-cc = { version = "1.2.36", default-features = false }
 clap = { version = "4.5.50", default-features = false }
 cmake = { version = "0.1.54", default-features = false }
 colored = { version = "3.0.0", default-features = false }
@@ -166,7 +165,6 @@ veecle-telemetry-server-protocol = { path = "veecle-telemetry-server-protocol", 
 veecle-telemetry-ui = { path = "veecle-telemetry-ui", version = "0.1.0", default-features = false }
 wakerset = { version = "0.2.5", default-features = false }
 walkdir = { version = "2.5.0", default-features = false }
-wasm-bindgen = { version = "0.2.101", default-features = false }
 wasm-bindgen-futures = { version = "0.4.51", default-features = false }
 web-sys = { version = "0.3.78", default-features = false }
 web-time = { version = "1.1.0", default-features = false }
