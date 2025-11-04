@@ -29,3 +29,6 @@ updates:
         versions: [">=0.7.0"]
       - dependency-name: "embedded-io-async"
         versions: [">=0.7.0"]
+      # Broken optional-`serde`-dependency, waiting on 8.0.0 to fix it <https://github.com/oxibus/can-dbc/pull/51>
+      - dependency-name: "can-dbc"
+        versions: ["7.0.0"]
