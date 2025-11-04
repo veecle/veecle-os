@@ -285,7 +285,7 @@ version = "0.23.0"
 criteria = "safe-to-run"
 
 [[exemptions.cc]]
-version = "1.2.43"
+version = "1.2.44"
 criteria = "safe-to-deploy"
 
 [[exemptions.cesu8]]
@@ -313,11 +313,11 @@ version = "1.8.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.clap]]
-version = "4.5.50"
+version = "4.5.51"
 criteria = "safe-to-run"
 
 [[exemptions.clap_builder]]
-version = "4.5.50"
+version = "4.5.51"
 criteria = "safe-to-run"
 
 [[exemptions.clap_derive]]
@@ -1001,7 +1001,7 @@ version = "0.3.1"
 criteria = "safe-to-run"
 
 [[exemptions.js-sys]]
-version = "0.3.81"
+version = "0.3.82"
 criteria = "safe-to-run"
 
 [[exemptions.khronos_api]]
@@ -1693,7 +1693,7 @@ version = "0.13.2"
 criteria = "safe-to-run"
 
 [[exemptions.target-triple]]
-version = "0.1.4"
+version = "1.0.0"
 criteria = "safe-to-run"
 
 [[exemptions.tempfile]]
@@ -1769,7 +1769,7 @@ version = "0.28.0"
 criteria = "safe-to-run"
 
 [[exemptions.tokio-util]]
-version = "0.7.16"
+version = "0.7.17"
 criteria = "safe-to-run"
 
 [[exemptions.toml]]
@@ -1813,7 +1813,7 @@ version = "0.3.20"
 criteria = "safe-to-run"
 
 [[exemptions.trybuild]]
-version = "1.0.112"
+version = "1.0.113"
 criteria = "safe-to-run"
 
 [[exemptions.ttf-parser]]
@@ -1845,7 +1845,7 @@ version = "0.1.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.unicode-ident]]
-version = "1.0.20"
+version = "1.0.22"
 criteria = "safe-to-deploy"
 
 [[exemptions.unicode-segmentation]]
@@ -1913,27 +1913,23 @@ version = "0.14.3+wasi-0.2.4"
 criteria = "safe-to-deploy"
 
 [[exemptions.wasm-bindgen]]
-version = "0.2.104"
-criteria = "safe-to-run"
-
-[[exemptions.wasm-bindgen-backend]]
-version = "0.2.104"
+version = "0.2.105"
 criteria = "safe-to-run"
 
 [[exemptions.wasm-bindgen-futures]]
-version = "0.4.54"
+version = "0.4.55"
 criteria = "safe-to-run"
 
 [[exemptions.wasm-bindgen-macro]]
-version = "0.2.104"
+version = "0.2.105"
 criteria = "safe-to-run"
 
 [[exemptions.wasm-bindgen-macro-support]]
-version = "0.2.104"
+version = "0.2.105"
 criteria = "safe-to-run"
 
 [[exemptions.wasm-bindgen-shared]]
-version = "0.2.104"
+version = "0.2.105"
 criteria = "safe-to-run"
 
 [[exemptions.wayland-backend]]
@@ -1973,7 +1969,7 @@ version = "0.31.6"
 criteria = "safe-to-run"
 
 [[exemptions.web-sys]]
-version = "0.3.81"
+version = "0.3.82"
 criteria = "safe-to-run"
 
 [[exemptions.web-time]]

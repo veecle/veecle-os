@@ -13,4 +13,4 @@ veecle-os = { path = "../../../../veecle-os", default-features = false, features
 ] }
 
 [dev-dependencies]
-assert_cmd = "2.0.17"
+assert_cmd = "2.1.1"
