@@ -23,7 +23,7 @@ futures = { workspace = true, features = ["executor"] }
 veecle-os-runtime = { workspace = true }
 
 [dev-dependencies]
-veecle-os.workspace = true
+veecle-os = { workspace = true }
 
 [lints]
 workspace = true
