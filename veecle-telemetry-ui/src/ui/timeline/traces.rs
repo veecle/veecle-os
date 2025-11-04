@@ -290,7 +290,7 @@ fn paint_scope_details(ui: &mut egui::Ui, span: SpanRef, max: Timestamp) {
         .num_columns(2)
         .show(ui, |ui| {
             ui.monospace("id");
-            ui.monospace(format!("{:?}", span.context));
+            ui.monospace(format!("{}", span.context));
             ui.end_row();
 
             ui.monospace("operation name");
