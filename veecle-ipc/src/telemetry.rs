@@ -31,14 +31,18 @@ impl Export for Exporter {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
+    use core::num::NonZeroU64;
     use tokio::sync::mpsc;
     use veecle_telemetry::collector::Export;
     use veecle_telemetry::protocol::{
-        ExecutionId, InstanceMessage, LogMessage, Severity, TelemetryMessage,
+        InstanceMessage, LogMessage, ProcessId, Severity, TelemetryMessage, ThreadId,
     };
     use veecle_telemetry::{SpanId, TraceId};
 
     use super::Exporter;
+
+    const THREAD_ID: ThreadId =
+        ThreadId::from_raw(ProcessId::from_raw(123), NonZeroU64::new(456).unwrap());
 
     #[tokio::test]
     async fn test_export_telemetry_message() {
@@ -46,7 +50,7 @@ mod tests {
         let exporter = Exporter::new(sender);
 
         let test_message = InstanceMessage {
-            execution: ExecutionId::from_raw(123),
+            thread: THREAD_ID,
             message: TelemetryMessage::Log(LogMessage {
                 time_unix_nano: 1000000000,
                 severity: Severity::Info,
@@ -62,7 +66,7 @@ mod tests {
         let received = receiver.recv().await.expect("should receive message");
         match received {
             veecle_ipc_protocol::Message::Telemetry(message) => {
-                assert_eq!(*message.execution, 123);
+                assert_eq!(message.thread, THREAD_ID);
                 match message.message {
                     TelemetryMessage::Log(message) => {
                         assert_eq!(message.time_unix_nano, 1000000000);
@@ -86,7 +90,7 @@ mod tests {
         drop(receiver);
 
         let test_message = InstanceMessage {
-            execution: ExecutionId::from_raw(456),
+            thread: THREAD_ID,
             message: TelemetryMessage::Log(LogMessage {
                 time_unix_nano: 2000000000,
                 severity: Severity::Error,
