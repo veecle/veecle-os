@@ -33,11 +33,11 @@ impl Export for Exporter {
 mod tests {
     use core::num::NonZeroU64;
     use tokio::sync::mpsc;
+    use veecle_telemetry::SpanId;
     use veecle_telemetry::collector::Export;
     use veecle_telemetry::protocol::{
         InstanceMessage, LogMessage, ProcessId, Severity, TelemetryMessage, ThreadId,
     };
-    use veecle_telemetry::{SpanId, TraceId};
 
     use super::Exporter;
 
@@ -56,7 +56,6 @@ mod tests {
                 severity: Severity::Info,
                 body: "test log message".into(),
                 attributes: Default::default(),
-                trace_id: Some(TraceId(0x1234)),
                 span_id: Some(SpanId(0x5678)),
             }),
         };
@@ -72,7 +71,6 @@ mod tests {
                         assert_eq!(message.time_unix_nano, 1000000000);
                         assert_eq!(message.severity, Severity::Info);
                         assert_eq!(message.body.as_ref(), "test log message");
-                        assert_eq!(message.trace_id, Some(TraceId(0x1234)));
                         assert_eq!(message.span_id, Some(SpanId(0x5678)));
                     }
                     _ => panic!("Expected Log message"),
@@ -96,7 +94,6 @@ mod tests {
                 severity: Severity::Error,
                 body: "error log message".into(),
                 attributes: Default::default(),
-                trace_id: Some(TraceId(0xabcd)),
                 span_id: Some(SpanId(0xef01)),
             }),
         };

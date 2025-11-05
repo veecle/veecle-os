@@ -12,8 +12,10 @@ use anyhow::Context;
 use egui::Color32;
 use indexmap::{IndexMap, IndexSet};
 use serde::{Deserialize, Serialize};
-use veecle_telemetry::protocol::{InstanceMessage, TelemetryMessage, TracingMessage};
-use veecle_telemetry::{SpanContext, SpanId as TelemetrySpanId, TraceId, Value as TelemetryValue};
+use veecle_telemetry::protocol::{
+    InstanceMessage, ProcessId, TelemetryMessage, ThreadId, TracingMessage,
+};
+use veecle_telemetry::{SpanContext, SpanId as TelemetrySpanId, Value as TelemetryValue};
 #[cfg(target_arch = "wasm32")]
 use web_time::Instant;
 
@@ -71,7 +73,7 @@ impl Default for Store {
 
 // Program span context for logs without a specific span.
 const PROGRAM_SPAN_CONTEXT: SpanContext = SpanContext {
-    trace_id: TraceId(0),
+    process_id: ProcessId::from_raw(0),
     span_id: TelemetrySpanId(0),
 };
 
@@ -170,16 +172,16 @@ impl Store {
 
         let InstanceMessage {
             // TODO(DEV-605): support filtering by thread.
-            thread: _,
+            thread,
             message,
         } = instance_message;
 
         match message {
             TelemetryMessage::Tracing(tracing_msg) => {
-                self.process_tracing_message(tracing_msg);
+                self.process_tracing_message(thread, tracing_msg);
             }
             TelemetryMessage::Log(log_msg) => {
-                self.process_log_message(log_msg);
+                self.process_log_message(thread, log_msg);
             }
             TelemetryMessage::TimeSync(_) => {
                 // TODO(DEV-601): handle these messages.
@@ -197,15 +199,15 @@ impl Store {
     }
 
     /// Processes a single tracing message.
-    fn process_tracing_message(&mut self, tracing_msg: TracingMessage) {
+    fn process_tracing_message(&mut self, thread_id: ThreadId, tracing_msg: TracingMessage) {
         match tracing_msg {
             TracingMessage::CreateSpan(span_msg) => {
                 let timestamp = self.update_timestamp(span_msg.start_time_unix_nano);
 
-                let context = SpanContext::new(span_msg.trace_id, span_msg.span_id);
+                let context = SpanContext::new(thread_id.process, span_msg.span_id);
                 let parent_context = span_msg
                     .parent_span_id
-                    .map(|parent_id| SpanContext::new(span_msg.trace_id, parent_id));
+                    .map(|parent_id| SpanContext::new(thread_id.process, parent_id));
 
                 let mut parent_span = parent_context.map(|parent| {
                     self.spans
@@ -250,7 +252,7 @@ impl Store {
             TracingMessage::EnterSpan(enter_msg) => {
                 let timestamp = self.update_timestamp(enter_msg.time_unix_nano);
 
-                let span_context = SpanContext::new(enter_msg.trace_id, enter_msg.span_id);
+                let span_context = SpanContext::new(thread_id.process, enter_msg.span_id);
 
                 let span = self
                     .spans
@@ -266,7 +268,7 @@ impl Store {
             TracingMessage::ExitSpan(exit_msg) => {
                 let timestamp = self.update_timestamp(exit_msg.time_unix_nano);
 
-                let span_context = SpanContext::new(exit_msg.trace_id, exit_msg.span_id);
+                let span_context = SpanContext::new(thread_id.process, exit_msg.span_id);
                 let span = self
                     .spans
                     .get_mut(&span_context)
@@ -288,7 +290,7 @@ impl Store {
             TracingMessage::CloseSpan(close_msg) => {
                 let timestamp = self.update_timestamp(close_msg.end_time_unix_nano);
 
-                let span_context = SpanContext::new(close_msg.trace_id, close_msg.span_id);
+                let span_context = SpanContext::new(thread_id.process, close_msg.span_id);
                 let span = self
                     .spans
                     .get_mut(&span_context)
@@ -306,7 +308,7 @@ impl Store {
             TracingMessage::AddEvent(event_msg) => {
                 let timestamp = self.update_timestamp(event_msg.time_unix_nano);
 
-                let span_context = SpanContext::new(event_msg.trace_id, event_msg.span_id);
+                let span_context = SpanContext::new(thread_id.process, event_msg.span_id);
                 let span = self
                     .spans
                     .get_mut(&span_context)
@@ -342,7 +344,7 @@ impl Store {
                 });
             }
             TracingMessage::AddLink(link_msg) => {
-                let span_context = SpanContext::new(link_msg.trace_id, link_msg.span_id);
+                let span_context = SpanContext::new(thread_id.process, link_msg.span_id);
                 let linked_span_context = link_msg.link;
 
                 let span = self
@@ -352,7 +354,7 @@ impl Store {
                 span.links.push(linked_span_context);
             }
             TracingMessage::SetAttribute(attr_msg) => {
-                let span_context = SpanContext::new(attr_msg.trace_id, attr_msg.span_id);
+                let span_context = SpanContext::new(thread_id.process, attr_msg.span_id);
                 let span = self
                     .spans
                     .get_mut(&span_context)
@@ -366,17 +368,17 @@ impl Store {
     }
 
     /// Processes a single log message.
-    fn process_log_message(&mut self, log_msg: veecle_telemetry::protocol::LogMessage) {
+    fn process_log_message(
+        &mut self,
+        thread_id: ThreadId,
+        log_msg: veecle_telemetry::protocol::LogMessage,
+    ) {
         let timestamp = self.update_timestamp(log_msg.time_unix_nano);
 
         // Find the span this log belongs to, or use the program span.
         let span_context = log_msg
             .span_id
-            .and_then(|span_id| {
-                log_msg
-                    .trace_id
-                    .map(|trace_id| SpanContext::new(trace_id, span_id))
-            })
+            .map(|span_id| SpanContext::new(thread_id.process, span_id))
             .unwrap_or(PROGRAM_SPAN_CONTEXT);
 
         let span = if let Some(span) = self.spans.get_mut(&span_context) {

@@ -238,7 +238,7 @@ fn span_property() {
 #[test]
 #[serial]
 fn current_span_integration() {
-    use veecle_telemetry::{CurrentSpan, SpanId, TraceId};
+    use veecle_telemetry::{CurrentSpan, ProcessId, SpanId};
 
     let exporter = set_exporter();
 
@@ -257,8 +257,10 @@ fn current_span_integration() {
         );
 
         // Test CurrentSpan::link
-        let external_context =
-            SpanContext::new(TraceId(0x123456789ABCDEF0), SpanId(0xFEDCBA9876543210));
+        let external_context = SpanContext::new(
+            ProcessId::from_raw(0x123456789ABCDEF0),
+            SpanId(0xFEDCBA9876543210),
+        );
         CurrentSpan::add_link(external_context);
 
         // Test CurrentSpan::attribute
@@ -275,8 +277,10 @@ fn current_span_integration() {
         );
         CurrentSpan::set_attribute(KeyValue::new("child_runtime_attr", 100));
 
-        let another_external =
-            SpanContext::new(TraceId(0x1111111111111111), SpanId(0x2222222222222222));
+        let another_external = SpanContext::new(
+            ProcessId::from_raw(0x1111111111111111),
+            SpanId(0x2222222222222222),
+        );
         CurrentSpan::add_link(another_external);
     }
 
@@ -286,11 +290,11 @@ fn current_span_integration() {
         indoc! {r#"
             root []
                 + attr: runtime_attr="added_later"
-                + link: trace=123456789abcdef0, span=fedcba9876543210
+                + link: process=123456789abcdef0 span=fedcba9876543210
                 + event: test_event [event_key="event_value", event_num=42]
                 child [child_attr=true]
                     + attr: child_runtime_attr=100
-                    + link: trace=1111111111111111, span=2222222222222222
+                    + link: process=1111111111111111 span=2222222222222222
                     + event: child_event [child_event_data="nested"]
         "#}
     );

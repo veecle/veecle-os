@@ -111,7 +111,7 @@ pub mod to_static;
 pub mod types;
 pub mod value;
 
-pub use id::{ProcessId, SpanContext, SpanId, TraceId};
+pub use id::{ProcessId, SpanContext, SpanId};
 pub use span::{CurrentSpan, Span, SpanGuard, SpanGuardRef};
 pub use value::{KeyValue, Value};
 pub use veecle_telemetry_macros::instrument;
