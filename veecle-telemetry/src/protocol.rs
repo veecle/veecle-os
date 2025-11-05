@@ -108,7 +108,7 @@ impl ThreadId {
 #[cfg_attr(feature = "alloc", derive(Deserialize))]
 pub struct InstanceMessage<'a> {
     /// The thread this message belongs to
-    pub thread: ThreadId,
+    pub thread_id: ThreadId,
 
     /// The telemetry message content
     #[serde(borrow)]
@@ -121,7 +121,7 @@ impl ToStatic for InstanceMessage<'_> {
 
     fn to_static(&self) -> Self::Static {
         InstanceMessage {
-            thread: self.thread,
+            thread_id: self.thread_id,
             message: self.message.to_static(),
         }
     }
@@ -485,7 +485,7 @@ mod tests {
         let tracing_message = TracingMessage::AddEvent(span_event);
         let telemetry_message = TelemetryMessage::Tracing(tracing_message);
         let instance_message = InstanceMessage {
-            thread: ThreadId::from_raw(ProcessId::from_raw(999), NonZeroU64::new(111).unwrap()),
+            thread_id: ThreadId::from_raw(ProcessId::from_raw(999), NonZeroU64::new(111).unwrap()),
             message: telemetry_message,
         };
 

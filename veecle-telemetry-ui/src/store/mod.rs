@@ -172,7 +172,7 @@ impl Store {
 
         let InstanceMessage {
             // TODO(DEV-605): support filtering by thread.
-            thread,
+            thread_id: thread,
             message,
         } = instance_message;
 

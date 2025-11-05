@@ -50,7 +50,7 @@ mod tests {
         let exporter = Exporter::new(sender);
 
         let test_message = InstanceMessage {
-            thread: THREAD_ID,
+            thread_id: THREAD_ID,
             message: TelemetryMessage::Log(LogMessage {
                 time_unix_nano: 1000000000,
                 severity: Severity::Info,
@@ -65,7 +65,7 @@ mod tests {
         let received = receiver.recv().await.expect("should receive message");
         match received {
             veecle_ipc_protocol::Message::Telemetry(message) => {
-                assert_eq!(message.thread, THREAD_ID);
+                assert_eq!(message.thread_id, THREAD_ID);
                 match message.message {
                     TelemetryMessage::Log(message) => {
                         assert_eq!(message.time_unix_nano, 1000000000);
@@ -88,7 +88,7 @@ mod tests {
         drop(receiver);
 
         let test_message = InstanceMessage {
-            thread: THREAD_ID,
+            thread_id: THREAD_ID,
             message: TelemetryMessage::Log(LogMessage {
                 time_unix_nano: 2000000000,
                 severity: Severity::Error,
