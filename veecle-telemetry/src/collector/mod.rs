@@ -255,7 +255,7 @@ impl Collector {
     ///
     /// let collector = get_collector();
     /// let message = InstanceMessage {
-    ///     thread: ThreadId::from_raw(ProcessId::from_raw(1), NonZeroU64::new(1).unwrap()),
+    ///     thread_id: ThreadId::from_raw(ProcessId::from_raw(1), NonZeroU64::new(1).unwrap()),
     ///     message: TelemetryMessage::TimeSync(TimeSyncMessage {
     ///         local_timestamp: 0,
     ///         since_epoch: 0,
@@ -306,7 +306,7 @@ impl Collector {
     #[inline]
     pub(crate) fn log_message(&self, log: LogMessage<'_>) {
         self.inner.exporter.export(InstanceMessage {
-            thread: ThreadId::current(self.inner.process_id),
+            thread_id: ThreadId::current(self.inner.process_id),
             message: TelemetryMessage::Log(log),
         });
     }
@@ -314,7 +314,7 @@ impl Collector {
     #[inline]
     fn tracing_message(&self, message: TracingMessage<'_>) {
         self.inner.exporter.export(InstanceMessage {
-            thread: ThreadId::current(self.inner.process_id),
+            thread_id: ThreadId::current(self.inner.process_id),
             message: TelemetryMessage::Tracing(message),
         });
     }
