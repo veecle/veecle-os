@@ -410,13 +410,13 @@ fn main() -> std::process::ExitCode {
         vec![
             Trial::test("veecle_os::tombi::fmt", move || {
                 Command::new("tombi")
-                    .args(["format", "--check"])
+                    .args(["format", "--offline", "--check"])
                     .current_dir(manifest_dir)
                     .run_as_test(capture)
             }),
             Trial::test("veecle_os::tombi::lint", move || {
                 Command::new("tombi")
-                    .args(["lint"])
+                    .args(["lint", "--offline"])
                     .current_dir(manifest_dir)
                     .run_as_test(capture)
             }),
