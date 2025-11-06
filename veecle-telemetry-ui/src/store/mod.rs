@@ -23,6 +23,13 @@ use web_time::Instant;
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct LogId(usize);
 
+impl std::fmt::Display for LogId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let Self(id) = self;
+        write!(f, "{id:05x}")
+    }
+}
+
 impl From<usize> for LogId {
     fn from(value: usize) -> Self {
         LogId(value)

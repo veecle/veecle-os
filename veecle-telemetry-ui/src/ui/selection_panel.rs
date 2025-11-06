@@ -50,7 +50,7 @@ fn selection_content_ui(
             panel_content_ui(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.strong("Span");
-                    ui.monospace(format!("{span_id:?}"));
+                    ui.monospace(format!("{span_id}"));
                 });
             });
 
@@ -70,7 +70,7 @@ fn selection_content_ui(
             panel_content_ui(ui, |ui| {
                 ui.horizontal(|ui| {
                     ui.strong("Log");
-                    ui.monospace(format!("{log_id:?}"));
+                    ui.monospace(format!("{log_id}"));
                 });
             });
 
@@ -224,9 +224,9 @@ fn optional_label_ui(ui: &mut egui::Ui, value: Option<impl std::fmt::Display>) {
 
 fn reference_link_ui<T>(ui: &mut egui::Ui, selection_state: &SelectionState, item: T)
 where
-    T: Into<Item> + std::fmt::Debug,
+    T: Into<Item> + std::fmt::Display,
 {
-    let text = egui::RichText::new(format!("{item:?}")).monospace();
+    let text = egui::RichText::new(format!("{item}")).monospace();
     let response = ui.link(text);
 
     let item = item.into();
