@@ -20,28 +20,28 @@ struct TestData {
 #[tokio::test]
 #[cfg_attr(coverage_nightly, coverage(off))]
 async fn test_drop_policy_behavior() {
-    let (tx, mut rx) = mpsc::channel::<Message<'static>>(2);
+    let (sender, mut receiver) = mpsc::channel::<Message<'static>>(2);
 
-    for i in 0..2 {
-        tx.send(Message::Storable(
-            veecle_ipc_protocol::EncodedStorable::new(&TestData { value: i }).unwrap(),
+    for index in 0..2 {
+        sender.send(Message::Storable(
+            veecle_ipc_protocol::EncodedStorable::new(&TestData { value: index }).unwrap(),
         ))
         .await
         .unwrap();
     }
 
     // Verify channel is full - `try_send` should return `Err`.
-    let result = tx.try_send(Message::Storable(
+    let result = sender.try_send(Message::Storable(
         veecle_ipc_protocol::EncodedStorable::new(&TestData { value: 100 }).unwrap(),
     ));
     assert!(result.is_err(), "try_send should fail when channel is full");
 
     // Verify original messages are intact.
-    for i in 0..2 {
-        let msg = rx.recv().await.unwrap();
-        if let Message::Storable(data) = msg {
+    for index in 0..2 {
+        let message = receiver.recv().await.unwrap();
+        if let Message::Storable(data) = message {
             let parsed: TestData = serde_json::from_str(&data.value).unwrap();
-            assert_eq!(parsed.value, i);
+            assert_eq!(parsed.value, index);
         }
     }
 }

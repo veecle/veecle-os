@@ -53,18 +53,18 @@ where
     T: Storable<DataType: Serialize> + 'static,
 {
     let output = config.connector.output();
-    let policy = config.policy;
+    let send_policy = config.send_policy;
 
     loop {
         let value = reader.wait_for_update().await.read(|value| {
             veecle_ipc_protocol::Message::Storable(EncodedStorable::new(value).unwrap())
         });
 
-        match policy {
+        match send_policy {
             SendPolicy::Drop => {
                 if let Err(error) = output.try_send(value) {
                     veecle_telemetry::warn!(
-                        "dropped ipc message due to full channel",
+                        "dropped IPC message due to full channel",
                         type_name = std::any::type_name::<T>(),
                         error = format!("{error:?}")
                     );
@@ -73,7 +73,7 @@ where
             SendPolicy::Panic => {
                 output
                     .try_send(value)
-                    .expect("IPC output channel is full - this indicates buffer exhaustion");
+                    .expect("IPC output channel is full");
             }
         }
     }
@@ -83,13 +83,13 @@ where
 #[derive(Debug, Clone, Copy)]
 pub struct OutputConfig<'a> {
     connector: &'a Connector,
-    policy: SendPolicy,
+    send_policy: SendPolicy,
 }
 
 impl<'a> OutputConfig<'a> {
     /// Creates a new output configuration.
-    pub fn new(connector: &'a Connector, policy: SendPolicy) -> Self {
-        Self { connector, policy }
+    pub fn new(connector: &'a Connector, send_policy: SendPolicy) -> Self {
+        Self { connector, send_policy }
     }
 }
 
@@ -97,13 +97,13 @@ impl<'a> From<&'a Connector> for OutputConfig<'a> {
     fn from(connector: &'a Connector) -> Self {
         Self {
             connector,
-            policy: SendPolicy::default(),
+            send_policy: SendPolicy::default(),
         }
     }
 }
 
 impl<'a> From<(&'a Connector, SendPolicy)> for OutputConfig<'a> {
-    fn from((connector, policy): (&'a Connector, SendPolicy)) -> Self {
-        Self { connector, policy }
+    fn from((connector, send_policy): (&'a Connector, SendPolicy)) -> Self {
+        Self { connector, send_policy }
     }
 }
