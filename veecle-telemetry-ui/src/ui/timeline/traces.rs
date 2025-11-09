@@ -35,6 +35,7 @@ use egui::{
 };
 use veecle_telemetry::SpanContext;
 
+use crate::filter::Filters;
 use crate::selection::SelectionState;
 use crate::store::{LogRef, SpanRef, Store, Timestamp};
 use crate::ui::timeline::TimeRangeUi;
@@ -176,6 +177,7 @@ pub fn traces_ui(
     response: &Response,
     painter: &Painter,
     metadata: &mut SpanUiMetadata,
+    filters: &Filters,
 ) {
     let info = Info {
         ctx: ui.ctx(),
@@ -199,6 +201,7 @@ pub fn traces_ui(
             0,
             max_depth,
             min_y,
+            filters,
         );
     }
 }
@@ -233,6 +236,7 @@ fn paint_scope(
     depth: usize,
     max_depth: usize,
     min_y: f32,
+    filters: &Filters,
 ) -> PaintResult {
     if depth >= max_depth {
         return PaintResult::Culled;
@@ -253,6 +257,7 @@ fn paint_scope(
         span,
         top_y,
         show_child_logs,
+        filters,
     );
 
     if result != PaintResult::Culled {
@@ -266,6 +271,7 @@ fn paint_scope(
                 depth + 1,
                 max_depth,
                 min_y,
+                filters,
             );
         }
 
@@ -324,6 +330,7 @@ fn paint_scope_details(ui: &mut egui::Ui, span: SpanRef, max: Timestamp) {
 const SELECTED_COLOR: Rgba = Rgba::from_rgb(0.9, 0.9, 0.9);
 const HOVER_COLOR: Rgba = Rgba::from_rgb(0.7, 0.7, 0.7);
 const INACTIVE_COLOR: Rgba = Rgba::from_rgb(0.4, 0.4, 0.4);
+const FILTERED_OUT_COLOR: Rgba = Rgba::from_rgb(0.15, 0.15, 0.15);
 
 #[allow(clippy::too_many_arguments)]
 fn paint_record(
@@ -336,6 +343,7 @@ fn paint_record(
     span: SpanRef,
     top_y: f32,
     show_child_logs: bool,
+    filters: &Filters,
 ) -> PaintResult {
     let start_x = time_range_ui.x_from_time_f32(span.start);
     let stop_x = time_range_ui.x_from_time_f32(span.end.min(time_range_ui.data.end()));
@@ -380,12 +388,17 @@ fn paint_record(
 
     let is_hovered = is_hovered || selection_state.is_span_hovered(span);
 
+    // if span matches - use inactive gray color, if it doesn't, then use very dark gray
+    let matches_filter = !filters.has_active_filters() || filters.span_matches(&span);
+
     let rect_color = if is_selected {
         SELECTED_COLOR
     } else if is_hovered {
         HOVER_COLOR
-    } else {
+    } else if matches_filter {
         INACTIVE_COLOR
+    } else {
+        FILTERED_OUT_COLOR
     };
 
     let min_width = RECT_MIN_WIDTH;
@@ -411,8 +424,13 @@ fn paint_record(
             let rect =
                 Rect::from_min_max(pos2(start_x, top_y_margin), pos2(stop_x, bottom_y_margin));
 
-            let rect_color =
+            let mut rect_color =
                 color_from_duration(span.duration()).multiply(if is_hovered { 0.8 } else { 1.0 });
+
+            // dim out activity bars for filtered-out spans
+            if !matches_filter {
+                rect_color = rect_color.multiply(0.4);
+            }
 
             info.painter.rect_filled(rect, RECT_ROUNDING, rect_color);
         }
@@ -452,13 +470,19 @@ fn paint_record(
             top_y + 0.5 * (RECT_HEIGHT - info.text_height),
         );
         let pos = pos.round_to_pixels(painter.pixels_per_point());
-        const TEXT_COLOR: Color32 = Color32::BLACK;
+
+        let text_color = if matches_filter {
+            Color32::BLACK
+        } else {
+            Color32::from_gray(60)
+        };
+
         painter.text(
             pos,
             Align2::LEFT_TOP,
             text,
             info.font_id.clone(),
-            TEXT_COLOR,
+            text_color,
         );
     }
 

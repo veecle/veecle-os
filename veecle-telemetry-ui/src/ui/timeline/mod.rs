@@ -438,7 +438,7 @@ impl TraceTimelinePanel {
 
                 let mut span_metadata = SpanUiMetadata::default();
 
-                let data = convert(app_state, store);
+                let data = convert(store);
                 for (actor_name, data) in &data.actors {
                     self.show_collapsing_actor(
                         time_area_response,
@@ -447,6 +447,7 @@ impl TraceTimelinePanel {
                         data,
                         app_state.selection(),
                         &mut span_metadata,
+                        app_state,
                         ui,
                     );
                 }
@@ -464,6 +465,7 @@ impl TraceTimelinePanel {
         actor: &Vec<ActorSpanRow>,
         selection_state: &SelectionState,
         span_metadata: &mut SpanUiMetadata,
+        app_state: &AppState,
         ui: &mut egui::Ui,
     ) {
         let is_expanded = !self.collapsed_actors.contains(actor_name);
@@ -603,6 +605,7 @@ impl TraceTimelinePanel {
                 time_area_response,
                 time_area_painter,
                 span_metadata,
+                app_state.filter(),
             );
 
             top = bottom;
@@ -810,13 +813,13 @@ fn span_depth(span: SpanRef) -> usize {
         + 1
 }
 
-fn convert<'a>(app_state: &'a AppState, store: &'a Store) -> SelectedData<'a> {
+fn convert<'a>(store: &'a Store) -> SelectedData<'a> {
     let mut selected = SelectedData {
         range: (Timestamp::MAX, Timestamp::MIN),
         actors: Default::default(),
     };
 
-    for span in app_state.filter().filter_root_spans(store) {
+    for span in store.root_spans() {
         // update range
         selected.range.0 = selected.range.0.min(span.start);
         selected.range.1 = selected.range.1.max(span.end);
