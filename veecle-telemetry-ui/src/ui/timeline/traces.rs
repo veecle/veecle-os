@@ -30,8 +30,8 @@ use std::collections::HashMap;
 
 use egui::emath::GuiRounding;
 use egui::{
-    Align2, Color32, FontId, LayerId, Painter, Pos2, Rect, Response, Rgba, Shape, Stroke, pos2,
-    remap_clamp,
+    Align2, Color32, FontId, LayerId, Painter, Pos2, Rect, Response, Rgba, Shape, Stroke,
+    StrokeKind, pos2, remap_clamp,
 };
 use veecle_telemetry::SpanContext;
 
@@ -415,6 +415,19 @@ fn paint_record(
                 color_from_duration(span.duration()).multiply(if is_hovered { 0.8 } else { 1.0 });
 
             info.painter.rect_filled(rect, RECT_ROUNDING, rect_color);
+        }
+
+        // use outline for selected span
+        if is_selected {
+            let outline_color = Color32::from_rgb(255, 200, 50);
+            let outline_stroke = Stroke::new(2.0, outline_color);
+            info.painter.rect(
+                draw_rect,
+                RECT_ROUNDING,
+                Color32::TRANSPARENT,
+                outline_stroke,
+                StrokeKind::Outside,
+            );
         }
     }
 
