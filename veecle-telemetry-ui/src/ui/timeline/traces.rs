@@ -419,7 +419,7 @@ fn paint_record(
 
         // use outline for selected span
         if is_selected {
-            let outline_color = Color32::from_rgb(255, 200, 50);
+            let outline_color = Color32::from_rgb(120, 170, 255);
             let outline_stroke = Stroke::new(2.0, outline_color);
             info.painter.rect(
                 draw_rect,
