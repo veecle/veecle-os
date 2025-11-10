@@ -23,11 +23,12 @@ async fn test_drop_policy_behavior() {
     let (sender, mut receiver) = mpsc::channel::<Message<'static>>(2);
 
     for index in 0..2 {
-        sender.send(Message::Storable(
-            veecle_ipc_protocol::EncodedStorable::new(&TestData { value: index }).unwrap(),
-        ))
-        .await
-        .unwrap();
+        sender
+            .send(Message::Storable(
+                veecle_ipc_protocol::EncodedStorable::new(&TestData { value: index }).unwrap(),
+            ))
+            .await
+            .unwrap();
     }
 
     // Verify channel is full - `try_send` should return `Err`.

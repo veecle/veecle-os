@@ -71,9 +71,7 @@ where
                 }
             }
             SendPolicy::Panic => {
-                output
-                    .try_send(value)
-                    .expect("IPC output channel is full");
+                output.try_send(value).expect("IPC output channel is full");
             }
         }
     }
@@ -89,7 +87,10 @@ pub struct OutputConfig<'a> {
 impl<'a> OutputConfig<'a> {
     /// Creates a new output configuration.
     pub fn new(connector: &'a Connector, send_policy: SendPolicy) -> Self {
-        Self { connector, send_policy }
+        Self {
+            connector,
+            send_policy,
+        }
     }
 }
 
@@ -104,6 +105,9 @@ impl<'a> From<&'a Connector> for OutputConfig<'a> {
 
 impl<'a> From<(&'a Connector, SendPolicy)> for OutputConfig<'a> {
     fn from((connector, send_policy): (&'a Connector, SendPolicy)) -> Self {
-        Self { connector, send_policy }
+        Self {
+            connector,
+            send_policy,
+        }
     }
 }
