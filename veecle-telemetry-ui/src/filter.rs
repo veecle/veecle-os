@@ -91,9 +91,21 @@ impl Filters {
         })
     }
 
-    pub fn filter_root_spans<'a>(&'a self, store: &'a Store) -> impl Iterator<Item = SpanRef<'a>> {
-        store
-            .root_spans()
-            .filter(|span| self.actor.is_empty() || self.actor.matches(&span.actor))
+    /// Check if a span matches current filters
+    pub fn span_matches(&self, span: &SpanRef) -> bool {
+        self.target.matches(&span.metadata.target)
+            && self
+                .file
+                .matches(span.metadata.file.as_deref().unwrap_or_default())
+            && self.actor.matches(&span.actor)
+    }
+
+    /// Check if any filters are activate
+    pub fn has_active_filters(&self) -> bool {
+        !self.target.is_empty()
+            || !self.file.is_empty()
+            || !self.actor.is_empty()
+            || !self.level.is_empty()
+            || !self.message.is_empty()
     }
 }
