@@ -14,7 +14,7 @@ async fn main() {
         store: [Ping, Pong],
         actors: [
             PingActor,
-            veecle_ipc::Output::<Ping>: &connector,
+            veecle_ipc::Output::<Ping>: (&connector).into(),
             veecle_ipc::Input::<Pong>: &connector,
         ],
     }
