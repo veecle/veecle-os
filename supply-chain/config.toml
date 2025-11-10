@@ -1405,7 +1405,7 @@ version = "0.37.5"
 criteria = "safe-to-run"
 
 [[exemptions.quote]]
-version = "1.0.41"
+version = "1.0.42"
 criteria = "safe-to-deploy"
 
 [[exemptions.r-efi]]
@@ -1685,7 +1685,7 @@ version = "1.0.109"
 criteria = "safe-to-deploy"
 
 [[exemptions.syn]]
-version = "2.0.108"
+version = "2.0.110"
 criteria = "safe-to-deploy"
 
 [[exemptions.synstructure]]
@@ -1813,7 +1813,7 @@ version = "0.3.20"
 criteria = "safe-to-run"
 
 [[exemptions.trybuild]]
-version = "1.0.113"
+version = "1.0.114"
 criteria = "safe-to-run"
 
 [[exemptions.ttf-parser]]
