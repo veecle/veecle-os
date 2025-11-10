@@ -426,7 +426,7 @@ fn paint_record(
                 RECT_ROUNDING,
                 Color32::TRANSPARENT,
                 outline_stroke,
-                StrokeKind::Outside,
+                StrokeKind::Middle,
             );
         }
     }
