@@ -6,12 +6,12 @@ use veecle_telemetry::to_static::ToStatic;
 /// An [`Export`] implementer that forwards telemetry messages via IPC.
 #[derive(Debug)]
 pub struct Exporter {
-    sender: mpsc::Sender<veecle_ipc_protocol::Message<'static>>,
+    sender: mpsc::Sender<InstanceMessage<'static>>,
 }
 
 impl Exporter {
     /// Creates a new IPC telemetry exporter.
-    pub fn new(sender: mpsc::Sender<veecle_ipc_protocol::Message<'static>>) -> Self {
+    pub fn new(sender: mpsc::Sender<InstanceMessage<'static>>) -> Self {
         Self { sender }
     }
 }
@@ -23,8 +23,7 @@ impl Export for Exporter {
     /// and sends it through the IPC channel. If the channel is full or closed,
     /// the message is dropped to avoid blocking telemetry collection.
     fn export(&self, message: InstanceMessage<'_>) {
-        let message = veecle_ipc_protocol::Message::Telemetry(message.to_static());
-        let _ = self.sender.try_send(message);
+        let _ = self.sender.try_send(message.to_static());
     }
 }
 
@@ -60,20 +59,15 @@ mod tests {
 
         exporter.export(test_message);
 
-        let received = receiver.recv().await.expect("should receive message");
-        match received {
-            veecle_ipc_protocol::Message::Telemetry(message) => {
-                assert_eq!(message.thread_id, THREAD_ID);
-                match message.message {
-                    TelemetryMessage::Log(message) => {
-                        assert_eq!(message.time_unix_nano, 1000000000);
-                        assert_eq!(message.severity, Severity::Info);
-                        assert_eq!(message.body.as_ref(), "test log message");
-                    }
-                    _ => panic!("Expected Log message"),
-                }
+        let message = receiver.recv().await.expect("should receive message");
+        assert_eq!(message.thread_id, THREAD_ID);
+        match message.message {
+            TelemetryMessage::Log(message) => {
+                assert_eq!(message.time_unix_nano, 1000000000);
+                assert_eq!(message.severity, Severity::Info);
+                assert_eq!(message.body.as_ref(), "test log message");
             }
-            _ => panic!("Expected Telemetry"),
+            _ => panic!("Expected Log message"),
         }
     }
 

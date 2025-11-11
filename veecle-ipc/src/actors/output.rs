@@ -52,13 +52,14 @@ pub async fn output<T>(
 where
     T: Storable<DataType: Serialize> + 'static,
 {
-    let output = config.connector.output();
+    let output = config.connector.storable_output();
     let send_policy = config.send_policy;
 
     loop {
-        let value = reader.wait_for_update().await.read(|value| {
-            veecle_ipc_protocol::Message::Storable(EncodedStorable::new(value).unwrap())
-        });
+        let value = reader
+            .wait_for_update()
+            .await
+            .read(|value| EncodedStorable::new(value).unwrap());
 
         match send_policy {
             SendPolicy::Drop => {
