@@ -19,7 +19,7 @@ pub struct Time;
 impl TimeAbstraction for Time {
     fn now() -> Instant {
         use std::sync::LazyLock;
-        static EPOCH: LazyLock<std::time::Instant> = LazyLock::new(std::time::Instant::now);
+        static EPOCH: LazyLock<tokio::time::Instant> = LazyLock::new(tokio::time::Instant::now);
         Instant::MIN
             + Duration::try_from(EPOCH.elapsed())
                 .expect("time elapsed since start is less than 2^64-1 microseconds")
@@ -217,5 +217,18 @@ mod tests {
         tokio::time::advance(std::time::Duration::from_secs(3)).await;
 
         assert!(matches!(interval.tick().now_or_never(), Some(Ok(()))));
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn now_with_tokio_paused() {
+        let start = Time::now();
+
+        Time::sleep(Duration::from_secs(240)).await.unwrap();
+
+        let duration = Time::now().duration_since(start).unwrap();
+        assert!(
+            duration >= Duration::from_secs(240),
+            "duration: {duration:?}"
+        );
     }
 }
