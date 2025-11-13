@@ -39,10 +39,16 @@ jobs:
           cache-bin: "false"
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      # `someip` tests `cargo run` this binary internally, pre-build it so they don't timeout.
-      - run: eval "$(cargo llvm-cov show-env --export-prefix)" && cargo build -p someip-test-service
-
-      - run: just coverage
+      - run: >
+          just coverage
+          --workspace
+          --exclude=capicxx-someip-sys
+          --exclude=someip-test-service
+          --exclude=someip-test-service-macro
+          --exclude=someip-test-service-sys
+          --exclude=someip-test-service-tests
+          --exclude=veecle-os-data-support-someip
+          --exclude=veecle-os-data-support-someip-macros
 
       - uses: actions/upload-artifact@v5
         with:
@@ -52,9 +58,55 @@ jobs:
             codecov.json
           retention-days: 1
 
+  llvm-cov-someip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - uses: ./.github/actions/setup-rustup
+        with:
+          rust-toolchain-toml: rust-toolchain-nightly.toml
+      - uses: ./.github/actions/setup-arm-gnu-toolchain
+      - uses: ./.github/actions/setup-cmake
+      - uses: ./.github/actions/setup-tools
+        with:
+          cargo-nextest: true
+          cargo-llvm-cov: true
+          just: true
+
+      - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1
+        with:
+          cache-bin: "false"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      # `someip` tests `cargo run` this binary internally, pre-build it so they don't timeout.
+      - run: eval "$(cargo llvm-cov show-env --export-prefix)" && cargo build -p someip-test-service
+
+      - run: >
+          just coverage
+          --package=capicxx-someip-sys
+          --package=someip-test-service
+          --package=someip-test-service-macro
+          --package=someip-test-service-sys
+          --package=someip-test-service-tests
+          --package=veecle-os-data-support-someip
+          --package=veecle-os-data-support-someip-macros
+
+      - run: mv codecov.json codecov-someip.json
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: coverage-someip
+          path: codecov-someip.json
+          retention-days: 1
+
   codecov-upload:
     runs-on: ubuntu-latest
-    needs: llvm-cov
+    needs:
+      - llvm-cov
+      - llvm-cov-someip
     # Skip codecov upload for dependabot PRs (no access to secrets).
     if: github.actor != 'dependabot[bot]'
     steps:
@@ -66,9 +118,13 @@ jobs:
         with:
           name: coverage
 
+      - uses: actions/download-artifact@v6
+        with:
+          name: coverage-someip
+
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           disable_search: true
-          files: codecov.json
+          files: codecov.json,codecov-someip.json

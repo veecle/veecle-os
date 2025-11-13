@@ -58,9 +58,9 @@ vale-all:
 
 # Generates coverage reports in Codecov's and cargo-llvm-cov JSON formats.
 # This requires nightly, you can cp rust-toolchain-nightly.toml rust-toolchain.toml
-coverage:
-    cargo llvm-cov nextest --workspace --all-features --no-report -E "not (test(trybuild) | test(veecle-os-examples))"
-    cargo llvm-cov --doc --workspace --all-features --no-report
+coverage *args='--workspace':
+    cargo llvm-cov nextest {{args}} --all-features --no-report -E "not (test(trybuild) | test(veecle-os-examples))"
+    cargo llvm-cov --doc {{args}} --all-features --no-report
     cargo llvm-cov report --doctests --codecov --output-path codecov.json
     cargo llvm-cov report --doctests --json --output-path cov.json
     cargo llvm-cov report --doctests --html

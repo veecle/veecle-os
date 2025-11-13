@@ -68,12 +68,16 @@ jobs:
           cache-bin: "false"
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      # `someip` tests `cargo run` this binary internally, pre-build it so they don't timeout.
-      - run: cargo build -p someip-test-service
-
       - run: >
           cargo nextest run
           --workspace
+          --exclude=capicxx-someip-sys
+          --exclude=someip-test-service
+          --exclude=someip-test-service-macro
+          --exclude=someip-test-service-sys
+          --exclude=someip-test-service-tests
+          --exclude=veecle-os-data-support-someip
+          --exclude=veecle-os-data-support-someip-macros
           -E '(not package(workspace)) | (test(/^veecle-os::/) & (not test(/::(clippy|doc)$/)))'
           --no-fail-fast
 
@@ -112,6 +116,41 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - run: cargo nextest run --package workspace -E 'test(/^veecle-os::(clippy|doc)$/)' --no-fail-fast
+
+  validate-rust-someip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - uses: ./.github/actions/setup-rustup
+      - uses: ./.github/actions/setup-cmake
+      - uses: ./.github/actions/setup-tools
+        with:
+          cargo-deny: true
+          cargo-nextest: true
+          cargo-vet: true
+          tombi: true
+
+      - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1
+        with:
+          cache-bin: "false"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      # `someip` tests `cargo run` this binary internally, pre-build it so they don't timeout.
+      - run: cargo build -p someip-test-service
+
+      - run: >
+          cargo nextest run
+          --package=capicxx-someip-sys
+          --package=someip-test-service
+          --package=someip-test-service-macro
+          --package=someip-test-service-sys
+          --package=someip-test-service-tests
+          --package=veecle-os-data-support-someip
+          --package=veecle-os-data-support-someip-macros
+          --no-fail-fast
 
   validate-rust-workspaces:
     runs-on: ubuntu-latest
@@ -185,6 +224,7 @@ jobs:
       - validate-miri
       - validate-rust
       - validate-rust-clippy-doc
+      - validate-rust-someip
       - validate-rust-workspaces
       - validate-trunk
       - validate-yaml
