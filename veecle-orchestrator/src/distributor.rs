@@ -126,6 +126,16 @@ impl Distributor {
     }
 }
 
+/// Per-encoded-data-type state used by [`Inner`].
+#[derive(Default)]
+struct PerTypeState {
+    /// The latest value seen for this type.
+    latest_value: Option<EncodedStorable>,
+
+    /// The links to a list of target instances.
+    targets: Vec<LinkTarget>,
+}
+
 /// The actual [`Distributor`] state machine, running in a background task and accepting commands over channels from its
 /// façade.
 struct Inner {
@@ -138,8 +148,8 @@ struct Inner {
     /// Output messages to any remote instance.
     external_output_tx: Option<mpsc::Sender<(SocketAddr, EncodedStorable)>>,
 
-    /// The links, for a specific data type, to a list of target instances.
-    links: BTreeMap<String, Vec<LinkTarget>>,
+    /// The state for a specific date type.
+    per_type: BTreeMap<String, PerTypeState>,
 
     /// How to actually send a message to the chosen target instances.
     instance_txs: BTreeMap<InstanceId, mpsc::Sender<EncodedStorable>>,
@@ -155,37 +165,58 @@ impl Inner {
             input_rx,
             command_rx,
             external_output_tx,
-            links: BTreeMap::new(),
+            per_type: BTreeMap::new(),
             instance_txs: BTreeMap::new(),
         }
     }
 
+    async fn send_message(
+        &self,
+        target: &LinkTarget,
+        storable: &EncodedStorable,
+    ) -> eyre::Result<()> {
+        let type_name = &storable.type_name;
+
+        match target {
+            LinkTarget::Local(id) => {
+                let Some(sender) = self.instance_txs.get(id) else {
+                    // Should be unreachable as this is checked in `add_link`.
+                    tracing::warn!(%type_name, %id, "no instance");
+                    return Ok(());
+                };
+                sender.send(storable.clone()).await?;
+            }
+            &LinkTarget::Remote(address) => {
+                let Some(sender) = self.external_output_tx.as_ref() else {
+                    // Should be unreachable as this is checked in `add_link`.
+                    tracing::warn!("no external output socket configured");
+                    return Ok(());
+                };
+                sender.send((address, storable.clone())).await?;
+            }
+        }
+
+        Ok(())
+    }
+
     async fn route_message(&mut self, storable: EncodedStorable) -> eyre::Result<()> {
         let type_name = &storable.type_name;
-        let Some(targets) = self.links.get(&**type_name) else {
+
+        self.per_type
+            .entry(type_name.clone().into_owned())
+            .or_default()
+            .latest_value = Some(storable.clone());
+
+        // Safe to unwrap as we just initialized it above, we need a separate query to have `&`
+        // instead of the `&mut` used with `entry`.
+        let targets = &self.per_type.get(&**type_name).unwrap().targets;
+
+        if targets.is_empty() {
             tracing::warn!(%type_name, "no registered ipc link");
-            return Ok(());
-        };
+        }
 
         for target in targets {
-            match target {
-                LinkTarget::Local(id) => {
-                    let Some(sender) = self.instance_txs.get(id) else {
-                        // Should be unreachable as this is checked in `add_link`.
-                        tracing::warn!(%type_name, %id, "no instance");
-                        continue;
-                    };
-                    sender.send(storable.clone()).await?;
-                }
-                &LinkTarget::Remote(address) => {
-                    let Some(sender) = self.external_output_tx.as_ref() else {
-                        // Should be unreachable as this is checked in `add_link`.
-                        tracing::warn!("no external output socket configured");
-                        continue;
-                    };
-                    sender.send((address, storable.clone())).await?;
-                }
-            }
+            self.send_message(target, &storable).await?;
         }
 
         Ok(())
@@ -201,7 +232,7 @@ impl Inner {
         Ok(rx)
     }
 
-    fn add_link(&mut self, type_name: String, target: LinkTarget) -> eyre::Result<()> {
+    async fn add_link(&mut self, type_name: String, target: LinkTarget) -> eyre::Result<()> {
         match &target {
             LinkTarget::Local(id) => {
                 eyre::ensure!(
@@ -217,12 +248,24 @@ impl Inner {
             }
         }
 
-        self.links.entry(type_name).or_default().push(target);
+        self.per_type
+            .entry(type_name.clone())
+            .or_default()
+            .targets
+            .push(target);
+
+        if let Some(storable) = self
+            .per_type
+            .get(&type_name)
+            .and_then(|state| state.latest_value.as_ref())
+        {
+            self.send_message(&target, storable).await?;
+        }
 
         Ok(())
     }
 
-    fn apply_command(&mut self, command: Command) {
+    async fn apply_command(&mut self, command: Command) {
         match command {
             Command::AddInstance { id, response_tx } => {
                 let response = self.add_instance(id);
@@ -233,14 +276,19 @@ impl Inner {
                 target,
                 response_tx,
             } => {
-                let response = self.add_link(type_name, target);
+                let response = self.add_link(type_name, target).await;
                 let _ = response_tx.send(response);
             }
             Command::GetInfo { response_tx } => {
-                let _ = response_tx.send(self.links.clone());
+                let _ = response_tx.send(
+                    self.per_type
+                        .iter()
+                        .map(|(type_name, state)| (type_name.clone(), state.targets.clone()))
+                        .collect(),
+                );
             }
             Command::Clear { response_tx } => {
-                self.links.clear();
+                self.per_type.clear();
                 self.instance_txs.clear();
                 let _ = response_tx.send(());
             }
@@ -257,7 +305,7 @@ impl Inner {
 
                 command = self.command_rx.recv() => {
                     let Some(command) = command else { break };
-                    self.apply_command(command);
+                    self.apply_command(command).await;
                 }
             }
         }
