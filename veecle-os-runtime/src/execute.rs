@@ -347,16 +347,18 @@ pub async fn execute_actor<'a, A>(
 where
     A: Actor<'a>,
 {
-    let future = A::new(A::StoreRequest::request(store).await, init_context).run();
-
-    let future = veecle_telemetry::future::FutureExt::with_span(
-        future,
+    veecle_telemetry::future::FutureExt::with_span(
+        async move {
+            match A::new(A::StoreRequest::request(store).await, init_context)
+                .run()
+                .await
+            {
+                Err(error) => panic!("{error}"),
+            }
+        },
         veecle_telemetry::span!("actor", actor = core::any::type_name::<A>()),
-    );
-
-    match future.await {
-        Err(error) => panic!("{error}"),
-    }
+    )
+    .await
 }
 
 /// Execute a given set of actors without heap allocation.
