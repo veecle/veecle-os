@@ -34,7 +34,7 @@ pub async fn ping_actor(mut ping: Writer<'_, Ping>, mut pong: Reader<'_, Pong>) 
 #[veecle_osal_std::main]
 async fn main() {
     let process_id = ProcessId::random(&mut rand::rng());
-    veecle_telemetry::collector::set_exporter(process_id, &ConsoleJsonExporter)
+    veecle_telemetry::collector::set_exporter(process_id, &ConsoleJsonExporter::DEFAULT)
         .expect("exporter was not set yet");
 
     veecle_os_runtime::execute! {
