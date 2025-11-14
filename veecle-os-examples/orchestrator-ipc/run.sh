@@ -148,8 +148,6 @@ in
 
     mod=veecle_os_examples_common::actors::ping_pong
 
-    run "$CLI" --socket "$CONTROL1" link add --type $mod::Ping --to $TRACE_ID
-    run "$CLI" --socket "$CONTROL1" link add --type $mod::Ping --to $IPC2
     run "$CLI" --socket "$CONTROL2" link add --type $mod::Ping --to $PONG_ID
     run "$CLI" --socket "$CONTROL1" link add --type $mod::Pong --to $TRACE_ID
     run "$CLI" --socket "$CONTROL2" link add --type $mod::Pong --to $IPC1
@@ -196,6 +194,26 @@ in
     run "$CLI" --socket "$CONTROL2" runtime start $USELESS_MACHINE_ID
   ;;
 esac
+
+
+if [[ "$subset" = "ping-pong" ]]
+then
+  sleep 0.1
+
+  echo
+  echo 'Delayed linking Ping to Trace runtime and orchestrator 2'
+  echo
+
+  run "$CLI" --socket "$CONTROL1" link add --type $mod::Ping --to $TRACE_ID
+  run "$CLI" --socket "$CONTROL1" link add --type $mod::Ping --to $IPC2
+
+  sleep 0.1
+
+  echo
+  echo 'Linking done'
+  echo
+fi
+
 
 echo
 echo 'Starting veecle-telemetry-ui (will run until closed)'
