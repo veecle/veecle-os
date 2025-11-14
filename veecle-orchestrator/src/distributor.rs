@@ -148,7 +148,7 @@ struct Inner {
     /// Output messages to any remote instance.
     external_output_tx: Option<mpsc::Sender<(SocketAddr, EncodedStorable)>>,
 
-    /// The state for a specific date type.
+    /// The state for a specific data type.
     per_type: BTreeMap<String, PerTypeState>,
 
     /// How to actually send a message to the chosen target instances.
