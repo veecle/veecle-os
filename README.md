@@ -9,6 +9,93 @@ Refer to the [user manual](https://veecle.github.io/veecle-os/user-manual/) to l
 Refer to [CONTRIBUTING](CONTRIBUTING.md) for build instructions and other development material.
 After completing the setup instructions, go to [the examples](veecle-os-examples/) to run some Veecle OS example programs.
 
+## Example
+
+Add the following dependencies to your `Cargo.toml` file:
+
+<!-- Dependencies in `readme-example/Cargo.toml` must be kept in sync with this. -->
+
+```toml
+rand = "0.9.2"
+tokio = "1.48.0"
+# TODO(#161): Uses a git dependency until the `ConsolePrettyExporter` is released.
+veecle-os = { git = "https://github.com/veecle/veecle-os", branch = "main", features = [
+    "osal-std",
+    "telemetry-enable",
+] }
+```
+
+Add the following code to your `main.rs` file:
+
+```rust
+use core::convert::Infallible;
+use veecle_os::info;
+use veecle_os::osal::api::time::{Duration, Instant, Interval, TimeAbstraction};
+use veecle_os::runtime::{InitializedReader, Storable, Writer};
+use veecle_os::telemetry::collector::{ConsolePrettyExporter, set_exporter, ProcessId};
+
+#[derive(Debug, Storable)]
+#[storable(data_type = "Instant")]
+pub struct Tick;
+
+/// Emits a timestamp every second.
+///
+/// Can be used on any supported platform.
+#[veecle_os::runtime::actor]
+pub async fn ticker_actor<T>(
+    mut tick_writer: Writer<'_, Tick>,
+) -> Result<Infallible, veecle_os::osal::api::Error>
+where
+    T: TimeAbstraction,
+{
+    let mut interval = T::interval(Duration::from_secs(1));
+
+    loop {
+        interval.tick().await?;
+        tick_writer.write(T::now()).await;
+    }
+}
+
+/// Prints every received tick via `veecle-telemetry`.
+///
+/// Can be used on any supported platform.
+#[veecle_os::runtime::actor]
+pub async fn ticker_reader(mut reader: InitializedReader<'_, Tick>) -> Infallible {
+    loop {
+        reader.wait_for_update().await.read(|tick| {
+            info!(
+                "latest tick",
+                tick = {
+                    i64::try_from(tick.duration_since(Instant::MIN).unwrap().as_secs()).unwrap()
+                }
+            );
+            // This is not relevant for running the example.
+            // To test the example in CI, we need to force it to terminate.
+            if env!("CARGO_PKG_NAME") == "readme-example" {
+                std::process::exit(0);
+            }
+        });
+    }
+}
+
+/// Platform specific `main` implementation for `std`.
+#[tokio::main]
+async fn main() {
+    let process_id = ProcessId::random(&mut rand::rng());
+    // The `ConsolePrettyExporter` should only be used for experimentation.
+    // See the `veecle-telemetry-ui` application for fully featured telemetry.
+    set_exporter(process_id, &ConsolePrettyExporter::DEFAULT).unwrap();
+
+    veecle_os::runtime::execute! {
+        store: [Tick],
+        actors: [
+            TickerReader,
+            TickerActor<veecle_os::osal::std::time::Time>,
+        ],
+    }.await;
+}
+```
+
 ## Minimum Supported Rust Version Policy
 
 The currently tested Rust version is defined in [`rust-toolchain.toml`](./rust-toolchain.toml) and specified as the MSRV via Cargo metadata in [`Cargo.toml`](./Cargo.toml).
@@ -35,7 +122,7 @@ This will generally closely track the latest released version and updating is no
 
 ## License
 
-This project is licensed under the [Apache License Version 2.0](LICENSE).
+This project is licensed under the [Apache License Version 2.0][license].
 
 ### Contribution
 

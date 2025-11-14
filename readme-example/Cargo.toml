@@ -1,0 +1,22 @@
+[package]
+name = "readme-example"
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = false
+
+[dev-dependencies]
+# Must be kept in sync with the root README.md.
+rand = "0.9.2"
+tokio = "1.48.0"
+# TODO(#161): Use released version when `ConsolePrettyExporter` is released.
+veecle-os = { git = "https://github.com/veecle/veecle-os", branch = "main", features = [
+  "osal-std",
+  "telemetry-enable",
+] }
+
+[lints]
+workspace = true
