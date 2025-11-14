@@ -14,11 +14,10 @@ use std::string::String;
 /// # Examples
 ///
 /// ```rust
-/// use veecle_telemetry::collector::{ConsolePrettyExporter, set_exporter};
-/// use veecle_telemetry::protocol::ExecutionId;
+/// use veecle_telemetry::collector::{ConsolePrettyExporter, set_exporter, ProcessId};
 ///
-/// let execution_id = ExecutionId::random(&mut rand::rng());
-/// set_exporter(execution_id, &ConsolePrettyExporter::DEFAULT).unwrap();
+/// let process_id = ProcessId::random(&mut rand::rng());
+/// set_exporter(process_id, &ConsolePrettyExporter::DEFAULT).unwrap();
 /// ```
 #[derive(Debug, Default)]
 pub struct ConsolePrettyExporter(());
@@ -32,7 +31,7 @@ impl Export for ConsolePrettyExporter {
     fn export(
         &self,
         InstanceMessage {
-            execution: _,
+            thread_id: _,
             message,
         }: InstanceMessage,
     ) {
@@ -155,8 +154,6 @@ mod tests {
         for (time_unix_nano, severity, body, attributes) in messages {
             format_message(
                 TelemetryMessage::Log(LogMessage {
-                    span_id: None,
-                    trace_id: None,
                     time_unix_nano,
                     severity,
                     body: body.into(),
