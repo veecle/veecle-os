@@ -93,6 +93,12 @@ impl<'a> KeyValue<'a> {
     }
 }
 
+impl core::fmt::Display for KeyValue<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}: {}", self.key, self.value)
+    }
+}
+
 #[cfg(feature = "alloc")]
 impl ToStatic for KeyValue<'_> {
     type Static = KeyValue<'static>;
@@ -142,6 +148,20 @@ impl ToStatic for Value<'_> {
             Value::Bool(b) => Value::Bool(*b),
             Value::I64(i) => Value::I64(*i),
             Value::F64(f) => Value::F64(*f),
+        }
+    }
+}
+
+impl<'a> core::fmt::Display for Value<'a> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            // For strings, debug print so they will get delimiters, since we are explicitly
+            // representing strings rather than directly human-targeted text, and they will be used
+            // in situations where knowing where the string ends is important.
+            Value::String(value) => write!(f, "{value:?}"),
+            Value::Bool(value) => write!(f, "{value}"),
+            Value::I64(value) => write!(f, "{value}"),
+            Value::F64(value) => write!(f, "{value}"),
         }
     }
 }
