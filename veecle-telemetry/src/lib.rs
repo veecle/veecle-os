@@ -31,7 +31,7 @@
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let process_id = ProcessId::random(&mut rand::rng());
-//! set_exporter(process_id, &ConsoleJsonExporter)?;
+//! set_exporter(process_id, &ConsoleJsonExporter::DEFAULT)?;
 //! # Ok(())
 //! # }
 //! ```

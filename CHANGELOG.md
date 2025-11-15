@@ -8,6 +8,7 @@
 * **breaking** Removed `Span::root` method and `root_span!` macro; root spans should use `Span::new` and `span!` instead.
 * **breaking** Replaced `SpanContext::from_span` with `Span::context` method.
 * **breaking** Telemetry execution id is replaced by separate thread and process ids to uniquely identify thread/task combinations.
+* **breaking** `ConsoleJsonExporter` is no longer a unit struct, replace usage with `ConsoleJsonExporter::DEFAULT`.
 * Added custom serialization for telemetry ids with hex-encoded string format.
 * Added `ThreadAbstraction` trait to OSAL for querying current thread id.
 * Updated MSRV to 1.91.
