@@ -306,6 +306,10 @@ fn paint_scope_details(ui: &mut egui::Ui, span: SpanRef, max: Timestamp) {
             );
             ui.end_row();
 
+            ui.monospace("thread");
+            ui.monospace(format!("{}", span.thread_id));
+            ui.end_row();
+
             ui.monospace("duration");
             if span.end == Timestamp::MAX {
                 ui.monospace(format!("{:.3}+ ms", (max - span.start).as_ms()));
