@@ -2,6 +2,8 @@ use std::collections::HashSet;
 use std::hash::Hash;
 use std::ops::Deref;
 
+use veecle_telemetry::protocol::ThreadId;
+
 use crate::store::{Level, LogRef, SpanRef, Store};
 
 #[derive(Default, Debug)]
@@ -70,6 +72,7 @@ pub struct Filters {
     pub message: StringFilter,
 
     pub actor: SetFilter<String>,
+    pub thread: SetFilter<ThreadId>,
 }
 
 impl Filters {
@@ -88,6 +91,7 @@ impl Filters {
                     .matches(log.metadata.file.as_deref().unwrap_or_default())
                 && self.actor.matches(&log.actor)
                 && self.message.matches(&log.body)
+                && self.thread.matches(&log.thread_id)
         })
     }
 
@@ -98,6 +102,7 @@ impl Filters {
                 .file
                 .matches(span.metadata.file.as_deref().unwrap_or_default())
             && self.actor.matches(&span.actor)
+            && self.thread.matches(&span.thread_id)
     }
 
     /// Check if any filters are activate
@@ -107,5 +112,6 @@ impl Filters {
             || !self.actor.is_empty()
             || !self.level.is_empty()
             || !self.message.is_empty()
+            || !self.thread.is_empty()
     }
 }
