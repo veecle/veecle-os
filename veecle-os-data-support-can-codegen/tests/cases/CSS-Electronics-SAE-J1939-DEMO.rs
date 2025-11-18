@@ -1,3 +1,4 @@
+// editorconfig-checker-disable
 //! J1939 v1.0.0 for CAN by CSS ELECTRONICS (WWW.CSSELECTRONICS.COM)
 #![allow(dead_code)]
 use ::my_serde as _serde;

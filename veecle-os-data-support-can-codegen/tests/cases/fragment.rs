@@ -1,3 +1,4 @@
+// editorconfig-checker-disable
 compile_error!(
     r#"
 failed to parse `fragment.dbc`

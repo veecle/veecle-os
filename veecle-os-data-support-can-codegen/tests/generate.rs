@@ -31,8 +31,10 @@ fn generate_test_case(source_path: &Utf8Path, input: String) -> datatest_stable:
         message_frame_validations: Box::new(|_| None),
     };
 
-    let actual =
+    let mut actual =
         veecle_os_data_support_can_codegen::Generator::new(source, options, &input).into_string();
+
+    actual.insert_str(0, "// editorconfig-checker-disable\n");
 
     let expected_path = source_path.with_extension("rs");
     let expected = maybe_read_to_string(&expected_path)?.unwrap_or_default();
