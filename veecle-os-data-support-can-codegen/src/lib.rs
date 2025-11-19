@@ -27,8 +27,8 @@
 
 use std::str::FromStr;
 
-use anyhow::{Context, Result, anyhow};
-use can_dbc::DBC;
+use anyhow::{Context, Result};
+use can_dbc::Dbc;
 use proc_macro2::{Literal, TokenStream};
 use quote::quote;
 
@@ -102,7 +102,7 @@ impl core::fmt::Debug for Options {
 #[derive(Debug)]
 pub struct Generator {
     options: Options,
-    inner: Result<DBC>,
+    inner: Result<Dbc>,
 }
 
 impl Generator {
@@ -110,27 +110,11 @@ impl Generator {
     ///
     /// `context` should be some kind of identifier for error messages, e.g. the source filename.
     pub fn new(context: &str, options: Options, input: &str) -> Self {
-        fn parse_dbc(input: &str) -> Result<DBC> {
-            DBC::try_from(input).map_err(|error| match error {
-                can_dbc::Error::Incomplete(_, rest) => {
-                    let parsed = &input[..(input.len() - rest.len())];
-                    let lines = parsed.lines().count();
-                    anyhow!("parser error around line {lines}")
-                }
-                can_dbc::Error::Nom(error) => anyhow!(error.to_owned()),
-                can_dbc::Error::MultipleMultiplexors => {
-                    anyhow!(
-                        "can’t Lookup multiplexors because the message uses extended multiplexing"
-                    )
-                }
-            })
-        }
-
         Self {
             options,
             // We don't return the error here so that we can decide later whether to report it via a `Result` or by
             // generating `compile_error!`.
-            inner: parse_dbc(input).with_context(|| format!("failed to parse `{context}`")),
+            inner: Dbc::try_from(input).with_context(|| format!("failed to parse `{context}`")),
         }
     }
 

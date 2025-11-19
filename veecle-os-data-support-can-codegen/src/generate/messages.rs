@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use anyhow::{Result, bail, ensure};
-use can_dbc::{Comment, DBC, Message, Signal, SignalExtendedValueType, ValueType};
+use can_dbc::{Comment, Dbc, Message, Signal, SignalExtendedValueType, ValueType};
 use heck::{ToPascalCase, ToSnakeCase};
 use proc_macro2::{Span, TokenStream};
 use quote::{ToTokens, quote};
@@ -157,7 +157,7 @@ struct SignalType {
 }
 
 fn signal_type(
-    dbc: &DBC,
+    dbc: &Dbc,
     message: &Message,
     signal: &Signal,
     factor: FloatOrInt,
@@ -166,14 +166,12 @@ fn signal_type(
     mut min: FloatOrInt,
 ) -> Result<SignalType> {
     let extended_type = dbc
-        .signal_extended_value_type_list()
+        .signal_extended_value_type_list
         .iter()
-        .find(|info| {
-            info.message_id() == message.message_id() && info.signal_name() == signal.name()
-        })
-        .map(|info| info.signal_extended_value_type());
+        .find(|info| info.message_id == message.id && info.signal_name == signal.name)
+        .map(|info| info.signal_extended_value_type);
 
-    let raw_ty: syn::Ident = syn::parse_str(match (signal.value_type(), signal.signal_size) {
+    let raw_ty: syn::Ident = syn::parse_str(match (signal.value_type, signal.size) {
         (ValueType::Signed, 1..=8) => "i8",
         (ValueType::Signed, 9..=16) => "i16",
         (ValueType::Signed, 17..=32) => "i32",
@@ -182,26 +180,26 @@ fn signal_type(
         (ValueType::Unsigned, 9..=16) => "u16",
         (ValueType::Unsigned, 17..=32) => "u32",
         (ValueType::Unsigned, 33..=64) => "u64",
-        (_, size) => bail!("unsupported signal size {size} for {}", signal.name()),
+        (_, size) => bail!("unsupported signal size {size} for {}", signal.name),
     })?;
 
-    let (ty_max, ty_min) = match signal.value_type() {
+    let (ty_max, ty_min) = match signal.value_type {
         ValueType::Signed => (
-            (2i128.pow(signal.signal_size as u32 - 1) - 1).into(),
-            (-2i128.pow(signal.signal_size as u32 - 1)).into(),
+            (2i128.pow(signal.size as u32 - 1) - 1).into(),
+            (-2i128.pow(signal.size as u32 - 1)).into(),
         ),
-        ValueType::Unsigned => ((2i128.pow(signal.signal_size as u32) - 1).into(), 0.into()),
+        ValueType::Unsigned => ((2i128.pow(signal.size as u32) - 1).into(), 0.into()),
     };
 
     match extended_type {
         Some(
             SignalExtendedValueType::IEEEfloat32Bit | SignalExtendedValueType::IEEEdouble64bit,
         ) => {
-            assert_eq!(signal.value_type(), &ValueType::Signed);
+            assert_eq!(signal.value_type, ValueType::Signed);
 
             match extended_type {
                 Some(SignalExtendedValueType::IEEEfloat32Bit) => {
-                    assert_eq!(signal.signal_size, 32);
+                    assert_eq!(signal.size, 32);
                     let ty = syn::parse_str("f32")?;
                     let raw_ty = syn::parse_str("u32")?;
                     Ok(SignalType {
@@ -216,7 +214,7 @@ fn signal_type(
                     })
                 }
                 Some(SignalExtendedValueType::IEEEdouble64bit) => {
-                    assert_eq!(signal.signal_size, 64);
+                    assert_eq!(signal.size, 64);
                     let ty = syn::parse_str("f64")?;
                     let raw_ty = syn::parse_str("u64")?;
                     Ok(SignalType {
@@ -336,7 +334,7 @@ fn signal_type(
                 Ok(SignalType {
                     // `+/- 0.5)` is used as an alternative to `.round()` because that's not available on no-std,
                     // the value should be very close to an integer anyway so this should be the same.
-                    to_raw: match signal.value_type() {
+                    to_raw: match signal.value_type {
                         // The sign check is necessary because `as {integer}` truncates towards 0, so we need to turn
                         // -0.9999 into -1.4999 so it gets truncated to -1 (and `signum()` is not available on no-std
                         // either).
@@ -387,7 +385,7 @@ fn test_translate_be_signal_start() {
 /// Generates a data type for `signal` along with conversion functions.
 fn generate_signal(
     options: &crate::Options,
-    dbc: &DBC,
+    dbc: &Dbc,
     message: &Message,
     signal: &Signal,
 ) -> Result<GeneratedSignal> {
@@ -397,22 +395,20 @@ fn generate_signal(
         ..
     } = options;
 
-    let name_str = signal.name().to_pascal_case();
+    let name_str = signal.name.to_pascal_case();
     let name: syn::Ident = syn::parse_str(&name_str)?;
-    let snake_case_name_str = signal.name().to_snake_case();
+    let snake_case_name_str = signal.name.to_snake_case();
     let snake_case_name: syn::Ident = syn::parse_str(&snake_case_name_str)?;
 
     let comments = dbc
-        .comments()
+        .comments
         .iter()
         .filter_map(|comment| match comment {
             Comment::Signal {
                 message_id,
-                signal_name,
+                name,
                 comment,
-            } if message_id == message.message_id() && signal_name == signal.name() => {
-                Some(comment)
-            }
+            } if message_id == &message.id && name == &signal.name => Some(comment),
             _ => None,
         })
         .map(|comment| format!(" ```text\n{comment}\n```"))
@@ -431,19 +427,19 @@ fn generate_signal(
         dbc,
         message,
         signal,
-        signal.factor().into(),
-        signal.offset().into(),
+        signal.factor.into(),
+        signal.offset.into(),
         signal.max.into(),
         signal.min.into(),
     )?;
 
-    let factor = make_lit(signal.factor().into());
-    let offset = make_lit(signal.offset().into());
+    let factor = make_lit(signal.factor.into());
+    let offset = make_lit(signal.offset.into());
 
     let (full_range, max, min, raw_max, raw_min) = if signal.max == 0.0 && signal.min == 0.0 {
         // Assume the full range
-        let max = ty_max * signal.factor().into() + signal.offset().into();
-        let min = ty_min * signal.factor().into() + signal.offset().into();
+        let max = ty_max * signal.factor.into() + signal.offset.into();
+        let min = ty_min * signal.factor.into() + signal.offset.into();
         (
             true,
             make_lit(max),
@@ -452,8 +448,8 @@ fn generate_signal(
             make_raw_lit(ty_min),
         )
     } else {
-        let raw_max = ((signal.max - signal.offset()) / signal.factor()).into();
-        let raw_min = ((signal.min - signal.offset()) / signal.factor()).into();
+        let raw_max = ((signal.max - signal.offset) / signal.factor).into();
+        let raw_min = ((signal.min - signal.offset) / signal.factor).into();
         (
             FloatOrInt::from(signal.max) == ty_max && FloatOrInt::from(signal.min) == ty_min,
             make_lit(signal.max.into()),
@@ -464,10 +460,10 @@ fn generate_signal(
     };
 
     let start_bit = usize::try_from(signal.start_bit)?;
-    let signal_size = usize::try_from(signal.signal_size)?;
+    let signal_size = usize::try_from(signal.size)?;
 
     let (start_bit, read_bits, write_bits) =
-        match (signal.byte_order(), raw_ty.to_string().starts_with("u")) {
+        match (signal.byte_order, raw_ty.to_string().starts_with("u")) {
             (can_dbc::ByteOrder::LittleEndian, true) => (
                 start_bit,
                 quote!(read_little_endian_unsigned),
@@ -493,9 +489,9 @@ fn generate_signal(
     ensure!(
         start_bit + signal_size <= 64,
         "invalid start-bit/signal-size {start_bit}/{signal_size} for signal {:?} of message {:?} [id {:?}]",
-        signal.name(),
-        message.message_name(),
-        message.message_id()
+        signal.name,
+        message.name,
+        message.id
     );
 
     let start_bit = proc_macro2::Literal::usize_unsuffixed(start_bit);
@@ -529,14 +525,14 @@ fn generate_signal(
 
     let choices = {
         let mut choices = Vec::from_iter(
-            dbc.value_descriptions_for_signal(*message.message_id(), signal.name())
+            dbc.value_descriptions_for_signal(message.id, &signal.name)
                 .into_iter()
                 .flatten()
-                .map(|description| (description.a(), description.b())),
+                .map(|description| (description.id, &description.description)),
         );
 
         // Ensure that with duplicate choices the lowest value gets the original description.
-        choices.sort_by(|(value1, _), (value2, _)| value1.total_cmp(value2));
+        choices.sort_by(|(id1, _), (id2, _)| id1.cmp(id2));
 
         // In case there's conflicts with our builtin `MAX` and `MIN` consts, add them as pre-known values to
         // deduplicate.
@@ -567,7 +563,7 @@ fn generate_signal(
     let consts = Vec::from_iter({
         choices.iter().map(move |(name, value, description)| {
             let description = format!(" {description}");
-            let raw = make_raw_lit(((*value - signal.offset()) / signal.factor()).into());
+            let raw = make_raw_lit(((*value as f64 - signal.offset) / signal.factor).into());
             quote! {
                 #[doc = #description]
                 #[allow(non_upper_case_globals)]
@@ -619,10 +615,10 @@ fn generate_signal(
 
     let make_from_raw_with_factor = |raw| {
         let mut value = from_raw(&ty, raw);
-        if *signal.factor() != 1.0 {
+        if signal.factor != 1.0 {
             value = quote!(#value * #factor);
         }
-        if *signal.offset() != 0.0 {
+        if signal.offset != 0.0 {
             value = quote!(#value + #offset);
         }
         value
@@ -633,10 +629,10 @@ fn generate_signal(
 
     let to_raw_with_factor = {
         let mut value = quote!(value);
-        if *signal.offset() != 0.0 {
+        if signal.offset != 0.0 {
             value = quote!(#value - #offset);
         }
-        if *signal.factor() != 1.0 {
+        if signal.factor != 1.0 {
             value = quote!(#value / #factor);
         }
         to_raw(&raw_ty, value)
@@ -720,7 +716,7 @@ fn generate_signal(
 }
 
 /// Generates a module for data types and conversions related to `message`.
-fn generate_message(options: &crate::Options, dbc: &DBC, message: &Message) -> Result<TokenStream> {
+fn generate_message(options: &crate::Options, dbc: &Dbc, message: &Message) -> Result<TokenStream> {
     let crate::Options {
         veecle_os_runtime,
         veecle_os_data_support_can,
@@ -729,17 +725,14 @@ fn generate_message(options: &crate::Options, dbc: &DBC, message: &Message) -> R
         ..
     } = options;
 
-    let name = syn::parse_str::<syn::Ident>(&message.message_name().to_pascal_case())?;
-    let snake_case_name = syn::parse_str::<syn::Ident>(&message.message_name().to_snake_case())?;
+    let name = syn::parse_str::<syn::Ident>(&message.name.to_pascal_case())?;
+    let snake_case_name = syn::parse_str::<syn::Ident>(&message.name.to_snake_case())?;
 
     let comments = dbc
-        .comments()
+        .comments
         .iter()
         .filter_map(|comment| match comment {
-            Comment::Message {
-                message_id,
-                comment,
-            } if message_id == message.message_id() => Some(comment),
+            Comment::Message { id, comment } if id == &message.id => Some(comment),
             _ => None,
         })
         .map(|comment| format!(" ```text\n{comment}\n```"))
@@ -748,15 +741,15 @@ fn generate_message(options: &crate::Options, dbc: &DBC, message: &Message) -> R
     let validation =
         message_frame_validations(&name).map(|validation| quote!(let () = #validation(&bytes)?;));
 
-    let message_size = usize::try_from(*message.message_size())?;
+    let message_size = usize::try_from(message.size)?;
     ensure!(
         message_size <= 8,
         "invalid size {message_size} for message {:?} [id {:?}]",
-        message.message_name(),
-        message.message_id()
+        message.name,
+        message.id
     );
 
-    let frame_id = match message.message_id() {
+    let frame_id = match message.id {
         can_dbc::MessageId::Standard(id) => {
             let id = syn::LitInt::new(&format!("{id:#x}"), Span::call_site());
             quote! {
@@ -773,7 +766,7 @@ fn generate_message(options: &crate::Options, dbc: &DBC, message: &Message) -> R
 
     let signals = Result::<Vec<_>>::from_iter(
         message
-            .signals()
+            .signals
             .iter()
             .map(|signal| generate_signal(options, dbc, message, signal)),
     )?;
@@ -868,11 +861,11 @@ fn generate_message(options: &crate::Options, dbc: &DBC, message: &Message) -> R
     })
 }
 
-pub(super) fn generate(options: &crate::Options, dbc: &DBC) -> Result<TokenStream> {
+pub(super) fn generate(options: &crate::Options, dbc: &Dbc) -> Result<TokenStream> {
     let serde = &options.serde;
 
     let messages = Result::<Vec<_>>::from_iter(
-        dbc.messages()
+        dbc.messages
             .iter()
             .map(|message| generate_message(options, dbc, message)),
     )?;

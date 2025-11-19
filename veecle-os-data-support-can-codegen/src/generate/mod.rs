@@ -1,14 +1,14 @@
 use anyhow::Result;
-use can_dbc::DBC;
+use can_dbc::Dbc;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::dbc_ext::DBCExt;
+use crate::dbc_ext::DbcExt;
 
 mod actors;
 mod messages;
 
-fn database_comment(dbc: &DBC) -> String {
+fn database_comment(dbc: &Dbc) -> String {
     let version = dbc
         .find_raw_attribute_string("DatabaseVersion")
         .unwrap_or("unknown");
@@ -28,7 +28,7 @@ fn database_comment(dbc: &DBC) -> String {
 /// Generates a module for everything defined by the `dbc`.
 ///
 /// `krate` should be a path to the `veecle-os-data-support-can` crate.
-pub(crate) fn generate(options: &crate::Options, dbc: &DBC) -> Result<TokenStream> {
+pub(crate) fn generate(options: &crate::Options, dbc: &Dbc) -> Result<TokenStream> {
     let docs = database_comment(dbc);
     let messages = messages::generate(options, dbc)?;
     let actors = actors::generate(options, dbc)?;
