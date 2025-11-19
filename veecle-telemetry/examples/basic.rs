@@ -5,7 +5,7 @@ use veecle_telemetry::collector::{ConsoleJsonExporter, ProcessId};
 
 fn main() {
     let process_id = ProcessId::random(&mut rand::rng());
-    veecle_telemetry::collector::set_exporter(process_id, &ConsoleJsonExporter)
+    veecle_telemetry::collector::set_exporter(process_id, &ConsoleJsonExporter::DEFAULT)
         .expect("exporter was not set yet");
 
     let _span = Span::new("main", &[]).entered();

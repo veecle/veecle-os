@@ -73,7 +73,7 @@ fn impl_main(
                 #veecle_telemetry_path::collector::ProcessId::random(
                     &mut #veecle_osal_std_path::reexports::rand::rng(),
                 ),
-                &#veecle_telemetry_path::collector::ConsoleJsonExporter
+                &#veecle_telemetry_path::collector::ConsoleJsonExporter::DEFAULT,
             )
             .unwrap();
         )

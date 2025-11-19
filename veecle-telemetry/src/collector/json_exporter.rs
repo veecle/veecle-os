@@ -9,10 +9,15 @@ use crate::protocol::InstanceMessage;
 /// use veecle_telemetry::collector::{ConsoleJsonExporter, set_exporter, ProcessId};
 ///
 /// let process_id = ProcessId::random(&mut rand::rng());
-/// set_exporter(process_id, &ConsoleJsonExporter).unwrap();
+/// set_exporter(process_id, &ConsoleJsonExporter::DEFAULT).unwrap();
 /// ```
-#[derive(Debug)]
-pub struct ConsoleJsonExporter;
+#[derive(Debug, Default)]
+pub struct ConsoleJsonExporter(());
+
+impl ConsoleJsonExporter {
+    /// A `const` version of `ConsoleJsonExporter::default()` to allow use as a `&'static`.
+    pub const DEFAULT: Self = ConsoleJsonExporter(());
+}
 
 impl Export for ConsoleJsonExporter {
     fn export(&self, message: InstanceMessage) {

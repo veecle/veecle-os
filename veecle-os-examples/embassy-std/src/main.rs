@@ -18,7 +18,7 @@ async fn run() {
 async fn main(spawner: Spawner) {
     veecle_os::telemetry::collector::set_exporter(
         veecle_os::telemetry::collector::ProcessId::random(&mut rand::rng()),
-        &veecle_os::telemetry::collector::ConsoleJsonExporter,
+        &veecle_os::telemetry::collector::ConsoleJsonExporter::DEFAULT,
     )
     .unwrap();
 
