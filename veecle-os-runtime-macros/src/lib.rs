@@ -82,7 +82,7 @@ fn actor2(
 ///
 /// # Attributes
 ///
-/// * `data_type = "Type"`: Sets the [`Storable::DataType`]. Defaults to `Self`.
+/// * `data_type = Type`: Sets the [`Storable::DataType`]. Defaults to `Self`.
 /// * `crate = ::veecle_os_runtime`: Overrides the path to the `veecle-os-runtime` crate in case the import was renamed.
 ///
 /// [`Storable`]: https://docs.rs/veecle-os/latest/veecle_os/runtime/trait.Storable.html
@@ -119,7 +119,7 @@ fn actor2(
 ///
 /// // `DataType = u8`
 /// #[derive(Storable)]
-/// #[storable(data_type = "u8")]
+/// #[storable(data_type = u8)]
 /// pub struct EventId;
 /// ```
 #[proc_macro_derive(Storable, attributes(storable))]

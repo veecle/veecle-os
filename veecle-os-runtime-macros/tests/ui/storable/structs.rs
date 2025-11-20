@@ -16,11 +16,11 @@ pub struct Sensor1(u8, u8, u8);
 pub struct Sensor2;
 
 #[derive(Debug, PartialEq, veecle_os_runtime_macros::Storable)]
-#[storable(data_type = "Sensor1")]
+#[storable(data_type = Sensor1)]
 pub struct Sensor3;
 
 #[derive(Debug, PartialEq, veecle_os_runtime_macros::Storable)]
-#[storable(data_type = "std::string::String")]
+#[storable(data_type = std::string::String)]
 pub struct Sensor4;
 
 fn value() -> u8 {

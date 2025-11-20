@@ -1,8 +1,8 @@
 error[E0412]: cannot find type `Inner` in this scope
- --> tests/ui/storable/missing_import.rs:6:24
+ --> tests/ui/storable/missing_import.rs:6:28
   |
-6 | #[storable(data_type = "Vec<Inner>")]
-  |                        ^^^^^^^^^^^^ not found in this scope
+6 | #[storable(data_type = Vec<Inner>)]
+  |                            ^^^^^ not found in this scope
   |
 help: consider importing this struct
   |

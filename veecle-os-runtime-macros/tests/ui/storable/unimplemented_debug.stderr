@@ -20,8 +20,8 @@ help: consider annotating `Sensor` with `#[derive(Debug)]`
 error[E0277]: `Data` doesn't implement `Debug`
  --> tests/ui/storable/unimplemented_debug.rs:9:24
   |
-9 | #[storable(data_type = "Data")]
-  |                        ^^^^^^ the trait `Debug` is not implemented for `Data`
+9 | #[storable(data_type = Data)]
+  |                        ^^^^ the trait `Debug` is not implemented for `Data`
   |
   = note: add `#[derive(Debug)]` to `Data` or manually `impl Debug for Data`
 note: required by a bound in `veecle_os_runtime::Storable::DataType`
