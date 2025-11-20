@@ -5,11 +5,11 @@ use core::fmt::Debug;
 use veecle_os::runtime::{InitializedReader, Reader, Storable, Writer};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
-#[storable(data_type = "u32")]
+#[storable(data_type = u32)]
 pub struct Ping;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
-#[storable(data_type = "u32")]
+#[storable(data_type = u32)]
 pub struct Pong;
 
 #[veecle_os::runtime::actor]

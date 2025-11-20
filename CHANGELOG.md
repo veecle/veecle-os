@@ -2,6 +2,9 @@
 
 ## Veecle OS
 
+* **breaking** The `Storable` macro now requires type paths and crate paths without quotes.
+  * `#[storable(data_type = "Type")]` becomes `#[storable(data_type = Type)]`.
+  * `#[storable(crate = "::path")]` becomes `#[storable(crate = ::path)]`.
 * **breaking** Telemetry functionality is now always compiled into the runtime.
   The `veecle-telemetry` feature flag has been removed from `veecle-os-runtime` and `telemetry` feature flag has been removed from `veecle-os`.
   Use the `telemetry-enable` feature flag on `veecle-os` to control telemetry behavior.
