@@ -1,4 +1,4 @@
-error: Unknown field: `foo`. Available values: `crate`, `data_type`
+error: unknown attribute argument
  --> tests/ui/storable/unknown_attribute.rs:2:12
   |
 2 | #[storable(foo = "bar")]

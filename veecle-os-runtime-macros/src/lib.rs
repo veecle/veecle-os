@@ -132,7 +132,7 @@ pub fn derive_storable(input: proc_macro::TokenStream) -> proc_macro::TokenStrea
 /// The actual implementation is in the module, this just maps any errors into `compile_error!`s to allow using `?` in
 /// the implementation while giving the expected infallible function signature.
 fn derive_storable2(input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
-    storable::impl_derive_storable(input).unwrap_or_else(|error| error.write_errors())
+    storable::impl_derive_storable(input).unwrap_or_else(|error| error.into_compile_error())
 }
 
 /// Returns a path to the `veecle_os_runtime` crate for use when macro users don't set it explicitly.

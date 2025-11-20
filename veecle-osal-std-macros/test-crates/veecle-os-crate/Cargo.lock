@@ -625,7 +625,6 @@ dependencies = [
 name = "veecle-os-runtime-macros"
 version = "0.1.0"
 dependencies = [
- "darling",
  "heck",
  "proc-macro-crate",
  "proc-macro2",
