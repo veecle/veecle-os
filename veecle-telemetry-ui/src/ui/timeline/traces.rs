@@ -300,7 +300,10 @@ fn paint_scope_details(ui: &mut egui::Ui, span: SpanRef, max: Timestamp) {
             ui.end_row();
 
             ui.monospace("operation name");
-            ui.monospace(span.metadata.name.as_str());
+            ui.add(
+                egui::Label::new(egui::RichText::new(span.metadata.name.as_str()).monospace())
+                    .wrap_mode(egui::TextWrapMode::Wrap),
+            );
             ui.end_row();
 
             ui.monospace("duration");
