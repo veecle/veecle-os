@@ -285,7 +285,7 @@ version = "0.3.0"
 criteria = "safe-to-run"
 
 [[exemptions.cargo_metadata]]
-version = "0.23.0"
+version = "0.23.1"
 criteria = "safe-to-run"
 
 [[exemptions.cc]]
@@ -317,11 +317,11 @@ version = "1.8.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.clap]]
-version = "4.5.51"
+version = "4.5.52"
 criteria = "safe-to-run"
 
 [[exemptions.clap_builder]]
-version = "4.5.51"
+version = "4.5.52"
 criteria = "safe-to-run"
 
 [[exemptions.clap_derive]]
@@ -517,11 +517,11 @@ version = "0.3.5"
 criteria = "safe-to-run"
 
 [[exemptions.ecolor]]
-version = "0.33.0"
+version = "0.33.2"
 criteria = "safe-to-run"
 
 [[exemptions.eframe]]
-version = "0.33.0"
+version = "0.33.2"
 criteria = "safe-to-run"
 
 [[exemptions.ego-tree]]
@@ -529,7 +529,7 @@ version = "0.10.0"
 criteria = "safe-to-run"
 
 [[exemptions.egui]]
-version = "0.33.0"
+version = "0.33.2"
 criteria = "safe-to-run"
 
 [[exemptions.egui-notify]]
@@ -541,19 +541,19 @@ version = "0.31.1"
 criteria = "safe-to-run"
 
 [[exemptions.egui-wgpu]]
-version = "0.33.0"
+version = "0.33.2"
 criteria = "safe-to-run"
 
 [[exemptions.egui-winit]]
-version = "0.33.0"
+version = "0.33.2"
 criteria = "safe-to-run"
 
 [[exemptions.egui_extras]]
-version = "0.33.0"
+version = "0.33.2"
 criteria = "safe-to-run"
 
 [[exemptions.egui_glow]]
-version = "0.33.0"
+version = "0.33.2"
 criteria = "safe-to-run"
 
 [[exemptions.either]]
@@ -561,7 +561,7 @@ version = "1.15.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.emath]]
-version = "0.33.0"
+version = "0.33.2"
 criteria = "safe-to-run"
 
 [[exemptions.embassy-executor]]
@@ -669,11 +669,11 @@ version = "0.11.8"
 criteria = "safe-to-run"
 
 [[exemptions.epaint]]
-version = "0.33.0"
+version = "0.33.2"
 criteria = "safe-to-run"
 
 [[exemptions.epaint_default_fonts]]
-version = "0.33.0"
+version = "0.33.2"
 criteria = "safe-to-run"
 
 [[exemptions.equivalent]]
@@ -753,7 +753,7 @@ version = "1.2.2"
 criteria = "safe-to-run"
 
 [[exemptions.fs-err]]
-version = "3.1.3"
+version = "3.2.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.futf]]
@@ -1461,7 +1461,7 @@ version = "0.6.2"
 criteria = "safe-to-run"
 
 [[exemptions.re_log]]
-version = "0.26.2"
+version = "0.27.2"
 criteria = "safe-to-run"
 
 [[exemptions.redox_syscall]]
