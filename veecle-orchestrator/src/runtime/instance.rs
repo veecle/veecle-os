@@ -104,13 +104,13 @@ async fn send_command<T>(
 
 /// Handles a single [`ControlRequest`].
 async fn handle_control_request(
-    request: veecle_ipc_protocol::ControlRequest,
+    request: &veecle_ipc_protocol::ControlRequest,
     command_tx: &mpsc::Sender<Command>,
 ) -> veecle_ipc_protocol::ControlResponse {
     let response: eyre::Result<_> = async {
-        match request {
+        match *request {
             ControlRequest::StartRuntime { id } => {
-                let id = InstanceId(id);
+                let id = InstanceId(veecle_ipc_protocol::Uuid::from_bytes(id));
                 send_command(command_tx, |response_tx| Command::StartInstance {
                     id,
                     response_tx,
@@ -119,7 +119,7 @@ async fn handle_control_request(
                 Ok(ControlResponse::Started)
             }
             ControlRequest::StopRuntime { id } => {
-                let id = InstanceId(id);
+                let id = InstanceId(veecle_ipc_protocol::Uuid::from_bytes(id));
                 send_command(command_tx, |response_tx| Command::StopInstance {
                     id,
                     response_tx,
@@ -133,7 +133,17 @@ async fn handle_control_request(
 
     match response {
         Ok(response) => response,
-        Err(error) => ControlResponse::Error(error.to_string()),
+        Err(error) => {
+            let error_str = error.to_string();
+            let error_bytes = error_str.as_bytes();
+            let length = error_bytes.len().min(256);
+            let mut message = [0u8; 256];
+            message[..length].copy_from_slice(&error_bytes[..length]);
+            ControlResponse::Error {
+                message,
+                length: length as u8,
+            }
+        }
     }
 }
 
@@ -181,10 +191,16 @@ async fn handle_instance_ipc(
                                 }
                                 veecle_ipc_protocol::Message::ControlRequest(request) => {
                                     let response = if privileged {
-                                        handle_control_request(request, &command_tx).await
+                                        handle_control_request(&request, &command_tx).await
                                     } else {
                                         tracing::warn!("non-privileged runtime attempted to send control request");
-                                        veecle_ipc_protocol::ControlResponse::Error("no control privileges".to_owned())
+                                        let msg = b"no control privileges";
+                                        let mut message = [0u8; 256];
+                                        message[..msg.len()].copy_from_slice(msg);
+                                        veecle_ipc_protocol::ControlResponse::Error {
+                                            message,
+                                            length: msg.len() as u8,
+                                        }
                                     };
 
                                     stream.send(&veecle_ipc_protocol::Message::ControlResponse(response)).await?;
@@ -239,12 +255,11 @@ fn handle_iceoryx2(
         .wrap_err("invalid control service name")?;
     let control_service = node
         .service_builder(&control_service_name)
-        .request_response::<[u8], [u8]>()
+        .request_response::<ControlRequest, ControlResponse>()
         .open_or_create()
         .wrap_err("failed to create control service")?;
     let control_server = control_service
         .server_builder()
-        .initial_max_slice_len(4096)
         .unable_to_deliver_strategy(UnableToDeliverStrategy::Block)
         .create()
         .wrap_err("failed to create control server")?;
@@ -256,40 +271,28 @@ fn handle_iceoryx2(
             return Ok(());
         }
 
-        while let Ok(Some(request)) = Server::<_, [u8], (), [u8], ()>::receive(&control_server) {
+        while let Ok(Some(request)) =
+            Server::<_, ControlRequest, (), ControlResponse, ()>::receive(&control_server)
+        {
             if shutdown.is_cancelled() {
                 return Ok(());
             }
 
-            match serde_json::from_slice::<ControlRequest>(&request) {
-                Ok(control_request) => {
-                    tracing::info!(?control_request, "received control request");
-                    let response = if privileged {
-                        runtime.block_on(handle_control_request(control_request, &command_tx))
-                    } else {
-                        tracing::warn!("non-privileged runtime attempted to send control request");
-                        ControlResponse::Error("no control privileges".to_owned())
-                    };
+            tracing::info!(request = ?request.payload(), "received control request");
+            let response = if privileged {
+                runtime.block_on(handle_control_request(request.payload(), &command_tx))
+            } else {
+                tracing::warn!("non-privileged runtime attempted to send control request");
+                ControlResponse::error("no control privileges")
+            };
 
-                    match serde_json::to_vec(&response) {
-                        Ok(json) => {
-                            if let Ok(resp) = request.loan_slice_uninit(json.len()) {
-                                let resp = resp.write_from_slice(&json);
-                                if let Err(error) = resp.send() {
-                                    tracing::error!(?error, "failed to send control response");
-                                }
-                            } else {
-                                tracing::error!("failed to loan buffer for control response");
-                            }
-                        }
-                        Err(error) => {
-                            tracing::error!(?error, "failed to serialize control response");
-                        }
-                    }
+            if let Ok(buffer) = request.loan_uninit() {
+                let buffer = buffer.write_payload(response);
+                if let Err(error) = buffer.send() {
+                    tracing::error!(?error, "failed to send control response");
                 }
-                Err(error) => {
-                    tracing::error!(?error, "failed to deserialize control request");
-                }
+            } else {
+                tracing::error!("failed to loan buffer for control response");
             }
         }
 

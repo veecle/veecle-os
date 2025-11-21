@@ -51,9 +51,11 @@
 #[cfg(doc)]
 extern crate self as veecle_ipc;
 
+/// JSON Lines-based IPC implementation using Unix sockets.
 #[cfg(feature = "jsonl")]
 pub mod jsonl;
 
+/// iceoryx2-based IPC implementation using shared memory.
 #[cfg(feature = "iceoryx2")]
 pub mod iceoryx2;
 

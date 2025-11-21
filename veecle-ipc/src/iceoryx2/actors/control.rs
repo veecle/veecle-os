@@ -17,16 +17,14 @@ use super::super::Connector;
 
 #[veecle_telemetry::instrument]
 fn send(
-    client: &mut Client<Service, [u8], (), [u8], ()>,
+    client: &mut Client<Service, ControlRequest, (), ControlResponse, ()>,
     request: ControlRequest,
-) -> anyhow::Result<PendingResponse<Service, [u8], (), [u8], ()>> {
-    let json = serde_json::to_vec(&request).context("failed to serialize control message")?;
-
-    let request = client
-        .loan_slice_uninit(json.len())
+) -> anyhow::Result<PendingResponse<Service, ControlRequest, (), ControlResponse, ()>> {
+    let buffer = client
+        .loan_uninit()
         .context("failed to loan buffer for control request")?;
-    let request = request.write_from_slice(&json);
-    let pending = request
+    let buffer = buffer.write_payload(request);
+    let pending = buffer
         .send()
         .context("failed send control request to orchestrator")?;
 
@@ -35,18 +33,14 @@ fn send(
 
 #[veecle_telemetry::instrument]
 async fn receive(
-    pending: PendingResponse<Service, [u8], (), [u8], ()>,
+    pending: PendingResponse<Service, ControlRequest, (), ControlResponse, ()>,
 ) -> anyhow::Result<ControlResponse> {
     loop {
-        let json = pending
+        if let Some(response) = pending
             .receive()
-            .context("failed to receive control response")?;
-
-        if let Some(json) = json {
-            let response = serde_json::from_slice::<ControlResponse>(&json)
-                .context("failed to deserialize control response")?;
-
-            break Ok(response);
+            .context("failed to receive control response")?
+        {
+            break Ok(response.clone());
         };
 
         // No response yet, need to busy-loop.
@@ -59,7 +53,7 @@ async fn receive(
 
 #[veecle_telemetry::instrument]
 async fn process(
-    client: &mut Client<Service, [u8], (), [u8], ()>,
+    client: &mut Client<Service, ControlRequest, (), ControlResponse, ()>,
     request: ControlRequest,
 ) -> anyhow::Result<ControlResponse> {
     veecle_telemetry::trace!("sending control request", request = format!("{request:?}"));
@@ -76,7 +70,7 @@ async fn process(
 }
 
 /// An actor that forwards [`ControlRequest`] from the store to the orchestrator via iceoryx2
-/// request/response and routes [`ControlResponse`] back.
+/// request/response and routes [`ControlResponse`] back using zero-copy.
 #[veecle_os_runtime::actor]
 pub async fn control_handler(
     #[init_context] connector: &Connector,
@@ -94,13 +88,12 @@ pub async fn control_handler(
     let service = connector
         .node()
         .service_builder(&service_name)
-        .request_response::<[u8], [u8]>()
+        .request_response::<ControlRequest, ControlResponse>()
         .open_or_create()
         .unwrap();
 
     let mut client = service
         .client_builder()
-        .initial_max_slice_len(4096)
         .unable_to_deliver_strategy(UnableToDeliverStrategy::Block)
         .create()
         .unwrap();
@@ -114,8 +107,9 @@ pub async fn control_handler(
 
         let response = process(&mut client, request).await.unwrap_or_else(|error| {
             let error = format!("{error:?}");
-            veecle_telemetry::error!("handling control request failed", error = error.clone());
-            ControlResponse::Error(error)
+            let response = ControlResponse::error(&error);
+            veecle_telemetry::error!("handling control request failed", error = error);
+            response
         });
 
         responses.write(response).await;
