@@ -23,7 +23,9 @@ async fn useless_machine_actor(
 
     veecle_os::telemetry::info!("sending stop request", id = id.to_string());
 
-    request.write(ControlRequest::StopRuntime { id }).await;
+    request
+        .write(ControlRequest::StopRuntime { id: *id.as_bytes() })
+        .await;
 
     let response = response.wait_init().await;
     let response = response.read_cloned();

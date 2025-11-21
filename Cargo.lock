@@ -5034,6 +5034,8 @@ name = "veecle-ipc-protocol"
 version = "0.1.0"
 dependencies = [
  "displaydoc",
+ "heapless",
+ "iceoryx2",
  "serde",
  "serde_json",
  "thiserror 2.0.17",

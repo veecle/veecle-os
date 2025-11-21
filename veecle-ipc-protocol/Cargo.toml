@@ -15,6 +15,8 @@ workspace-checks.miri = false
 
 [dependencies]
 displaydoc = { workspace = true }
+heapless = { workspace = true, optional = true }
+iceoryx2 = { version = "0.7.0", default-features = false, optional = true }
 serde = { workspace = true, features = ["derive"], optional = true }
 serde_json = { workspace = true, features = ["std"], optional = true }
 thiserror = { workspace = true, features = ["std"] }
@@ -24,7 +26,7 @@ veecle-os-runtime = { workspace = true }
 veecle-telemetry = { workspace = true, features = ["std"] }
 
 [features]
-iceoryx2 = ["dep:serde", "dep:serde_json"]
+iceoryx2 = ["dep:heapless", "dep:iceoryx2"]
 jsonl = ["dep:serde", "dep:serde_json", "dep:tokio-util"]
 
 [lints]
