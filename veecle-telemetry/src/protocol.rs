@@ -100,6 +100,11 @@ impl ThreadId {
             }
         })
     }
+
+    /// Returns the raw value of this id.
+    pub fn raw(&self) -> NonZeroU64 {
+        self.raw
+    }
 }
 
 impl fmt::Display for ThreadId {
@@ -172,7 +177,7 @@ impl serde::Serialize for ThreadId {
 
         hex::encode_to_slice(self.process.to_raw().to_le_bytes(), &mut bytes[..32]).unwrap();
         bytes[32] = b':';
-        hex::encode_to_slice(self.raw.get().to_le_bytes(), &mut bytes[33..]).unwrap();
+        hex::encode_to_slice(self.raw().get().to_le_bytes(), &mut bytes[33..]).unwrap();
 
         serializer.serialize_str(str::from_utf8(&bytes).unwrap())
     }
@@ -559,7 +564,7 @@ mod tests {
                 parsed,
                 "Failed roundtrip for {:#x}:{:#x}",
                 thread_id.process.to_raw(),
-                thread_id.raw,
+                thread_id.raw(),
             );
         }
     }
