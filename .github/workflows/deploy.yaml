@@ -21,7 +21,7 @@ jobs:
     env:
       RUSTDOCFLAGS: "--deny warnings --cfg docsrs"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -53,7 +53,7 @@ jobs:
     env:
       RUSTDOCFLAGS: "--deny warnings --cfg docsrs"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -79,7 +79,7 @@ jobs:
   build-veecle-telemetry-ui-wasm:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -107,7 +107,7 @@ jobs:
       url: ${{ steps.wrangler.outputs.deployment-url }}
       alias-url: ${{ steps.wrangler.outputs.pages-deployment-alias-url }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/download-artifact@v6
         with:
           name: docs-private
@@ -135,7 +135,7 @@ jobs:
       url: ${{ steps.wrangler.outputs.deployment-url }}
       alias-url: ${{ steps.wrangler.outputs.pages-deployment-alias-url }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/download-artifact@v6
         with:
           name: user-manual
@@ -160,7 +160,7 @@ jobs:
       url: ${{ steps.wrangler.outputs.deployment-url }}
       alias-url: ${{ steps.wrangler.outputs.pages-deployment-alias-url }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/download-artifact@v6
         with:
           name: veecle-telemetry-ui-wasm
@@ -197,7 +197,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - run: |
           gh pr comment "$PR" --edit-last --create-if-none --body "
             | Deployment - Branch link                                             | Commit link - $GITHUB_SHA   |

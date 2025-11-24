@@ -31,7 +31,7 @@ jobs:
       actions: read
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: veecle/style-guide/.github/actions/claude@main
         with:
