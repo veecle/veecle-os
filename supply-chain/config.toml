@@ -317,11 +317,11 @@ version = "1.8.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.clap]]
-version = "4.5.52"
+version = "4.5.53"
 criteria = "safe-to-run"
 
 [[exemptions.clap_builder]]
-version = "4.5.52"
+version = "4.5.53"
 criteria = "safe-to-run"
 
 [[exemptions.clap_derive]]
@@ -869,7 +869,7 @@ version = "0.3.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.hashbrown]]
-version = "0.16.0"
+version = "0.16.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.heapless]]
@@ -957,7 +957,7 @@ version = "0.3.3"
 criteria = "safe-to-run"
 
 [[exemptions.indexmap]]
-version = "2.12.0"
+version = "2.12.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.indoc]]
@@ -1705,7 +1705,7 @@ version = "1.0.109"
 criteria = "safe-to-run"
 
 [[exemptions.syn]]
-version = "2.0.110"
+version = "2.0.111"
 criteria = "safe-to-deploy"
 
 [[exemptions.synstructure]]
