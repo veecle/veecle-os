@@ -101,7 +101,9 @@ UI_WEBSOCKET_PORT=42817
 PING_ID=$(uuidgen -r)
 PONG_ID=$(uuidgen -r)
 TRACE_ID=$(uuidgen -r)
-USELESS_MACHINE_ID=$(uuidgen -r)
+
+USELESS_MACHINE1_ID=$(uuidgen -r)
+USELESS_MACHINE2_ID=$(uuidgen -r)
 
 # Build the binaries that will be used
 case "$subset"
@@ -127,7 +129,6 @@ echo 'Starting veecle-telemetry-server and orchestrators'
 echo
 
 export VEECLE_ORCHESTRATOR_LOG=debug
-export USELESS_MACHINE_ID
 
 run-background "$UI_SERVER" --bind "$EXAMPLE_IP" --port "$UI_WEBSOCKET_PORT" --telemetry-socket "$TELEMETRY_SOCKET"
 run-background "$ORCHESTRATOR" --control-socket "$CONTROL1" --ipc-socket $IPC1 --telemetry-socket "$TELEMETRY_SOCKET"
@@ -159,8 +160,8 @@ in
 
   useless)
     # Because it's registered without privileges on orchestrator1 it will fail to shut itself down.
-    run "$CLI" --socket "$CONTROL1" runtime add "$USELESS_MACHINE" --id $USELESS_MACHINE_ID
-    run "$CLI" --socket "$CONTROL2" runtime add "$USELESS_MACHINE" --id $USELESS_MACHINE_ID --privileged
+    run "$CLI" --socket "$CONTROL1" runtime add "$USELESS_MACHINE" --id $USELESS_MACHINE1_ID
+    run "$CLI" --socket "$CONTROL2" runtime add "$USELESS_MACHINE" --id $USELESS_MACHINE2_ID --privileged
 
     run "$CLI" --socket "$CONTROL2" runtime list
     run "$CLI" --socket "$CONTROL2" link list
@@ -170,7 +171,7 @@ in
     run "$CLI" --socket "$CONTROL2" runtime list
     run "$CLI" --socket "$CONTROL2" link list
 
-    run "$CLI" --socket "$CONTROL2" runtime add "$USELESS_MACHINE" --id $USELESS_MACHINE_ID --privileged
+    run "$CLI" --socket "$CONTROL2" runtime add "$USELESS_MACHINE" --id $USELESS_MACHINE2_ID --privileged
   ;;
 esac
 
@@ -192,8 +193,8 @@ in
   ;;
 
   useless)
-    run "$CLI" --socket "$CONTROL1" runtime start $USELESS_MACHINE_ID
-    run "$CLI" --socket "$CONTROL2" runtime start $USELESS_MACHINE_ID
+    run "$CLI" --socket "$CONTROL1" runtime start $USELESS_MACHINE1_ID
+    run "$CLI" --socket "$CONTROL2" runtime start $USELESS_MACHINE2_ID
   ;;
 esac
 
