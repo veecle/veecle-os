@@ -134,7 +134,10 @@ impl State {
     pub(super) async fn shutdown(&mut self) {
         futures::stream::iter(self.runtimes.iter_mut())
             .for_each_concurrent(None, async |(id, runtime)| {
-                #[allow(clippy::collapsible_if)] // Separate condition check from error handling.
+                #[allow(
+                    clippy::collapsible_if,
+                    reason = "separate condition check from error handling"
+                )]
                 if runtime.is_running() {
                     if let Err(error) = runtime.stop().await {
                         tracing::info!("child {id} failed to stop: {error:?}");

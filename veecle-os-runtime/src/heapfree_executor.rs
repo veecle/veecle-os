@@ -487,8 +487,7 @@ mod tests {
                             yielded = true;
                             cx.waker().wake_by_ref();
 
-                            // for code-coverage
-                            #[expect(clippy::waker_clone_wake)]
+                            #[expect(clippy::waker_clone_wake, reason = "for code-coverage")]
                             cx.waker().clone().wake();
 
                             Poll::Pending

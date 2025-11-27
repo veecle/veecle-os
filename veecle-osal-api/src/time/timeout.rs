@@ -57,7 +57,7 @@ mod tests {
                 }
             }
             unimplemented!();
-            #[allow(unreachable_code)] // Used for type hinting.
+            #[allow(unreachable_code, reason = "used for type hinting")]
             IntervalInternal
         }
     }

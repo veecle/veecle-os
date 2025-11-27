@@ -1,7 +1,9 @@
 //! Types to work with the vsomeip configuration.
 
-// Private module re-exported for use in crate's private binary.
-#![allow(missing_docs)]
+#![allow(
+    missing_docs,
+    reason = "private module re-exported for use in crate's private binary"
+)]
 
 use std::path::Path;
 

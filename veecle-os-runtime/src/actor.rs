@@ -141,7 +141,7 @@ pub trait Actor<'a> {
 pub trait StoreRequest<'a>: sealed::Sealed {
     /// Requests an instance of `Self` from the [`Datastore`].
     #[doc(hidden)]
-    #[allow(async_fn_in_trait)] // It's actually private so it's fine.
+    #[allow(async_fn_in_trait, reason = "it's actually private so it's fine")]
     async fn request(datastore: Pin<&'a impl Datastore>) -> Self;
 }
 
@@ -155,13 +155,16 @@ pub trait Datastore {
     /// overwrite it.
     fn source(self: Pin<&Self>) -> Pin<&generational::Source>;
 
-    #[expect(rustdoc::private_intra_doc_links)] // `rustdoc` is buggy with links from "pub" but unreachable types.
+    #[expect(
+        rustdoc::private_intra_doc_links,
+        reason = "`rustdoc` is buggy with links from `pub` but unreachable types"
+    )]
     /// Returns a reference to the slot for a specific type.
     ///
     /// # Panics
     ///
     /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    #[expect(private_interfaces)] // The methods are internal.
+    #[expect(private_interfaces, reason = "the methods are internal")]
     fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
     where
         T: Storable + 'static;
@@ -175,7 +178,7 @@ where
         Pin::into_inner(self).source()
     }
 
-    #[expect(private_interfaces)] // The methods are internal.
+    #[expect(private_interfaces, reason = "the methods are internal")]
     fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
     where
         T: Storable + 'static,

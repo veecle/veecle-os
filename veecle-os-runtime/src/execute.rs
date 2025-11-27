@@ -1,6 +1,11 @@
-// Everything defined in here except the macro are internal helpers, they often mention private types.
-#![expect(private_bounds)]
-#![expect(private_interfaces)]
+#![expect(
+    private_bounds,
+    private_interfaces,
+    reason = "
+        everything defined in here except the macro are internal helpers,
+        they often mention private types
+    "
+)]
 
 use crate::actor::{Actor, Datastore, StoreRequest};
 use crate::cons::{Cons, Nil, TupleConsToCons};
@@ -88,12 +93,16 @@ where
     }
 }
 
-// This lint is hit when documenting with `--document-private-items`.
-// If we use `expect`, a warning is emitted when not using `--document-private-items`.
-// If we remove the lint, a warning is emitted when using `--document-private-items`.
-// To be able to deny warning, we need to allow the lint here.
-// https://github.com/rust-lang/rust/issues/145449
-#[allow(rustdoc::private_intra_doc_links)]
+#[allow(
+    rustdoc::private_intra_doc_links,
+    reason = "
+        This lint is hit when documenting with `--document-private-items`.
+        If we use `expect`, a warning is emitted when not using `--document-private-items`.
+        If we remove the lint, a warning is emitted when using `--document-private-items`.
+        To be able to deny warning, we need to allow the lint here.
+        https://github.com/rust-lang/rust/issues/145449
+    "
+)]
 /// Given a slot cons-list, combines it with a [`generational::Source`] to implement [`Datastore`].
 impl<S: Slots> Datastore for Cons<generational::Source, S>
 where
