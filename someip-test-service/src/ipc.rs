@@ -1,7 +1,9 @@
 //! Provides a simple IPC mechanism used to synchronize test service from a child process with the main process.
 
-// Private module re-exported for use in crate's private binary.
-#![allow(missing_docs)]
+#![allow(
+    missing_docs,
+    reason = "private module re-exported for use in crate's private binary"
+)]
 
 use std::env::var as env_var;
 use std::io::{Read, Write};

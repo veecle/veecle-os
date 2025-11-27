@@ -68,7 +68,7 @@
 //! # })
 //! ```
 
-#![allow(async_fn_in_trait)] // Auto-bounds are not necessary here.
+#![allow(async_fn_in_trait, reason = "auto-bounds are not necessary here")]
 
 use core::future::IntoFuture;
 

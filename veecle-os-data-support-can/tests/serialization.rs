@@ -1,4 +1,4 @@
-#![allow(missing_docs)] // This is a test crate.
+#![allow(missing_docs, reason = "this is a test crate")]
 
 #[macro_use]
 mod macros;

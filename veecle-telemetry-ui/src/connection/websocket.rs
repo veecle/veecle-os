@@ -12,8 +12,7 @@ use anyhow::Context;
 pub struct WebSocketConnection {
     url: String,
 
-    // When this is dropped, the connection gets closed.
-    #[expect(unused)]
+    #[expect(unused, reason = "when this is dropped, the connection gets closed")]
     sender: ewebsock::WsSender,
     receiver: ewebsock::WsReceiver,
 

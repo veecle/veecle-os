@@ -3,8 +3,10 @@
 // Since the code is generated we don't want to format it.
 // TODO: maybe this should be inserted in the generated code.
 #[rustfmt::skip]
-// We use `#[cfg(all())]` to test the cfg handling of the code generator, Clippy doesn't like this.
-#[expect(clippy::non_minimal_cfg)]
+#[expect(
+    clippy::non_minimal_cfg,
+    reason = "we use `#[cfg(all())]` to test the cfg handling of the code generator",
+)]
 #[path = "cases/CSS-Electronics-SAE-J1939-DEMO.rs"]
 mod j1939;
 
