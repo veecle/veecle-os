@@ -1,0 +1,14 @@
+{
+  "IgnoreDefaults": false,
+  "SpacesAfterTabs": false,
+  "Exclude": [],
+  "AllowedContentTypes": [],
+  "Disable": {
+    "EndOfLine": false,
+    "Indentation": false,
+    "InsertFinalNewline": false,
+    "TrimTrailingWhitespace": false,
+    "IndentSize": false,
+    "MaxLineLength": true
+  }
+}

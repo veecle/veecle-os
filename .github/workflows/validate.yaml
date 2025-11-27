@@ -205,8 +205,7 @@ jobs:
         with:
           editorconfig-checker: true
 
-      # TODO: max-line-length at least _should_ be checked, but there's many current violations to fix first.
-      - run: editorconfig-checker -disable-max-line-length -f github-actions -no-color
+      - run: editorconfig-checker -f github-actions -no-color
 
   validate-yaml:
     runs-on: ubuntu-latest
