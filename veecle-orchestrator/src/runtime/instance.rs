@@ -270,6 +270,7 @@ impl RuntimeInstance {
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .env("VEECLE_IPC_SOCKET", &self.socket_path)
+            .env("VEECLE_RUNTIME_ID", self.id.to_string())
             .spawn()
             .wrap_err_with(|| format!("starting runtime process '{binary}'"))?;
 

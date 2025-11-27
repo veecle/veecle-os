@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
+use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use futures::sink::SinkExt;
@@ -8,7 +9,7 @@ use tokio::net::UnixStream;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use tokio_util::codec::Framed;
-use veecle_ipc_protocol::{Codec, ControlRequest, ControlResponse, EncodedStorable, Message};
+use veecle_ipc_protocol::{Codec, ControlRequest, ControlResponse, EncodedStorable, Message, Uuid};
 
 use crate::Exporter;
 
@@ -77,6 +78,7 @@ fn outputs() -> (OutputTx, OutputRx) {
 /// Manages the connection to other runtimes via the `veecle-orchestrator`.
 #[derive(Debug)]
 pub struct Connector {
+    runtime_id: Uuid,
     output_tx: OutputTx,
     inputs: Inputs,
     control_responses: Mutex<Option<mpsc::Receiver<ControlResponse>>>,
@@ -93,6 +95,8 @@ impl Connector {
     /// If the connection cannot be established.
     pub async fn connect() -> Self {
         let socket = std::env::var("VEECLE_IPC_SOCKET").unwrap();
+        let runtime_id = std::env::var("VEECLE_RUNTIME_ID").unwrap();
+        let runtime_id = Uuid::from_str(&runtime_id).unwrap();
 
         let stream = UnixStream::connect(&socket).await.unwrap();
         let mut stream = Framed::new(stream, Codec::new());
@@ -146,6 +150,7 @@ impl Connector {
         });
 
         Self {
+            runtime_id,
             output_tx,
             inputs,
             control_responses: Mutex::new(Some(control_response_rx)),
@@ -172,6 +177,13 @@ impl Connector {
     /// ```
     pub fn exporter(&self) -> Exporter {
         Exporter::new(self.output_tx.telemetry.clone())
+    }
+
+    /// Returns this runtime's instance id.
+    ///
+    /// This id uniquely identifies this runtime instance within the orchestrator.
+    pub fn runtime_id(&self) -> Uuid {
+        self.runtime_id
     }
 
     /// Registers a new channel that will receive input from the `veecle-orchestrator` tagged with `type_name`.

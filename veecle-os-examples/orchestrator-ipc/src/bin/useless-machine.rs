@@ -3,7 +3,6 @@
 //! This implements a [useless machine](https://en.wikipedia.org/wiki/Useless_machine) in the form
 //! of a runtime process that just shuts itself down.
 use core::convert::Infallible;
-use core::str::FromStr;
 
 use veecle_ipc::{ControlRequest, ControlResponse, Uuid};
 use veecle_os::osal::std::time::{Duration, Time, TimeAbstraction};
@@ -11,14 +10,10 @@ use veecle_os::runtime::{Reader, Writer};
 
 #[veecle_os::runtime::actor]
 async fn useless_machine_actor(
+    #[init_context] id: Uuid,
     mut request: Writer<'_, ControlRequest>,
     response: Reader<'_, ControlResponse>,
 ) -> Infallible {
-    let id = std::env::var("USELESS_MACHINE_ID")
-        .expect("missing USELESS_MACHINE_ID environment variable");
-
-    let id = Uuid::from_str(&id).expect("USELESS_MACHINE_ID must be a valid instance id");
-
     veecle_os::telemetry::info!(
         "useless machine starting, will shut down soon",
         id = id.to_string()
@@ -57,7 +52,7 @@ async fn main() {
     veecle_os::runtime::execute! {
         store: [ControlRequest, ControlResponse],
         actors: [
-            UselessMachineActor,
+            UselessMachineActor: connector.runtime_id(),
             veecle_ipc::ControlHandler: &connector,
         ],
     }
