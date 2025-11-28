@@ -183,6 +183,9 @@ impl VeecleTelemetryApp {
             SystemCommand::SetMessageFilter(message_filter) => {
                 self.state.filter_mut().message.set(message_filter);
             }
+            SystemCommand::SetThreadFilter(thread_filter) => {
+                self.state.filter_mut().thread.set(thread_filter);
+            }
         }
     }
 
