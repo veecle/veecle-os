@@ -38,3 +38,14 @@ jobs:
       - uses: veecle/style-guide/.github/actions/claude-review@main
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+  minimize-old-claude-comments:
+    runs-on: ubuntu-latest
+    needs: review
+    if: always() && needs.review.result == 'success'
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: veecle/style-guide/.github/actions/minimize-old-claude-comments@main
