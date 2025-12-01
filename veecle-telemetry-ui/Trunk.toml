@@ -3,4 +3,4 @@ target = "index.html"
 dist = "dist"
 
 [tools]
-wasm_bindgen = "0.2.105"
+wasm_bindgen = "0.2.106"
