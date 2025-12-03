@@ -9,7 +9,7 @@ use pin_project::pin_project;
 use veecle_telemetry::SpanContext;
 
 #[pin_project]
-pub(crate) struct Slot<T>
+pub struct Slot<T>
 where
     T: Storable + 'static,
 {

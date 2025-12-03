@@ -108,6 +108,7 @@ mod execute;
 
 mod heapfree_executor;
 
+pub mod find;
 pub mod memory_pool;
 
 pub use self::actor::{Actor, StoreRequest, actor};
