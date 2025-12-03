@@ -7,6 +7,7 @@ pub use veecle_os_runtime_macros::actor;
 
 use crate::datastore::{ExclusiveReader, InitializedReader, Reader, Storable, Writer};
 use crate::datastore::{Slot, generational};
+use crate::find::NewDatastore;
 
 mod sealed {
     pub trait Sealed {}
@@ -142,64 +143,64 @@ pub trait StoreRequest<'a>: sealed::Sealed {
     /// Requests an instance of `Self` from the [`Datastore`].
     #[doc(hidden)]
     #[allow(async_fn_in_trait, reason = "it's actually private so it's fine")]
-    async fn request(datastore: Pin<&'a impl Datastore>) -> Self;
+    async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self;
 }
 
 impl sealed::Sealed for () {}
 
-/// Internal trait to abstract out type-erased and concrete data stores.
-pub trait Datastore {
-    /// Returns a generational source tracking the global datastore generation.
-    ///
-    /// This is used to ensure that every reader has had (or will have) a chance to read a value before a writer may
-    /// overwrite it.
-    fn source(self: Pin<&Self>) -> Pin<&generational::Source>;
+// /// Internal trait to abstract out type-erased and concrete data stores.
+// pub trait Datastore {
+//     /// Returns a generational source tracking the global datastore generation.
+//     ///
+//     /// This is used to ensure that every reader has had (or will have) a chance to read a value before a writer may
+//     /// overwrite it.
+//     fn source(self: Pin<&Self>) -> Pin<&generational::Source>;
+//
+//     #[expect(
+//         rustdoc::private_intra_doc_links,
+//         reason = "`rustdoc` is buggy with links from `pub` but unreachable types"
+//     )]
+//     /// Returns a reference to the slot for a specific type.
+//     ///
+//     /// # Panics
+//     ///
+//     /// * If there is no [`Slot`] for `T` in the [`Datastore`].
+//     #[expect(private_interfaces, reason = "the methods are internal")]
+//     fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
+//     where
+//         T: Storable + 'static;
+// }
+//
+// impl<S> Datastore for Pin<&S>
+// where
+//     S: Datastore,
+// {
+//     fn source(self: Pin<&Self>) -> Pin<&generational::Source> {
+//         Pin::into_inner(self).source()
+//     }
+//
+//     #[expect(private_interfaces, reason = "the methods are internal")]
+//     fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
+//     where
+//         T: Storable + 'static,
+//     {
+//         Pin::into_inner(self).slot()
+//     }
+// }
 
-    #[expect(
-        rustdoc::private_intra_doc_links,
-        reason = "`rustdoc` is buggy with links from `pub` but unreachable types"
-    )]
-    /// Returns a reference to the slot for a specific type.
-    ///
-    /// # Panics
-    ///
-    /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    #[expect(private_interfaces, reason = "the methods are internal")]
-    fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
-    where
-        T: Storable + 'static;
-}
-
-impl<S> Datastore for Pin<&S>
-where
-    S: Datastore,
-{
-    fn source(self: Pin<&Self>) -> Pin<&generational::Source> {
-        Pin::into_inner(self).source()
-    }
-
-    #[expect(private_interfaces, reason = "the methods are internal")]
-    fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
-    where
-        T: Storable + 'static,
-    {
-        Pin::into_inner(self).slot()
-    }
-}
-
-pub(crate) trait DatastoreExt<'a>: Copy {
+pub trait DatastoreExt<'a> {
     #[cfg(test)]
     /// Increments the global datastore generation.
     ///
     /// Asserts that every reader has had (or will have) a chance to read a value before a writer may overwrite it.
-    fn increment_generation(self);
+    fn increment_generation(&'a self);
 
     /// Returns the [`Reader`] for a specific slot.
     ///
     /// # Panics
     ///
     /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    fn reader<T>(self) -> Reader<'a, T>
+    fn reader<T>(&'a self) -> Reader<'a, T>
     where
         T: Storable + 'static;
 
@@ -211,7 +212,7 @@ pub(crate) trait DatastoreExt<'a>: Copy {
     /// # Panics
     ///
     /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    fn exclusive_reader<T>(self) -> ExclusiveReader<'a, T>
+    fn exclusive_reader<T>(&'a self) -> ExclusiveReader<'a, T>
     where
         T: Storable + 'static;
 
@@ -222,36 +223,100 @@ pub(crate) trait DatastoreExt<'a>: Copy {
     /// * If the [`Writer`] for this slot has already been acquired.
     ///
     /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    fn writer<T>(self) -> Writer<'a, T>
+    fn writer<T>(&'a self) -> Writer<'a, T>
     where
         T: Storable + 'static;
 }
 
-impl<'a, S> DatastoreExt<'a> for Pin<&'a S>
+// impl<'a, S> DatastoreExt<'a> for Pin<&'a S>
+// where
+//     S: NewDatastore,
+// {
+//     #[cfg(test)]
+//     #[cfg_attr(coverage_nightly, coverage(off))]
+//     fn increment_generation(&'a self) {
+//         self.source().increment_generation()
+//     }
+//
+//     fn reader<T>(&'a self) -> Reader<'a, T>
+//     where
+//         T: Storable + 'static,
+//     {
+//         Reader::from_slot(self.slot::<T>())
+//     }
+//
+//     fn exclusive_reader<T>(&'a self) -> ExclusiveReader<'a, T>
+//     where
+//         T: Storable + 'static,
+//     {
+//         ExclusiveReader::from_slot(self.slot::<T>())
+//     }
+//
+//     fn writer<T>(&'a self) -> Writer<'a, T>
+//     where
+//         T: Storable + 'static,
+//     {
+//         Writer::new(self.source().waiter(), self.slot::<T>())
+//     }
+// }
+
+// impl<'a, S> DatastoreExt<'a> for &'a S
+// where
+//     S: NewDatastore,
+// {
+//     #[cfg(test)]
+//     #[cfg_attr(coverage_nightly, coverage(off))]
+//     fn increment_generation(&'a self) {
+//         self.source().increment_generation()
+//     }
+//
+//     fn reader<T>(&'a self) -> Reader<'a, T>
+//     where
+//         T: Storable + 'static,
+//     {
+//         Reader::from_slot(self.slot::<T>())
+//     }
+//
+//     fn exclusive_reader<T>(&'a self) -> ExclusiveReader<'a, T>
+//     where
+//         T: Storable + 'static,
+//     {
+//         ExclusiveReader::from_slot(self.slot::<T>())
+//     }
+//
+//     fn writer<T>(&'a self) -> Writer<'a, T>
+//     where
+//         T: Storable + 'static,
+//     {
+//         Writer::new(self.source().waiter(), self.slot::<T>())
+//     }
+// }
+
+impl<'a, S> DatastoreExt<'a> for S
 where
-    S: Datastore,
+    S: NewDatastore,
 {
     #[cfg(test)]
     #[cfg_attr(coverage_nightly, coverage(off))]
-    fn increment_generation(self) {
+    fn increment_generation(&'a self) {
         self.source().increment_generation()
     }
 
-    fn reader<T>(self) -> Reader<'a, T>
+    fn reader<T>(&'a self) -> Reader<'a, T>
     where
         T: Storable + 'static,
     {
         Reader::from_slot(self.slot::<T>())
     }
 
-    fn exclusive_reader<T>(self) -> ExclusiveReader<'a, T>
+    fn exclusive_reader<T>(&'a self) -> ExclusiveReader<'a, T>
     where
         T: Storable + 'static,
     {
         ExclusiveReader::from_slot(self.slot::<T>())
     }
 
-    fn writer<T>(self) -> Writer<'a, T>
+    fn writer<T>(&'a self) -> Writer<'a, T>
     where
         T: Storable + 'static,
     {
@@ -261,7 +326,7 @@ where
 
 /// Implements a no-op for Actors that do not read or write any values.
 impl<'a> StoreRequest<'a> for () {
-    async fn request(_store: Pin<&'a impl Datastore>) -> Self {}
+    async fn request(_store: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {}
 }
 
 impl<T> sealed::Sealed for Reader<'_, T> where T: Storable + 'static {}
@@ -270,7 +335,7 @@ impl<'a, T> StoreRequest<'a> for Reader<'a, T>
 where
     T: Storable + 'static,
 {
-    async fn request(datastore: Pin<&'a impl Datastore>) -> Self {
+    async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {
         datastore.reader()
     }
 }
@@ -281,7 +346,7 @@ impl<'a, T> StoreRequest<'a> for ExclusiveReader<'a, T>
 where
     T: Storable + 'static,
 {
-    async fn request(datastore: Pin<&'a impl Datastore>) -> Self {
+    async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {
         datastore.exclusive_reader()
     }
 }
@@ -292,7 +357,7 @@ impl<'a, T> StoreRequest<'a> for InitializedReader<'a, T>
 where
     T: Storable + 'static,
 {
-    async fn request(datastore: Pin<&'a impl Datastore>) -> Self {
+    async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {
         Reader::from_slot(datastore.slot()).wait_init().await
     }
 }
@@ -303,7 +368,7 @@ impl<'a, T> StoreRequest<'a> for Writer<'a, T>
 where
     T: Storable + 'static,
 {
-    async fn request(datastore: Pin<&'a impl Datastore>) -> Self {
+    async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {
         datastore.writer()
     }
 }
@@ -321,7 +386,7 @@ macro_rules! impl_request_helper {
         where
             $t: StoreRequest<'a>,
         {
-            async fn request(datastore: Pin<&'a impl Datastore>) -> Self {
+            async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {
                 (<$t as StoreRequest>::request(datastore).await,)
             }
         }
@@ -339,7 +404,7 @@ macro_rules! impl_request_helper {
         where
             $($t: StoreRequest<'a>),*
         {
-            async fn request(datastore: Pin<&'a impl Datastore>) -> Self {
+            async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {
                 // join! is necessary here to avoid argument-order-dependence with the #[actor] macro.
                 // This ensures that any `InitializedReaders` in self correctly track the generation at which they were
                 // first ready, so that the first `wait_for_update` sees the value that caused them to become

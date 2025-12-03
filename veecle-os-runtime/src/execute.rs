@@ -7,12 +7,12 @@
     "
 )]
 
-use crate::actor::{Actor, Datastore, StoreRequest};
+use crate::actor::{Actor, DatastoreExt, StoreRequest};
 use crate::cons::{Cons, Nil, TupleConsToCons};
 use crate::datastore::{
     ExclusiveReader, InitializedReader, Reader, Slot, Storable, Writer, generational,
 };
-use crate::find::{Find, create_locals};
+use crate::find::{Find, NewDatastore, create_locals};
 use core::any::TypeId;
 use core::pin::Pin;
 
@@ -104,32 +104,32 @@ where
         https://github.com/rust-lang/rust/issues/145449
     "
 )]
-/// Given a slot cons-list, combines it with a [`generational::Source`] to implement [`Datastore`].
-impl<S: Slots> Datastore for Cons<generational::Source, S>
-where
-    S: Slots,
-{
-    fn source(self: Pin<&Self>) -> Pin<&generational::Source> {
-        let this = self.project_ref();
-        this.0
-    }
+// /// Given a slot cons-list, combines it with a [`generational::Source`] to implement [`Datastore`].
+// impl<S: Slots> Datastore for Cons<generational::Source, S>
+// where
+//     S: Slots,
+// {
+//     fn source(self: Pin<&Self>) -> Pin<&generational::Source> {
+//         let this = self.project_ref();
+//         this.0
+//     }
+//
+//     fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
+//     where
+//         T: Storable + 'static,
+//     {
+//         let this = self.project_ref();
+//         this.1.slot::<T>()
+//     }
+// }
 
-    fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
-    where
-        T: Storable + 'static,
-    {
-        let this = self.project_ref();
-        this.1.slot::<T>()
-    }
-}
-
-/// Given a cons-list of [`Storable`] types, returns a complete [`Datastore`] that contains a slot for each type.
-pub fn make_store<T>() -> impl Datastore
-where
-    T: IntoSlots,
-{
-    Cons(generational::Source::new(), T::make_slots())
-}
+// /// Given a cons-list of [`Storable`] types, returns a complete [`Datastore`] that contains a slot for each type.
+// pub fn make_store<T>() -> impl Datastore
+// where
+//     T: IntoSlots,
+// {
+//     Cons(generational::Source::new(), T::make_slots())
+// }
 
 /// Internal helper to query how a [`StoreRequest`] type will use a specific type.
 pub trait AccessKind {
@@ -320,7 +320,7 @@ where
 ///
 /// `_store` is the reference to the store the actors will use. A copy is passed in here as the lifetime of this
 /// reference may be required for the init-contexts inference.
-pub fn validate_actors<'a, A, S, I>(init_contexts: I, _store: Pin<&'a impl Datastore>) -> I
+pub fn validate_actors<'a, A, S, I>(init_contexts: I, _store: &'a impl NewDatastore) -> I
 where
     A: ActorList<'a, InitContexts = I>,
     S: IntoSlots,
@@ -351,7 +351,7 @@ where
 
 /// Internal helper to get a full future that initializes and executes an [`Actor`] given a [`Datastore`]
 pub async fn execute_actor<'a, A>(
-    store: Pin<&'a impl Datastore>,
+    store: &'a (impl NewDatastore + DatastoreExt<'a>),
     init_context: A::InitContext,
 ) -> core::convert::Infallible
 where
@@ -437,50 +437,38 @@ macro_rules! execute {
     ) => {{
         async {
 
-            fn foo(x: impl $crate::find::Find){
-                let foo = core::pin::pin!($crate::find::make_source());
-                let wrapper = $crate::find::Wrapper {
-                    source: foo.as_ref(),
-                    inner: x,
-                };
-                panic!("foo");
+            async fn handler_fn<'a>(store: (impl $crate::find::NewDatastore + $crate::__exports::DatastoreExt<'a>)) {
+                let init_contexts = $crate::__exports::validate_actors::<
+                    $crate::__make_cons!(@type $($actor_type,)*),
+                    $crate::__make_cons!(@type $($data_type,)*),
+                    _,
+                >($crate::__make_cons!(@value $(
+                    // Wrapper block is used to provide a `()` if no expression is passed.
+                    { $($init_context)? },
+                )*), &store);
+
+                // To count how many actors there are, we create an array of `()` with the appropriate length.
+                const LEN: usize = [$($crate::discard_to_unit!($actor_type),)*].len();
+
+                let futures: [core::pin::Pin<&mut dyn core::future::Future<Output = core::convert::Infallible>>; LEN] =
+                    $crate::make_futures! {
+                        init_contexts: init_contexts,
+                        store: &store,
+                        actors: [$($actor_type,)*],
+                    };
+
+                // static SHARED: $crate::__exports::ExecutorShared<LEN>
+                //     = $crate::__exports::ExecutorShared::new(&SHARED);
+                //
+                // let executor = $crate::__exports::Executor::new(
+                //     &SHARED,
+                //     $crate::find::NewDatastore::source(&store),
+                //     futures,
+                // );
+                //
+                // executor.run().await
             }
-            $crate::find::create_locals!(foo, $($data_type),*);
-
-            let store = core::pin::pin!(
-                $crate::__exports::make_store::<$crate::__make_cons!(@type $($data_type,)*)>(),
-            );
-            let store = store.as_ref();
-
-            let init_contexts = $crate::__exports::validate_actors::<
-                $crate::__make_cons!(@type $($actor_type,)*),
-                $crate::__make_cons!(@type $($data_type,)*),
-                _,
-            >($crate::__make_cons!(@value $(
-                // Wrapper block is used to provide a `()` if no expression is passed.
-                { $($init_context)? },
-            )*), store);
-
-            // To count how many actors there are, we create an array of `()` with the appropriate length.
-            const LEN: usize = [$($crate::discard_to_unit!($actor_type),)*].len();
-
-            let futures: [core::pin::Pin<&mut dyn core::future::Future<Output = core::convert::Infallible>>; LEN] =
-                $crate::make_futures! {
-                    init_contexts: init_contexts,
-                    store: store,
-                    actors: [$($actor_type,)*],
-                };
-
-            static SHARED: $crate::__exports::ExecutorShared<LEN>
-                = $crate::__exports::ExecutorShared::new(&SHARED);
-
-            let executor = $crate::__exports::Executor::new(
-                &SHARED,
-                $crate::__exports::Datastore::source(store),
-                futures,
-            );
-
-            executor.run().await
+            $crate::find::create_locals!(handler_fn, $($data_type),*);
         }
     }};
 }

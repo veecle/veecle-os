@@ -23,7 +23,7 @@ pub struct Source {
 }
 
 impl Source {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
