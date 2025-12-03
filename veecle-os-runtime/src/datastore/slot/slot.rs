@@ -1,15 +1,15 @@
 use super::super::generational;
 use super::Waiter;
 use crate::Storable;
-use core::any::TypeId;
 use core::cell::{Cell, Ref, RefCell, RefMut};
 use core::pin::Pin;
 
 use pin_project::pin_project;
 use veecle_telemetry::SpanContext;
 
+/// TODO
 #[pin_project]
-pub(crate) struct Slot<T>
+pub struct Slot<T>
 where
     T: Storable + 'static,
 {
@@ -42,7 +42,12 @@ impl<T> Slot<T>
 where
     T: Storable + 'static,
 {
-    pub(crate) fn new() -> Self {
+    #[expect(
+        clippy::new_without_default,
+        reason = "Slot is only created in statics, which makes Default not needed."
+    )]
+    /// Creates a new slot.
+    pub const fn new() -> Self {
         Self {
             item: RefCell::new(None),
             source: generational::Source::new(),
@@ -129,25 +134,5 @@ where
 
     pub(crate) fn increment_generation(self: Pin<&Self>) {
         self.project_ref().source.increment_generation();
-    }
-
-    pub(crate) fn assert_is_type<U>(self: Pin<&Self>) -> Pin<&Slot<U>>
-    where
-        U: Storable,
-    {
-        if TypeId::of::<T>() == TypeId::of::<U>() {
-            // SAFETY:
-            // `Pin::map_unchecked`: We're only transforming the type, so it retains its pinned-ness.
-            // `cast` + `as_ref`: We verified above that the stored value is of the right type.
-            unsafe {
-                Pin::map_unchecked(self, |this| {
-                    core::ptr::NonNull::from_ref(this)
-                        .cast::<Slot<U>>()
-                        .as_ref()
-                })
-            }
-        } else {
-            panic!("invalid cast")
-        }
     }
 }

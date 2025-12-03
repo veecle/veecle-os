@@ -142,64 +142,43 @@ pub trait StoreRequest<'a>: sealed::Sealed {
     /// Requests an instance of `Self` from the [`Datastore`].
     #[doc(hidden)]
     #[allow(async_fn_in_trait, reason = "it's actually private so it's fine")]
-    async fn request(datastore: Pin<&'a impl Datastore>) -> Self;
+    async fn request(datastore: &'a (impl Datastore<'a> + DatastoreExt<'a>)) -> Self;
 }
 
 impl sealed::Sealed for () {}
 
 /// Internal trait to abstract out type-erased and concrete data stores.
-pub trait Datastore {
+pub trait Datastore<'a> {
     /// Returns a generational source tracking the global datastore generation.
     ///
     /// This is used to ensure that every reader has had (or will have) a chance to read a value before a writer may
     /// overwrite it.
-    fn source(self: Pin<&Self>) -> Pin<&generational::Source>;
+    fn source(&'a self) -> Pin<&'a generational::Source>;
 
-    #[expect(
-        rustdoc::private_intra_doc_links,
-        reason = "`rustdoc` is buggy with links from `pub` but unreachable types"
-    )]
     /// Returns a reference to the slot for a specific type.
     ///
     /// # Panics
     ///
     /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    #[expect(private_interfaces, reason = "the methods are internal")]
-    fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
+    fn slot<T>(&self) -> Pin<&'a Slot<T>>
     where
         T: Storable + 'static;
 }
 
-impl<S> Datastore for Pin<&S>
-where
-    S: Datastore,
-{
-    fn source(self: Pin<&Self>) -> Pin<&generational::Source> {
-        Pin::into_inner(self).source()
-    }
-
-    #[expect(private_interfaces, reason = "the methods are internal")]
-    fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
-    where
-        T: Storable + 'static,
-    {
-        Pin::into_inner(self).slot()
-    }
-}
-
-pub(crate) trait DatastoreExt<'a>: Copy {
+/// Internal trait to provide methods based on [`Datastore`].
+pub trait DatastoreExt<'a> {
     #[cfg(test)]
     /// Increments the global datastore generation.
     ///
     /// Asserts that every reader has had (or will have) a chance to read a value before a writer may overwrite it.
-    fn increment_generation(self);
+    fn increment_generation(&'a self);
 
     /// Returns the [`Reader`] for a specific slot.
     ///
     /// # Panics
     ///
     /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    fn reader<T>(self) -> Reader<'a, T>
+    fn reader<T>(&'a self) -> Reader<'a, T>
     where
         T: Storable + 'static;
 
@@ -211,7 +190,7 @@ pub(crate) trait DatastoreExt<'a>: Copy {
     /// # Panics
     ///
     /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    fn exclusive_reader<T>(self) -> ExclusiveReader<'a, T>
+    fn exclusive_reader<T>(&'a self) -> ExclusiveReader<'a, T>
     where
         T: Storable + 'static;
 
@@ -222,36 +201,36 @@ pub(crate) trait DatastoreExt<'a>: Copy {
     /// * If the [`Writer`] for this slot has already been acquired.
     ///
     /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    fn writer<T>(self) -> Writer<'a, T>
+    fn writer<T>(&'a self) -> Writer<'a, T>
     where
         T: Storable + 'static;
 }
 
-impl<'a, S> DatastoreExt<'a> for Pin<&'a S>
+impl<'a, S> DatastoreExt<'a> for S
 where
-    S: Datastore,
+    S: Datastore<'a>,
 {
     #[cfg(test)]
     #[cfg_attr(coverage_nightly, coverage(off))]
-    fn increment_generation(self) {
+    fn increment_generation(&'a self) {
         self.source().increment_generation()
     }
 
-    fn reader<T>(self) -> Reader<'a, T>
+    fn reader<T>(&'a self) -> Reader<'a, T>
     where
         T: Storable + 'static,
     {
         Reader::from_slot(self.slot::<T>())
     }
 
-    fn exclusive_reader<T>(self) -> ExclusiveReader<'a, T>
+    fn exclusive_reader<T>(&'a self) -> ExclusiveReader<'a, T>
     where
         T: Storable + 'static,
     {
         ExclusiveReader::from_slot(self.slot::<T>())
     }
 
-    fn writer<T>(self) -> Writer<'a, T>
+    fn writer<T>(&'a self) -> Writer<'a, T>
     where
         T: Storable + 'static,
     {
@@ -261,7 +240,7 @@ where
 
 /// Implements a no-op for Actors that do not read or write any values.
 impl<'a> StoreRequest<'a> for () {
-    async fn request(_store: Pin<&'a impl Datastore>) -> Self {}
+    async fn request(_store: &'a (impl Datastore<'a> + DatastoreExt<'a>)) -> Self {}
 }
 
 impl<T> sealed::Sealed for Reader<'_, T> where T: Storable + 'static {}
@@ -270,7 +249,7 @@ impl<'a, T> StoreRequest<'a> for Reader<'a, T>
 where
     T: Storable + 'static,
 {
-    async fn request(datastore: Pin<&'a impl Datastore>) -> Self {
+    async fn request(datastore: &'a (impl Datastore<'a> + DatastoreExt<'a>)) -> Self {
         datastore.reader()
     }
 }
@@ -281,7 +260,7 @@ impl<'a, T> StoreRequest<'a> for ExclusiveReader<'a, T>
 where
     T: Storable + 'static,
 {
-    async fn request(datastore: Pin<&'a impl Datastore>) -> Self {
+    async fn request(datastore: &'a (impl Datastore<'a> + DatastoreExt<'a>)) -> Self {
         datastore.exclusive_reader()
     }
 }
@@ -292,7 +271,7 @@ impl<'a, T> StoreRequest<'a> for InitializedReader<'a, T>
 where
     T: Storable + 'static,
 {
-    async fn request(datastore: Pin<&'a impl Datastore>) -> Self {
+    async fn request(datastore: &'a (impl Datastore<'a> + DatastoreExt<'a>)) -> Self {
         Reader::from_slot(datastore.slot()).wait_init().await
     }
 }
@@ -303,7 +282,7 @@ impl<'a, T> StoreRequest<'a> for Writer<'a, T>
 where
     T: Storable + 'static,
 {
-    async fn request(datastore: Pin<&'a impl Datastore>) -> Self {
+    async fn request(datastore: &'a (impl Datastore<'a> + DatastoreExt<'a>)) -> Self {
         datastore.writer()
     }
 }
@@ -321,7 +300,7 @@ macro_rules! impl_request_helper {
         where
             $t: StoreRequest<'a>,
         {
-            async fn request(datastore: Pin<&'a impl Datastore>) -> Self {
+            async fn request(datastore: &'a (impl Datastore<'a> + DatastoreExt<'a>)) -> Self {
                 (<$t as StoreRequest>::request(datastore).await,)
             }
         }
@@ -339,7 +318,7 @@ macro_rules! impl_request_helper {
         where
             $($t: StoreRequest<'a>),*
         {
-            async fn request(datastore: Pin<&'a impl Datastore>) -> Self {
+            async fn request(datastore: &'a (impl Datastore<'a> + DatastoreExt<'a>)) -> Self {
                 // join! is necessary here to avoid argument-order-dependence with the #[actor] macro.
                 // This ensures that any `InitializedReaders` in self correctly track the generation at which they were
                 // first ready, so that the first `wait_for_update` sees the value that caused them to become
@@ -401,7 +380,6 @@ mod tests {
     use futures::future::FutureExt;
 
     use crate::actor::{DatastoreExt, StoreRequest};
-    use crate::cons::{Cons, Nil};
     use crate::datastore::{InitializedReader, Storable};
 
     #[test]
@@ -414,18 +392,19 @@ mod tests {
         #[storable(crate = crate)]
         struct B;
 
-        let datastore = pin!(crate::execute::make_store::<Cons<A, Cons<B, Nil>>>());
+        use crate as runtime;
+        let datastore = crate::__exports::create_store_proc!(runtime, A, B);
 
-        let mut a_writer = datastore.as_ref().writer::<A>();
-        let mut b_writer = datastore.as_ref().writer::<B>();
+        let mut a_writer = datastore.writer::<A>();
+        let mut b_writer = datastore.writer::<B>();
 
         // No matter the order these two request the readers, they should both resolve during the generation where the
         // later of the two is first written.
         let mut request_1 = pin!(<(InitializedReader<A>, InitializedReader<B>)>::request(
-            datastore.as_ref()
+            &datastore
         ));
         let mut request_2 = pin!(<(InitializedReader<B>, InitializedReader<A>)>::request(
-            datastore.as_ref()
+            &datastore
         ));
 
         let (request_1_waker, request_1_wake_count) = futures_test::task::new_count_waker();
@@ -446,7 +425,7 @@ mod tests {
         let old_request_1_wake_count = request_1_wake_count.get();
         let old_request_2_wake_count = request_2_wake_count.get();
 
-        datastore.as_ref().increment_generation();
+        datastore.increment_generation();
 
         a_writer.write(A).now_or_never().unwrap();
 
@@ -467,7 +446,7 @@ mod tests {
         let old_request_1_wake_count = request_1_wake_count.get();
         let old_request_2_wake_count = request_2_wake_count.get();
 
-        datastore.as_ref().increment_generation();
+        datastore.increment_generation();
 
         b_writer.write(B).now_or_never().unwrap();
 

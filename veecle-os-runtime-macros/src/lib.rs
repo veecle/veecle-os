@@ -5,6 +5,13 @@
 
 mod actor;
 mod storable;
+mod store;
+
+/// TODO
+#[proc_macro]
+pub fn create_store_proc(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    crate::store::impl_create_store_proc(item)
+}
 
 /// Generates an [`Actor`] from a function.
 ///

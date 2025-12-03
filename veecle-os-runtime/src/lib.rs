@@ -120,6 +120,9 @@ pub use self::datastore::{
 pub mod __exports {
     pub use crate::actor::{Datastore, IsActorResult};
     pub use crate::cons::{Cons, Nil, TupleConsToCons};
-    pub use crate::execute::{execute_actor, make_store, validate_actors};
+    pub use crate::datastore::Slot;
+    pub use crate::datastore::generational::Source;
+    pub use crate::execute::{execute_actor, validate_actors};
     pub use crate::heapfree_executor::{Executor, ExecutorShared};
+    pub use veecle_os_runtime_macros::create_store_proc;
 }

@@ -23,8 +23,12 @@ pub struct Source {
 }
 
 impl Source {
-    pub(crate) fn new() -> Self {
-        Self::default()
+    /// Creates a new source.
+    pub const fn new() -> Self {
+        Self {
+            generation: Cell::new(0),
+            list: PinCell::new(WakerList::new()),
+        }
     }
 
     /// Returns a new waiter for this source.

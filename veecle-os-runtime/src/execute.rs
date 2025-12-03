@@ -1,39 +1,23 @@
 #![expect(
     private_bounds,
-    private_interfaces,
     reason = "
         everything defined in here except the macro are internal helpers,
         they often mention private types
     "
 )]
 
-use crate::actor::{Actor, Datastore, StoreRequest};
+use crate::actor::{Actor, Datastore, DatastoreExt, StoreRequest};
 use crate::cons::{Cons, Nil, TupleConsToCons};
-use crate::datastore::{
-    ExclusiveReader, InitializedReader, Reader, Slot, Storable, Writer, generational,
-};
+use crate::datastore::{ExclusiveReader, InitializedReader, Reader, Slot, Storable, Writer};
 use core::any::TypeId;
-use core::pin::Pin;
 
 /// Internal helper to implement [`Datastore::slot`] recursively for a cons-list of slots.
 trait Slots {
-    /// See [`Datastore::slot`].
-    fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
-    where
-        T: Storable + 'static;
-
     /// Returns the [`TypeId`] and type names for all the slots stored in this type.
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)>;
 }
 
 impl Slots for Nil {
-    fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
-    where
-        T: Storable + 'static,
-    {
-        panic!("no slot available for `{}`", core::any::type_name::<T>())
-    }
-
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
         core::iter::empty()
     }
@@ -44,18 +28,6 @@ where
     U: Storable + 'static,
     R: Slots,
 {
-    fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
-    where
-        T: Storable + 'static,
-    {
-        let this = self.project_ref();
-        if TypeId::of::<U>() == TypeId::of::<T>() {
-            this.0.assert_is_type()
-        } else {
-            this.1.slot::<T>()
-        }
-    }
-
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
         R::all_slots().chain(core::iter::once((
             TypeId::of::<U>(),
@@ -68,17 +40,10 @@ where
 trait IntoSlots {
     /// A cons-list that contains a slot for every type in this cons-list.
     type Slots: Slots;
-
-    /// Creates a new instance of the slot cons-list with all slots empty.
-    fn make_slots() -> Self::Slots;
 }
 
 impl IntoSlots for Nil {
     type Slots = Nil;
-
-    fn make_slots() -> Self::Slots {
-        Nil
-    }
 }
 
 impl<T, R> IntoSlots for Cons<T, R>
@@ -87,47 +52,6 @@ where
     R: IntoSlots,
 {
     type Slots = Cons<Slot<T>, R::Slots>;
-
-    fn make_slots() -> Self::Slots {
-        Cons(Slot::<T>::new(), R::make_slots())
-    }
-}
-
-#[allow(
-    rustdoc::private_intra_doc_links,
-    reason = "
-        This lint is hit when documenting with `--document-private-items`.
-        If we use `expect`, a warning is emitted when not using `--document-private-items`.
-        If we remove the lint, a warning is emitted when using `--document-private-items`.
-        To be able to deny warning, we need to allow the lint here.
-        https://github.com/rust-lang/rust/issues/145449
-    "
-)]
-/// Given a slot cons-list, combines it with a [`generational::Source`] to implement [`Datastore`].
-impl<S: Slots> Datastore for Cons<generational::Source, S>
-where
-    S: Slots,
-{
-    fn source(self: Pin<&Self>) -> Pin<&generational::Source> {
-        let this = self.project_ref();
-        this.0
-    }
-
-    fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
-    where
-        T: Storable + 'static,
-    {
-        let this = self.project_ref();
-        this.1.slot::<T>()
-    }
-}
-
-/// Given a cons-list of [`Storable`] types, returns a complete [`Datastore`] that contains a slot for each type.
-pub fn make_store<T>() -> impl Datastore
-where
-    T: IntoSlots,
-{
-    Cons(generational::Source::new(), T::make_slots())
 }
 
 /// Internal helper to query how a [`StoreRequest`] type will use a specific type.
@@ -319,7 +243,7 @@ where
 ///
 /// `_store` is the reference to the store the actors will use. A copy is passed in here as the lifetime of this
 /// reference may be required for the init-contexts inference.
-pub fn validate_actors<'a, A, S, I>(init_contexts: I, _store: Pin<&'a impl Datastore>) -> I
+pub fn validate_actors<'a, A, S, I>(init_contexts: I) -> I
 where
     A: ActorList<'a, InitContexts = I>,
     S: IntoSlots,
@@ -350,23 +274,20 @@ where
 
 /// Internal helper to get a full future that initializes and executes an [`Actor`] given a [`Datastore`]
 pub async fn execute_actor<'a, A>(
-    store: Pin<&'a impl Datastore>,
+    store: &'a (impl Datastore<'a> + DatastoreExt<'a>),
     init_context: A::InitContext,
 ) -> core::convert::Infallible
 where
     A: Actor<'a>,
 {
-    veecle_telemetry::future::FutureExt::with_span(
-        async move {
-            match A::new(A::StoreRequest::request(store).await, init_context)
-                .run()
-                .await
-            {
-                Err(error) => panic!("{error}"),
-            }
-        },
-        veecle_telemetry::span!("actor", actor = core::any::type_name::<A>()),
-    )
+    async move {
+        match A::new(A::StoreRequest::request(store).await, init_context)
+            .run()
+            .await
+        {
+            Err(error) => panic!("{error}"),
+        }
+    }
     .await
 }
 
@@ -434,43 +355,42 @@ macro_rules! execute {
             $($actor_type:ty $(: $init_context:expr )? ),* $(,)?
         ] $(,)?
     ) => {{
+
         async {
-            let store = core::pin::pin!(
-                $crate::__exports::make_store::<$crate::__make_cons!(@type $($data_type,)*)>(),
-            );
-            let store = store.as_ref();
+            let store = $crate::__exports::create_store_proc!($crate, $($data_type,)*);
 
-            let init_contexts = $crate::__exports::validate_actors::<
-                $crate::__make_cons!(@type $($actor_type,)*),
-                $crate::__make_cons!(@type $($data_type,)*),
-                _,
-            >($crate::__make_cons!(@value $(
-                // Wrapper block is used to provide a `()` if no expression is passed.
-                { $($init_context)? },
-            )*), store);
+                let init_contexts = $crate::__exports::validate_actors::<
+                    $crate::__make_cons!(@type $($actor_type,)*),
+                    $crate::__make_cons!(@type $($data_type,)*),
+                    _,
+                >($crate::__make_cons!(@value $(
+                    // Wrapper block is used to provide a `()` if no expression is passed.
+                    { $($init_context)? },
+                )*));
 
-            // To count how many actors there are, we create an array of `()` with the appropriate length.
-            const LEN: usize = [$($crate::discard_to_unit!($actor_type),)*].len();
+                // To count how many actors there are, we create an array of `()` with the appropriate length.
+                const LEN: usize = [$($crate::discard_to_unit!($actor_type),)*].len();
 
-            let futures: [core::pin::Pin<&mut dyn core::future::Future<Output = core::convert::Infallible>>; LEN] =
-                $crate::make_futures! {
-                    init_contexts: init_contexts,
-                    store: store,
-                    actors: [$($actor_type,)*],
-                };
+                let futures: [core::pin::Pin<&mut dyn core::future::Future<Output = core::convert::Infallible>>; LEN] =
+                    $crate::make_futures! {
+                        init_contexts: init_contexts,
+                        store: &store,
+                        actors: [$($actor_type,)*],
+                    };
 
-            static SHARED: $crate::__exports::ExecutorShared<LEN>
-                = $crate::__exports::ExecutorShared::new(&SHARED);
+                static SHARED: $crate::__exports::ExecutorShared<LEN>
+                    = $crate::__exports::ExecutorShared::new(&SHARED);
 
-            let executor = $crate::__exports::Executor::new(
-                &SHARED,
-                $crate::__exports::Datastore::source(store),
-                futures,
-            );
+                let executor = $crate::__exports::Executor::new(
+                    &SHARED,
+                    $crate::__exports::Datastore::source(&store),
+                    futures,
+                );
 
-            executor.run().await
+                executor.run().await
         }
-    }};
+
+     }};
 }
 
 /// Internal helper to construct an array of pinned futures for given actors + init-contexts + store.

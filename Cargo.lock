@@ -4943,7 +4943,7 @@ dependencies = [
  "veecle-os-runtime-macros 0.1.0",
  "veecle-os-test",
  "veecle-telemetry 0.1.0",
- "wakerset",
+ "wakerset 0.2.5 (git+https://github.com/arctic-alpaca/wakerset?branch=const)",
  "walkdir",
 ]
 
@@ -4959,7 +4959,7 @@ dependencies = [
  "typenum",
  "veecle-os-runtime-macros 0.1.0 (git+https://github.com/veecle/veecle-os?branch=main)",
  "veecle-telemetry 0.1.0 (git+https://github.com/veecle/veecle-os?branch=main)",
- "wakerset",
+ "wakerset 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -5239,6 +5239,14 @@ name = "wakerset"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f434542e8bd0e49c3510ed64ac744e81e542d709a2385aa785fdb317ed284a48"
+dependencies = [
+ "arrayvec",
+]
+
+[[package]]
+name = "wakerset"
+version = "0.2.5"
+source = "git+https://github.com/arctic-alpaca/wakerset?branch=const#54bdf26e21c0e61c46e8835c520e36a552d0f008"
 dependencies = [
  "arrayvec",
 ]
