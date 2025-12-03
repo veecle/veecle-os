@@ -12,6 +12,7 @@ use crate::cons::{Cons, Nil, TupleConsToCons};
 use crate::datastore::{
     ExclusiveReader, InitializedReader, Reader, Slot, Storable, Writer, generational,
 };
+use crate::find::{Find, create_locals};
 use core::any::TypeId;
 use core::pin::Pin;
 
@@ -435,6 +436,17 @@ macro_rules! execute {
         ] $(,)?
     ) => {{
         async {
+
+            fn foo(x: impl $crate::find::Find){
+                let foo = core::pin::pin!($crate::find::make_source());
+                let wrapper = $crate::find::Wrapper {
+                    source: foo.as_ref(),
+                    inner: x,
+                };
+                panic!("foo");
+            }
+            $crate::find::create_locals!(foo, $($data_type),*);
+
             let store = core::pin::pin!(
                 $crate::__exports::make_store::<$crate::__make_cons!(@type $($data_type,)*)>(),
             );
