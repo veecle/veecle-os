@@ -72,7 +72,7 @@ where
     }
 }
 
-trait NewDatastore {
+pub trait NewDatastore {
     fn source(&self) -> Pin<&generational::Source>;
 
     fn slot<T>(&self) -> Pin<&Slot<T>>
@@ -88,9 +88,14 @@ macro_rules! create_locals {
             let a = core::pin::pin!($crate::find::make_slot::<$t>());
             let tuple = (&a.as_ref(), tuple);
         )*
-        std::println!("{}", core::any::type_name_of_val(&tuple));
 
-        $handler(tuple)
+        let source = core::pin::pin!($crate::__exports::Source::new());
+        let wrapper = $crate::find::Wrapper {
+            source: source.as_ref(),
+            inner: tuple,
+        };
+
+        $handler(wrapper).await
     };
 }
 
@@ -99,8 +104,9 @@ pub use create_locals;
 #[cfg(test)]
 mod tests {
     use crate::Storable;
-    use crate::find::Find;
     use crate::find::Wrapper;
+    use crate::find::{Find, NewDatastore};
+    use std::dbg;
 
     #[test]
     fn foo() {
@@ -111,13 +117,9 @@ mod tests {
             type DataType = u32;
         }
 
-        fn x(x: impl Find) {
-            let foo = core::pin::pin!(crate::datastore::generational::Source::new());
-            let wrapper = Wrapper {
-                source: foo.as_ref(),
-                inner: x,
-            };
+        fn x(x: impl NewDatastore) {
+            dbg!(&x.source());
         }
-        create_locals!(x, Foo, Foo, Foo);
+        //create_locals!(x, Foo, Foo, Foo);
     }
 }
