@@ -433,7 +433,7 @@ macro_rules! execute {
         ] $(,)?
     ) => {{
         async {
-
+            #[inline(always)]
             async fn handler_fn<'a>(store: &'a (impl $crate::find::NewDatastore + $crate::__exports::DatastoreExt<'a>)) -> core::convert::Infallible{
                 let init_contexts = $crate::__exports::validate_actors::<
                     $crate::__make_cons!(@type $($actor_type,)*),

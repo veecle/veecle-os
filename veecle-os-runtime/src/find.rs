@@ -11,6 +11,7 @@ pub trait Find {
 }
 
 impl Find for () {
+    #[inline(always)]
     fn find<T>(&self) -> Option<Pin<&Slot<T>>>
     where
         T: Storable + Sized + 'static,
@@ -24,6 +25,7 @@ where
     X: Storable,
     Y: Find,
 {
+    #[inline(always)]
     fn find<T>(&self) -> Option<Pin<&Slot<T>>>
     where
         T: Storable + Sized + 'static,
@@ -36,19 +38,30 @@ where
     }
 }
 
-#[pin_project::pin_project]
-pub struct Wrapper<'a, X>
+impl<'a, X> NewDatastore for (Pin<&'a generational::Source>, X)
 where
     X: Find,
 {
-    pub source: Pin<&'a generational::Source>,
-    pub inner: X,
+    #[inline(always)]
+    fn source(&self) -> Pin<&Source> {
+        self.0
+    }
+
+    #[inline(always)]
+    fn slot<T>(&self) -> Pin<&Slot<T>>
+    where
+        T: Storable + 'static,
+    {
+        self.1.find().unwrap()
+    }
 }
 
+#[inline(always)]
 pub fn make_source() -> Source {
     Source::new()
 }
 
+#[inline(always)]
 pub fn make_slot<T>() -> Slot<T>
 where
     T: Storable,
@@ -56,25 +69,11 @@ where
     Slot::new()
 }
 
-impl<'a, X> NewDatastore for Wrapper<'a, X>
-where
-    X: Find,
-{
-    fn source(&self) -> Pin<&Source> {
-        self.source
-    }
-
-    fn slot<T>(&self) -> Pin<&Slot<T>>
-    where
-        T: Storable + 'static,
-    {
-        self.inner.find().unwrap()
-    }
-}
-
 pub trait NewDatastore {
+    #[inline(always)]
     fn source(&self) -> Pin<&generational::Source>;
 
+    #[inline(always)]
     fn slot<T>(&self) -> Pin<&Slot<T>>
     where
         T: Storable + 'static;
@@ -90,10 +89,10 @@ macro_rules! create_locals {
         )*
 
         let source = core::pin::pin!($crate::__exports::Source::new());
-        let wrapper = $crate::find::Wrapper {
-            source: source.as_ref(),
-            inner: tuple,
-        };
+        let wrapper = (
+             source.as_ref(),
+             tuple,
+        );
 
         $handler(&wrapper).await
     };
@@ -104,7 +103,6 @@ pub use create_locals;
 #[cfg(test)]
 mod tests {
     use crate::Storable;
-    use crate::find::Wrapper;
     use crate::find::{Find, NewDatastore};
     use std::dbg;
 
