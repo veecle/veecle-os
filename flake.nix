@@ -1,8 +1,7 @@
 # See `shell.nix` for more details.
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
 
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
@@ -15,20 +14,17 @@
   outputs = {
     self,
     nixpkgs,
-    nixpkgs-unstable,
     rust-overlay,
     flake-utils,
   }: flake-utils.lib.eachDefaultSystem (system:
   let
-    pkgs-unstable = import nixpkgs-unstable {
-      inherit system;
-    };
     pkgs = import nixpkgs {
       inherit system;
       overlays = [
         rust-overlay.overlays.default
         (final: prev: {
-          tombi = pkgs-unstable.tombi.overrideAttrs (oldAttrs: rec {
+          # There were formatting changes in later versions, so we have to pin to the same as CI uses.
+          tombi = prev.tombi.overrideAttrs (oldAttrs: rec {
             version = "0.6.11";
             name = "${oldAttrs.pname}-${version}";
             src = final.fetchFromGitHub {
@@ -42,6 +38,9 @@
               hash = "sha256-7fjvYvftnM6pHr40/uB0kkxuQ2CMPPd8asRgukHUY9k=";
             };
           });
+
+          # Tests fail while running in the homeless-shelter for some reason.
+          cargo-llvm-cov = prev.cargo-llvm-cov.overrideAttrs { doCheck = false; };
         })
       ];
     };
