@@ -1,6 +1,5 @@
 //! Smallest unit of work within a runtime instance.
 use core::convert::Infallible;
-use core::pin::Pin;
 
 #[doc(inline)]
 pub use veecle_os_runtime_macros::actor;

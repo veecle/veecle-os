@@ -320,7 +320,7 @@ where
 ///
 /// `_store` is the reference to the store the actors will use. A copy is passed in here as the lifetime of this
 /// reference may be required for the init-contexts inference.
-pub fn validate_actors<'a, A, S, I>(init_contexts: I, _store: &'a impl NewDatastore) -> I
+pub fn validate_actors<'a, A, S, I>(init_contexts: I) -> I
 where
     A: ActorList<'a, InitContexts = I>,
     S: IntoSlots,
@@ -357,17 +357,14 @@ pub async fn execute_actor<'a, A>(
 where
     A: Actor<'a>,
 {
-    veecle_telemetry::future::FutureExt::with_span(
-        async move {
-            match A::new(A::StoreRequest::request(store).await, init_context)
-                .run()
-                .await
-            {
-                Err(error) => panic!("{error}"),
-            }
-        },
-        veecle_telemetry::span!("actor", actor = core::any::type_name::<A>()),
-    )
+    async move {
+        match A::new(A::StoreRequest::request(store).await, init_context)
+            .run()
+            .await
+        {
+            Err(error) => panic!("{error}"),
+        }
+    }
     .await
 }
 
@@ -437,7 +434,7 @@ macro_rules! execute {
     ) => {{
         async {
 
-            async fn handler_fn<'a>(store: (impl $crate::find::NewDatastore + $crate::__exports::DatastoreExt<'a>)) {
+            async fn handler_fn<'a>(store: &'a (impl $crate::find::NewDatastore + $crate::__exports::DatastoreExt<'a>)) -> core::convert::Infallible{
                 let init_contexts = $crate::__exports::validate_actors::<
                     $crate::__make_cons!(@type $($actor_type,)*),
                     $crate::__make_cons!(@type $($data_type,)*),
@@ -445,7 +442,7 @@ macro_rules! execute {
                 >($crate::__make_cons!(@value $(
                     // Wrapper block is used to provide a `()` if no expression is passed.
                     { $($init_context)? },
-                )*), &store);
+                )*));
 
                 // To count how many actors there are, we create an array of `()` with the appropriate length.
                 const LEN: usize = [$($crate::discard_to_unit!($actor_type),)*].len();
@@ -453,20 +450,20 @@ macro_rules! execute {
                 let futures: [core::pin::Pin<&mut dyn core::future::Future<Output = core::convert::Infallible>>; LEN] =
                     $crate::make_futures! {
                         init_contexts: init_contexts,
-                        store: &store,
+                        store: store,
                         actors: [$($actor_type,)*],
                     };
 
-                // static SHARED: $crate::__exports::ExecutorShared<LEN>
-                //     = $crate::__exports::ExecutorShared::new(&SHARED);
-                //
-                // let executor = $crate::__exports::Executor::new(
-                //     &SHARED,
-                //     $crate::find::NewDatastore::source(&store),
-                //     futures,
-                // );
-                //
-                // executor.run().await
+                static SHARED: $crate::__exports::ExecutorShared<LEN>
+                    = $crate::__exports::ExecutorShared::new(&SHARED);
+
+                let executor = $crate::__exports::Executor::new(
+                    &SHARED,
+                    $crate::find::NewDatastore::source(store),
+                    futures,
+                );
+
+                executor.run().await
             }
             $crate::find::create_locals!(handler_fn, $($data_type),*);
         }
