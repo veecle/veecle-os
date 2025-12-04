@@ -95,7 +95,7 @@ macro_rules! create_locals {
             inner: tuple,
         };
 
-        $handler(wrapper).await
+        $handler(&wrapper).await
     };
 }
 
