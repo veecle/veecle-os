@@ -1,4 +1,4 @@
-# This `shell.nix` has been tested with NixOS 25.05.
+# This `shell.nix` has been tested with NixOS 25.11.
 #
 # You can either use it directly with your system `nixpkgs`, or via the flake which has pinned `nixpkgs` and `rust-overlay` versions.
 #
