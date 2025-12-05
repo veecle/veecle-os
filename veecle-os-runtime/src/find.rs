@@ -9,21 +9,10 @@ pub trait Find<'a> {
     fn find<T>(&self) -> Option<&'a Slot<T>>
     where
         T: Storable + Sized + 'static;
-    fn find_ref<T>(&self) -> Option<&'a Slot<T>>
-    where
-        T: Storable + Sized + 'static;
 }
 
 impl<'a> Find<'a> for () {
-    #[inline(always)]
     fn find<T>(&self) -> Option<&'a Slot<T>>
-    where
-        T: Storable + Sized + 'static,
-    {
-        None
-    }
-    #[inline(always)]
-    fn find_ref<T>(&self) -> Option<&'a Slot<T>>
     where
         T: Storable + Sized + 'static,
     {
@@ -36,32 +25,19 @@ where
     X: Storable,
     Y: Find<'a>,
 {
-    #[inline(always)]
     fn find<T>(&self) -> Option<&'a Slot<T>>
     where
         T: Storable + Sized + 'static,
     {
         if TypeId::of::<X>() == TypeId::of::<T>() {
-            Some(unsafe { transmute(self.0) })
+            Some(unsafe { transmute::<&Slot<X>, &Slot<T>>(self.0) })
         } else {
             Find::find(&self.1)
         }
     }
-
-    #[inline(always)]
-    fn find_ref<T>(&self) -> Option<&'a Slot<T>>
-    where
-        T: Storable + Sized + 'static,
-    {
-        if TypeId::of::<X>() == TypeId::of::<T>() {
-            Some(unsafe { transmute(self.0) })
-        } else {
-            Find::find_ref(&self.1)
-        }
-    }
 }
 
-impl<'a, X> NewDatastore<'a> for (Pin<&'a generational::Source>, X)
+impl<'a, X> NewDatastore<'a> for (Pin<&'a generational::Source>, &X)
 where
     X: Find<'a>,
 {
@@ -107,20 +83,13 @@ macro_rules! create_locals {
         $(
             let a = $crate::find::make_slot::<$t>();
             let mut tuple = (&a, tuple);
-            if let Some(a) = $crate::find::Find::find_ref::<$t>(&tuple.1){
-                let x = tuple.0;
+            if let Some(a) = $crate::find::Find::find::<$t>(&tuple.1){
                 tuple.0 = a;
             }
         )*
-
-
         let source = core::pin::pin!($crate::__exports::Source::new());
-        let wrapper = (
-             source.as_ref(),
-             tuple,
-        );
 
-        $handler(wrapper).await
+        $handler(source.as_ref(),&tuple).await
     };
 }
 
