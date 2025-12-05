@@ -2,17 +2,28 @@ use crate::Storable;
 use crate::datastore::generational::Source;
 use crate::datastore::{Slot, generational};
 use core::any::TypeId;
+use core::mem::transmute;
 use core::pin::Pin;
 
-pub trait Find {
-    fn find<T>(&self) -> Option<Pin<&Slot<T>>>
+pub trait Find<'a> {
+    fn find<T>(&self) -> Option<Pin<&'a Slot<T>>>
+    where
+        T: Storable + Sized + 'static;
+    fn find_ref<T>(&self) -> Option<&Pin<&'a Slot<T>>>
     where
         T: Storable + Sized + 'static;
 }
 
-impl Find for () {
+impl<'a> Find<'a> for () {
     #[inline(always)]
-    fn find<T>(&self) -> Option<Pin<&Slot<T>>>
+    fn find<T>(&self) -> Option<Pin<&'a Slot<T>>>
+    where
+        T: Storable + Sized + 'static,
+    {
+        None
+    }
+    #[inline(always)]
+    fn find_ref<T>(&self) -> Option<&Pin<&'a Slot<T>>>
     where
         T: Storable + Sized + 'static,
     {
@@ -20,13 +31,13 @@ impl Find for () {
     }
 }
 
-impl<X, Y> Find for (&Pin<&Slot<X>>, Y)
+impl<'a, X, Y> Find<'a> for (&Pin<&'a Slot<X>>, Y)
 where
     X: Storable,
-    Y: Find,
+    Y: Find<'a>,
 {
     #[inline(always)]
-    fn find<T>(&self) -> Option<Pin<&Slot<T>>>
+    fn find<T>(&self) -> Option<Pin<&'a Slot<T>>>
     where
         T: Storable + Sized + 'static,
     {
@@ -36,19 +47,52 @@ where
             Find::find(&self.1)
         }
     }
+
+    #[inline(always)]
+    fn find_ref<T>(&self) -> Option<&Pin<&'a Slot<T>>>
+    where
+        T: Storable + Sized + 'static,
+    {
+        if TypeId::of::<X>() == TypeId::of::<T>() {
+            Some(unsafe { transmute(self.0) })
+        } else {
+            Find::find_ref(&self.1)
+        }
+    }
 }
 
-impl<'a, X> NewDatastore for (Pin<&'a generational::Source>, X)
+impl<'a, Y> Find<'a> for ((), Y)
 where
-    X: Find,
+    Y: Find<'a>,
 {
     #[inline(always)]
-    fn source(&self) -> Pin<&Source> {
+    fn find<T>(&self) -> Option<Pin<&'a Slot<T>>>
+    where
+        T: Storable + Sized + 'static,
+    {
+        Find::find(&self.1)
+    }
+
+    #[inline(always)]
+    fn find_ref<T>(&self) -> Option<&Pin<&'a Slot<T>>>
+    where
+        T: Storable + Sized + 'static,
+    {
+        Find::find_ref(&self.1)
+    }
+}
+
+impl<'a, X> NewDatastore<'a> for (Pin<&'a generational::Source>, X)
+where
+    X: Find<'a>,
+{
+    #[inline(always)]
+    fn source(self) -> Pin<&'a Source> {
         self.0
     }
 
     #[inline(always)]
-    fn slot<T>(&self) -> Pin<&Slot<T>>
+    fn slot<T>(self) -> Pin<&'a Slot<T>>
     where
         T: Storable + 'static,
     {
@@ -69,12 +113,10 @@ where
     Slot::new()
 }
 
-pub trait NewDatastore {
-    #[inline(always)]
-    fn source(&self) -> Pin<&generational::Source>;
+pub trait NewDatastore<'a> {
+    fn source(self) -> Pin<&'a generational::Source>;
 
-    #[inline(always)]
-    fn slot<T>(&self) -> Pin<&Slot<T>>
+    fn slot<T>(self) -> Pin<&'a Slot<T>>
     where
         T: Storable + 'static;
 }
@@ -85,8 +127,13 @@ macro_rules! create_locals {
         let tuple = ();
         $(
             let a = core::pin::pin!($crate::find::make_slot::<$t>());
-            let tuple = (&a.as_ref(), tuple);
+            let mut tuple = (&a.as_ref(), tuple);
+            if let Some(a) = $crate::find::Find::find_ref::<$t>(&tuple.1){
+                let x = tuple.0;
+                tuple.0 = a;
+            }
         )*
+
 
         let source = core::pin::pin!($crate::__exports::Source::new());
         let wrapper = (
@@ -94,30 +141,8 @@ macro_rules! create_locals {
              tuple,
         );
 
-        $handler(&wrapper).await
+        $handler(wrapper).await
     };
 }
 
 pub use create_locals;
-
-#[cfg(test)]
-mod tests {
-    use crate::Storable;
-    use crate::find::{Find, NewDatastore};
-    use std::dbg;
-
-    #[test]
-    fn foo() {
-        pub struct Foo {
-            _x: u32,
-        };
-        impl Storable for Foo {
-            type DataType = u32;
-        }
-
-        fn x(x: impl NewDatastore) {
-            dbg!(&x.source());
-        }
-        //create_locals!(x, Foo, Foo, Foo);
-    }
-}
