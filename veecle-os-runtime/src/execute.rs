@@ -434,7 +434,11 @@ macro_rules! execute {
     ) => {{
         async {
             #[inline(always)]
-            async fn handler_fn<'a>(store: (impl $crate::find::NewDatastore<'a> + $crate::__exports::DatastoreExt<'a> + Copy) ) -> core::convert::Infallible{
+            async fn handler_fn<'a>(
+                source: core::pin::Pin<&'a $crate::__exports::Source>,
+                tuple: &impl $crate::find::Find<'a>
+            ) -> core::convert::Infallible{
+                let store = (source, tuple);
                 let init_contexts = $crate::__exports::validate_actors::<
                     $crate::__make_cons!(@type $($actor_type,)*),
                     $crate::__make_cons!(@type $($data_type,)*),
