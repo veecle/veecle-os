@@ -351,7 +351,7 @@ where
 
 /// Internal helper to get a full future that initializes and executes an [`Actor`] given a [`Datastore`]
 pub async fn execute_actor<'a, A>(
-    store: &'a (impl NewDatastore + DatastoreExt<'a>),
+    store: (impl NewDatastore<'a> + DatastoreExt<'a> + core::marker::Copy),
     init_context: A::InitContext,
 ) -> core::convert::Infallible
 where
@@ -434,7 +434,7 @@ macro_rules! execute {
     ) => {{
         async {
             #[inline(always)]
-            async fn handler_fn<'a>(store: &'a (impl $crate::find::NewDatastore + $crate::__exports::DatastoreExt<'a>)) -> core::convert::Infallible{
+            async fn handler_fn<'a>(store: (impl $crate::find::NewDatastore<'a> + $crate::__exports::DatastoreExt<'a> + Copy) ) -> core::convert::Infallible{
                 let init_contexts = $crate::__exports::validate_actors::<
                     $crate::__make_cons!(@type $($actor_type,)*),
                     $crate::__make_cons!(@type $($data_type,)*),
@@ -450,7 +450,7 @@ macro_rules! execute {
                 let futures: [core::pin::Pin<&mut dyn core::future::Future<Output = core::convert::Infallible>>; LEN] =
                     $crate::make_futures! {
                         init_contexts: init_contexts,
-                        store: store,
+                        store: store.clone(),
                         actors: [$($actor_type,)*],
                     };
 
@@ -459,7 +459,7 @@ macro_rules! execute {
 
                 let executor = $crate::__exports::Executor::new(
                     &SHARED,
-                    $crate::find::NewDatastore::source(store),
+                    $crate::find::NewDatastore::source(store.clone()),
                     futures,
                 );
 

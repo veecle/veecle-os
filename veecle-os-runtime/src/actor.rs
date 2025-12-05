@@ -142,7 +142,9 @@ pub trait StoreRequest<'a>: sealed::Sealed {
     /// Requests an instance of `Self` from the [`Datastore`].
     #[doc(hidden)]
     #[allow(async_fn_in_trait, reason = "it's actually private so it's fine")]
-    async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self;
+    async fn request(
+        datastore: (impl NewDatastore<'a> + DatastoreExt<'a> + core::marker::Copy),
+    ) -> Self;
 }
 
 impl sealed::Sealed for () {}
@@ -192,14 +194,14 @@ pub trait DatastoreExt<'a> {
     /// Increments the global datastore generation.
     ///
     /// Asserts that every reader has had (or will have) a chance to read a value before a writer may overwrite it.
-    fn increment_generation(&'a self);
+    fn increment_generation(self);
 
     /// Returns the [`Reader`] for a specific slot.
     ///
     /// # Panics
     ///
     /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    fn reader<T>(&'a self) -> Reader<'a, T>
+    fn reader<T>(self) -> Reader<'a, T>
     where
         T: Storable + 'static;
 
@@ -211,7 +213,7 @@ pub trait DatastoreExt<'a> {
     /// # Panics
     ///
     /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    fn exclusive_reader<T>(&'a self) -> ExclusiveReader<'a, T>
+    fn exclusive_reader<T>(self) -> ExclusiveReader<'a, T>
     where
         T: Storable + 'static;
 
@@ -222,7 +224,7 @@ pub trait DatastoreExt<'a> {
     /// * If the [`Writer`] for this slot has already been acquired.
     ///
     /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    fn writer<T>(&'a self) -> Writer<'a, T>
+    fn writer<T>(self) -> Writer<'a, T>
     where
         T: Storable + 'static;
 }
@@ -293,29 +295,29 @@ pub trait DatastoreExt<'a> {
 
 impl<'a, S> DatastoreExt<'a> for S
 where
-    S: NewDatastore,
+    S: NewDatastore<'a> + Copy,
 {
     #[cfg(test)]
     #[cfg_attr(coverage_nightly, coverage(off))]
-    fn increment_generation(&'a self) {
+    fn increment_generation(self) {
         self.source().increment_generation()
     }
 
-    fn reader<T>(&'a self) -> Reader<'a, T>
+    fn reader<T>(self) -> Reader<'a, T>
     where
         T: Storable + 'static,
     {
         Reader::from_slot(self.slot::<T>())
     }
 
-    fn exclusive_reader<T>(&'a self) -> ExclusiveReader<'a, T>
+    fn exclusive_reader<T>(self) -> ExclusiveReader<'a, T>
     where
         T: Storable + 'static,
     {
         ExclusiveReader::from_slot(self.slot::<T>())
     }
 
-    fn writer<T>(&'a self) -> Writer<'a, T>
+    fn writer<T>(self) -> Writer<'a, T>
     where
         T: Storable + 'static,
     {
@@ -325,7 +327,10 @@ where
 
 /// Implements a no-op for Actors that do not read or write any values.
 impl<'a> StoreRequest<'a> for () {
-    async fn request(_store: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {}
+    async fn request(
+        _store: (impl NewDatastore<'a> + DatastoreExt<'a> + core::marker::Copy),
+    ) -> Self {
+    }
 }
 
 impl<T> sealed::Sealed for Reader<'_, T> where T: Storable + 'static {}
@@ -334,7 +339,9 @@ impl<'a, T> StoreRequest<'a> for Reader<'a, T>
 where
     T: Storable + 'static,
 {
-    async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {
+    async fn request(
+        datastore: (impl NewDatastore<'a> + DatastoreExt<'a> + core::marker::Copy),
+    ) -> Self {
         datastore.reader()
     }
 }
@@ -345,7 +352,9 @@ impl<'a, T> StoreRequest<'a> for ExclusiveReader<'a, T>
 where
     T: Storable + 'static,
 {
-    async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {
+    async fn request(
+        datastore: (impl NewDatastore<'a> + DatastoreExt<'a> + core::marker::Copy),
+    ) -> Self {
         datastore.exclusive_reader()
     }
 }
@@ -356,7 +365,9 @@ impl<'a, T> StoreRequest<'a> for InitializedReader<'a, T>
 where
     T: Storable + 'static,
 {
-    async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {
+    async fn request(
+        datastore: (impl NewDatastore<'a> + DatastoreExt<'a> + core::marker::Copy),
+    ) -> Self {
         Reader::from_slot(datastore.slot()).wait_init().await
     }
 }
@@ -367,7 +378,9 @@ impl<'a, T> StoreRequest<'a> for Writer<'a, T>
 where
     T: Storable + 'static,
 {
-    async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {
+    async fn request(
+        datastore: (impl NewDatastore<'a> + DatastoreExt<'a> + core::marker::Copy),
+    ) -> Self {
         datastore.writer()
     }
 }
@@ -385,7 +398,7 @@ macro_rules! impl_request_helper {
         where
             $t: StoreRequest<'a>,
         {
-            async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {
+            async fn request(datastore: (impl NewDatastore<'a> + DatastoreExt<'a> + core::marker::Copy)) -> Self {
                 (<$t as StoreRequest>::request(datastore).await,)
             }
         }
@@ -403,7 +416,7 @@ macro_rules! impl_request_helper {
         where
             $($t: StoreRequest<'a>),*
         {
-            async fn request(datastore: &'a (impl NewDatastore + DatastoreExt<'a>)) -> Self {
+            async fn request(datastore: (impl NewDatastore<'a> + DatastoreExt<'a> + core::marker::Copy)) -> Self {
                 // join! is necessary here to avoid argument-order-dependence with the #[actor] macro.
                 // This ensures that any `InitializedReaders` in self correctly track the generation at which they were
                 // first ready, so that the first `wait_for_update` sees the value that caused them to become
