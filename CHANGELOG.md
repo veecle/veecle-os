@@ -13,6 +13,7 @@
 * Added `ThreadAbstraction` trait to OSAL for querying current thread id.
 * Updated MSRV to 1.91.
 * Fixed `veecle_os::telemetry::instrument` macro to automatically resolve correct crate paths for the facade.
+* Implemented `stable_deref_trait::StableDeref` for `Chunk` to allow usage in `yoke`.
 
 ## Veecle Telemetry
 

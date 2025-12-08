@@ -756,9 +756,9 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "stable_deref_trait"
-version = "1.2.0"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
+checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
 name = "stm32-fmc"
@@ -959,6 +959,7 @@ dependencies = [
  "generic-array",
  "pin-cell",
  "pin-project",
+ "stable_deref_trait",
  "typenum",
  "veecle-os-runtime-macros",
  "veecle-telemetry",

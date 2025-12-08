@@ -19,6 +19,7 @@ futures = { workspace = true, features = ["async-await"] }
 generic-array = { workspace = true }
 pin-cell = { workspace = true }
 pin-project = { workspace = true }
+stable_deref_trait = { workspace = true }
 typenum = { workspace = true, features = ["const-generics"] }
 veecle-os-runtime-macros = { workspace = true }
 veecle-telemetry = { workspace = true }
