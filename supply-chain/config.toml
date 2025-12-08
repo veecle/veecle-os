@@ -434,6 +434,10 @@ criteria = "safe-to-run"
 
 [[exemptions.darling]]
 version = "0.21.3"
+criteria = "safe-to-run"
+
+[[exemptions.darling]]
+version = "0.23.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.darling_core]]
@@ -442,6 +446,10 @@ criteria = "safe-to-run"
 
 [[exemptions.darling_core]]
 version = "0.21.3"
+criteria = "safe-to-run"
+
+[[exemptions.darling_core]]
+version = "0.23.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.darling_macro]]
@@ -450,6 +458,10 @@ criteria = "safe-to-run"
 
 [[exemptions.darling_macro]]
 version = "0.21.3"
+criteria = "safe-to-run"
+
+[[exemptions.darling_macro]]
+version = "0.23.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.data-encoding]]
@@ -730,7 +742,7 @@ criteria = "safe-to-run"
 
 [[exemptions.fnv]]
 version = "1.0.7"
-criteria = "safe-to-deploy"
+criteria = "safe-to-run"
 
 [[exemptions.foldhash]]
 version = "0.2.0"
@@ -1017,7 +1029,7 @@ version = "1.5.0"
 criteria = "safe-to-run"
 
 [[exemptions.libc]]
-version = "0.2.177"
+version = "0.2.178"
 criteria = "safe-to-deploy"
 
 [[exemptions.libloading]]
@@ -1057,7 +1069,7 @@ version = "0.4.14"
 criteria = "safe-to-deploy"
 
 [[exemptions.log]]
-version = "0.4.28"
+version = "0.4.29"
 criteria = "safe-to-run"
 
 [[exemptions.log-once]]
@@ -1601,7 +1613,7 @@ version = "3.2.0"
 criteria = "safe-to-run"
 
 [[exemptions.servo_arc]]
-version = "0.4.0"
+version = "0.4.3"
 criteria = "safe-to-run"
 
 [[exemptions.sha1]]
@@ -1901,7 +1913,7 @@ version = "0.2.2"
 criteria = "safe-to-run"
 
 [[exemptions.uuid]]
-version = "1.18.1"
+version = "1.19.0"
 criteria = "safe-to-run"
 
 [[exemptions.veecle-freertos-integration]]
