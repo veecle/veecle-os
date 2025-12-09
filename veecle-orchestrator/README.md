@@ -40,6 +40,30 @@ stopped instance 0195fc7b-33e6-70e3-bee1-ac515185fac7
 removed instance 0195fc7b-33e6-70e3-bee1-ac515185fac7
 ```
 
+### Process Priority
+
+When starting a runtime instance, you can optionally set the process priority using the `--priority` flag.
+This controls the Linux process nice value and affects CPU scheduling priority.
+
+```console
+# Start with high priority (nice value -10)
+> cargo run -p veecle-orchestrator-cli -- runtime start --priority high <instance-id>
+
+# Start with normal priority (nice value 0, default)
+> cargo run -p veecle-orchestrator-cli -- runtime start <instance-id>
+
+# Start with low priority (nice value 10)
+> cargo run -p veecle-orchestrator-cli -- runtime start --priority low <instance-id>
+```
+
+Available priority levels:
+- `high`: Nice value -10 (higher CPU priority)
+- `normal`: Nice value 0 (default OS priority)
+- `low`: Nice value 10 (lower CPU priority)
+
+Note that setting negative nice values (high priority) requires appropriate permissions (CAP_SYS_NICE capability or sufficient RLIMIT_NICE).
+If the orchestrator lacks these permissions, a warning will be logged but the runtime will still start with the default priority.
+
 You should see logs from these actions in the orchestrator as well
 
 ```console

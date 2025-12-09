@@ -9,6 +9,19 @@ use tokio_util::codec::{Decoder, Encoder, LinesCodec, LinesCodecError};
 pub use uuid::Uuid;
 use veecle_telemetry::to_static::ToStatic;
 
+/// Priority level for a runtime process.
+#[derive(Clone, Copy, Debug, Default, serde::Deserialize, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Priority {
+    /// High priority (nice value -10).
+    High,
+    /// Normal priority (nice value 0).
+    #[default]
+    Normal,
+    /// Low priority (nice value 10).
+    Low,
+}
+
 /// A control request sent from a runtime to the orchestrator.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, veecle_os_runtime::Storable)]
 pub enum ControlRequest {
@@ -17,6 +30,12 @@ pub enum ControlRequest {
         /// The runtime instance to start.
         // This is `veecle_orchestrator_protocol::InstanceId` but we don't want the dependency.
         id: Uuid,
+
+        /// The priority level for the runtime process.
+        ///
+        /// If not specified, defaults to [`Priority::Normal`].
+        #[serde(default)]
+        priority: Option<Priority>,
     },
 
     /// Request to stop a runtime instance.

@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use tokio::sync::{mpsc, oneshot};
-use veecle_orchestrator_protocol::{InstanceId, RuntimeInfo};
+use veecle_orchestrator_protocol::{InstanceId, Priority, RuntimeInfo};
 
 use crate::distributor::Distributor;
 use crate::telemetry::Exporter;
@@ -41,6 +41,7 @@ pub(crate) enum Command {
 
     StartInstance {
         id: InstanceId,
+        priority: Option<Priority>,
         response_tx: oneshot::Sender<eyre::Result<()>>,
     },
 
@@ -115,11 +116,19 @@ impl Conductor {
 
     /// Starts the runtime instance with the passed id.
     #[tracing::instrument(skip(self))]
-    pub(crate) async fn start(&self, id: InstanceId) -> eyre::Result<()> {
+    pub(crate) async fn start(
+        &self,
+        id: InstanceId,
+        priority: Option<Priority>,
+    ) -> eyre::Result<()> {
         let (response_tx, response_rx) = oneshot::channel();
 
         self.command_tx
-            .send(Command::StartInstance { id, response_tx })
+            .send(Command::StartInstance {
+                id,
+                priority,
+                response_tx,
+            })
             .await?;
 
         response_rx.await?
@@ -198,8 +207,12 @@ async fn run(
                 let response = state.remove_instance(id).await;
                 let _ = response_tx.send(response);
             }
-            Command::StartInstance { id, response_tx } => {
-                let response = state.start_instance(id);
+            Command::StartInstance {
+                id,
+                priority,
+                response_tx,
+            } => {
+                let response = state.start_instance(id, priority);
                 let _ = response_tx.send(response);
             }
             Command::StopInstance { id, response_tx } => {

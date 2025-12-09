@@ -195,8 +195,11 @@ async fn handle_request(
             conductor.remove(id).await.wrap_err("removing instance")?;
             encode(())?
         }
-        Request::Start(id) => {
-            conductor.start(id).await.wrap_err("starting instance")?;
+        Request::Start { id, priority } => {
+            conductor
+                .start(id, priority)
+                .await
+                .wrap_err("starting instance")?;
             encode(())?
         }
         Request::Stop(id) => {
