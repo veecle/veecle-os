@@ -561,6 +561,24 @@ impl Header {
 
         Ok(&buffer[..written])
     }
+
+    /// Serializes the header and the payload into one packet.
+    pub fn serialize_with_serializable<'a>(
+        &mut self,
+        payload: &impl Serialize,
+        buffer: &'a mut [u8],
+    ) -> Result<&'a [u8], SerializeError> {
+        let mut byte_writer = ByteWriter::new(buffer);
+
+        self.length = Length::from_payload_length(payload.required_length() as u32);
+
+        let written = byte_writer.write_counted(|byte_writer| {
+            self.serialize_partial(byte_writer)?;
+            payload.serialize_partial(byte_writer)
+        })?;
+
+        Ok(&buffer[..written])
+    }
 }
 
 #[cfg(test)]
@@ -904,5 +922,78 @@ mod tests {
                 Err(ParseError::MalformedMessage { .. })
             ));
         }
+    }
+
+    #[test]
+    fn serialize_with_serializable() {
+        #[derive(Debug, Parse, Serialize, Eq, PartialEq)]
+        pub struct SerializablePayload {
+            pub data: u32,
+            pub boolean: bool,
+        }
+
+        let mut header = Header {
+            message_id: MessageId::new(ServiceId(0), MethodId(0)),
+            length: Length(0),
+            request_id: RequestId::new(ClientId::new(0.into(), 0.into()), SessionId(0)),
+            protocol_version: ProtocolVersion(0),
+            interface_version: InterfaceVersion(0),
+            message_type: MessageType::Request,
+            return_code: ReturnCode::Ok,
+        };
+        let payload = SerializablePayload {
+            data: 1,
+            boolean: true,
+        };
+
+        let mut buffer = [0u8; 128];
+        let serialized = header
+            .serialize_with_serializable(&payload, &mut buffer)
+            .unwrap();
+
+        let (parsed_header, parsed_payload) = Header::parse_with_payload(serialized).unwrap();
+
+        assert_eq!(
+            parsed_header.length.payload_length() as usize,
+            payload.required_length()
+        );
+
+        let parsed_payload = SerializablePayload::parse(parsed_payload.into_inner()).unwrap();
+        assert_eq!(&parsed_payload, &payload);
+    }
+
+    #[test]
+    fn serialize_with_serializable_buffer_too_small() {
+        #[derive(Debug, Parse, Serialize, Eq, PartialEq)]
+        pub struct SerializablePayload {
+            pub data: u32,
+            pub boolean: bool,
+        }
+
+        let mut header = Header {
+            message_id: MessageId::new(ServiceId(0), MethodId(0)),
+            length: Length(0),
+            request_id: RequestId::new(ClientId::new(0.into(), 0.into()), SessionId(0)),
+            protocol_version: ProtocolVersion(0),
+            interface_version: InterfaceVersion(0),
+            message_type: MessageType::Request,
+            return_code: ReturnCode::Ok,
+        };
+        let payload = SerializablePayload {
+            data: 1,
+            boolean: true,
+        };
+
+        let mut buffer_header_fail = [0u8; 0];
+        assert_eq!(
+            header.serialize_with_serializable(&payload, &mut buffer_header_fail),
+            Err(SerializeError::BufferTooSmall)
+        );
+
+        let mut buffer_payload_fail = [0u8; 17];
+        assert_eq!(
+            header.serialize_with_serializable(&payload, &mut buffer_payload_fail),
+            Err(SerializeError::BufferTooSmall)
+        );
     }
 }
