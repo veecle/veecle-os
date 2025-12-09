@@ -423,6 +423,11 @@ impl<'a> Payload<'a> {
     pub fn new(bytes: &'a [u8]) -> Self {
         Self(bytes)
     }
+
+    /// Returns the internal payload slice.
+    pub fn into_inner(self) -> &'a [u8] {
+        self.0
+    }
 }
 
 /// SOME/IP header.
@@ -631,6 +636,14 @@ mod tests {
 
         let payload = Payload::from(payload_data.as_slice());
         assert_eq!(payload.as_ref(), payload_data);
+    }
+
+    #[test]
+    fn payload_into_inner() {
+        let payload_data = [10, 20, 30];
+
+        let payload = Payload::new(payload_data.as_slice());
+        assert_eq!(payload.into_inner(), payload_data);
     }
 
     #[test]

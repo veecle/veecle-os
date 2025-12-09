@@ -1681,7 +1681,7 @@ version = "0.6.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.stable_deref_trait]]
-version = "1.2.0"
+version = "1.2.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.static_assertions]]
@@ -2273,7 +2273,7 @@ version = "1.0.1"
 criteria = "safe-to-run"
 
 [[exemptions.yoke]]
-version = "0.8.0"
+version = "0.8.1"
 criteria = "safe-to-run"
 
 [[exemptions.yoke-derive]]

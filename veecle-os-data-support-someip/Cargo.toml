@@ -25,6 +25,9 @@ veecle-os-data-support-someip-macros = { workspace = true }
 
 [dev-dependencies]
 pretty_assertions = { workspace = true, features = ["std"] }
+veecle-os-runtime = { workspace = true }
+veecle-os-test = { workspace = true }
+yoke = { workspace = true, features = ["derive"] }
 
 [lints]
 workspace = true

@@ -252,6 +252,13 @@ pub struct Chunk<'a, T> {
     token: &'a AtomicBool,
 }
 
+// Required so `Chunk` can be used in `yoke::Yoke` as the cart.
+// SAFETY: While `Chunk` has a reference to its assigned memory location in the `MemoryPool`,
+// the address of that memory cannot change as a reference to the `MemoryPool` instance is held.
+// With that, the address returned by the `Deref` and `DerefMut` implementations
+// are stable for the duration of the lifetime of `Chunk`.
+unsafe impl<'a, T> stable_deref_trait::StableDeref for Chunk<'a, T> {}
+
 impl<T> Debug for Chunk<'_, T>
 where
     T: Debug,
