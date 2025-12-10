@@ -26,6 +26,7 @@
 ## Veecle OS Data Support SOME/IP
 
 * **breaking** Change return type of `veecle_os_data_support_someip::serialize::SerializeExt::serialize` to match its documentation.
+* Add `serialize_with_serializable` to `veecle_os_data_support_someip::header::Header` to allow serializing without intermediate buffer.
 
 # 0.1.0
 
