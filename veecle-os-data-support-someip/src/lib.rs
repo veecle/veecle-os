@@ -12,11 +12,10 @@ macro_rules! test_round_trip {
         // Serialize valid.
         let mut buffer = [0u8; 2048];
         let buffer_length = crate::serialize::Serialize::required_length(&value);
-        let serialized_data = crate::serialize::SerializeExt::serialize(&value, &mut buffer);
+        let serialized_length =
+            crate::serialize::SerializeExt::serialize(&value, &mut buffer).unwrap();
 
-        assert!(matches!(serialized_data, Ok(..)));
-
-        let serialized_data = serialized_data.unwrap();
+        let serialized_data = &buffer[..serialized_length];
 
         // Required length.
 

@@ -138,16 +138,16 @@ pub trait Serialize {
 pub trait SerializeExt: Sized {
     /// Serializes a SOME/IP payload type to a given slice of bytes using [`Serialize`] and returns the number of
     /// bytes written to the buffer.
-    fn serialize<'a>(&self, buffer: &'a mut [u8]) -> Result<&'a [u8], SerializeError>;
+    fn serialize(&self, buffer: &mut [u8]) -> Result<usize, SerializeError>;
 }
 
 impl<T> SerializeExt for T
 where
     T: Serialize,
 {
-    fn serialize<'a>(&self, buffer: &'a mut [u8]) -> Result<&'a [u8], SerializeError> {
+    fn serialize(&self, buffer: &mut [u8]) -> Result<usize, SerializeError> {
         let mut writer = ByteWriter::new(buffer);
         let written = writer.write_counted(|writer| self.serialize_partial(writer))?;
-        Ok(&buffer[..written])
+        Ok(written)
     }
 }

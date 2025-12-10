@@ -104,9 +104,9 @@ pub fn someip_parse(input: TokenStream) -> TokenStream {
 /// let bytes = &[0x0, 0x6, 0x1, 0x2, 0x3, 0x4];
 ///
 /// let mut buffer = [0u8; 16];
-/// let output = input.serialize(&mut buffer).unwrap();
+/// let written = input.serialize(&mut buffer).unwrap();
 ///
-/// assert_eq!(output, bytes);
+/// assert_eq!(&buffer[..written], bytes);
 /// ```
 ///
 /// Zero sized types and tuple structs can be derived as well.

@@ -19,7 +19,7 @@ mod tests {
         let mut buffer = [0; 512];
 
         let value = TestStruct { inner: 5 };
-        let serialized = value.serialize(&mut buffer).unwrap();
-        assert_eq!(TestStruct::parse(serialized).unwrap(), value);
+        let written = value.serialize(&mut buffer).unwrap();
+        assert_eq!(TestStruct::parse(&buffer[..written]).unwrap(), value);
     }
 }

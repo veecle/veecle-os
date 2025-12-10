@@ -23,6 +23,10 @@
 
 * **breaking** Removed.
 
+## Veecle OS Data Support SOME/IP
+
+* **breaking** Change return type of `veecle_os_data_support_someip::serialize::SerializeExt::serialize` to match its documentation.
+
 # 0.1.0
 
 * Initial release.
