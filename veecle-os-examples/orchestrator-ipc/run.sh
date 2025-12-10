@@ -187,14 +187,14 @@ sleep 1
 case "$subset"
 in
   ping-pong)
-    run "$CLI" --socket "$CONTROL1" runtime start $TRACE_ID
+    run "$CLI" --socket "$CONTROL1" runtime start $TRACE_ID --priority high
     run "$CLI" --socket "$CONTROL2" runtime start $PONG_ID
-    run "$CLI" --socket "$CONTROL1" runtime start $PING_ID
+    run "$CLI" --socket "$CONTROL1" runtime start $PING_ID --priority low
   ;;
 
   useless)
-    run "$CLI" --socket "$CONTROL1" runtime start $USELESS_MACHINE1_ID
-    run "$CLI" --socket "$CONTROL2" runtime start $USELESS_MACHINE2_ID
+    run "$CLI" --socket "$CONTROL1" runtime start $USELESS_MACHINE1_ID --priority low
+    run "$CLI" --socket "$CONTROL2" runtime start $USELESS_MACHINE2_ID --priority high
   ;;
 esac
 

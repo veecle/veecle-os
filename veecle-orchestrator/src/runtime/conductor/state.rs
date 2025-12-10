@@ -7,7 +7,7 @@ use eyre::{OptionExt, Result, bail};
 use futures::stream::StreamExt;
 use tempfile::TempDir;
 use tokio::sync::mpsc;
-use veecle_orchestrator_protocol::{InstanceId, RuntimeInfo};
+use veecle_orchestrator_protocol::{InstanceId, Priority, RuntimeInfo};
 
 use crate::distributor::Distributor;
 use crate::runtime::conductor::Command;
@@ -93,12 +93,16 @@ impl State {
     }
 
     #[tracing::instrument(skip(self))]
-    pub(super) fn start_instance(&mut self, id: InstanceId) -> Result<()> {
+    pub(super) fn start_instance(
+        &mut self,
+        id: InstanceId,
+        priority: Option<Priority>,
+    ) -> Result<()> {
         let Some(instance) = self.runtimes.get_mut(&id) else {
             bail!("instance id {id} was not registered");
         };
 
-        instance.start()?;
+        instance.start(priority)?;
 
         Ok(())
     }

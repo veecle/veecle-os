@@ -108,6 +108,7 @@ re_log = { version = "0.27.2", default-features = false }
 rfd = { version = "0.16.0", default-features = false }
 rtt-target = { version = "0.6.2", default-features = false }
 runtime-macros = { version = "1.1.1", default-features = false }
+rustix = { version = "1.1.2", default-features = false }
 scraper = { version = "0.24.0", default-features = false }
 serde = { version = "1.0.219", default-features = false }
 serde_derive = { version = "1.0.219", default-features = false }

@@ -20,6 +20,7 @@ eyre = { workspace = true }
 futures = { workspace = true, features = ["async-await", "std"] }
 libc = { workspace = true }
 nix = { workspace = true, features = ["signal"] }
+rustix = { workspace = true, features = ["process"] }
 serde = { workspace = true }
 serde_json = { workspace = true, features = ["std"] }
 sha2 = { workspace = true }

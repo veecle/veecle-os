@@ -15,6 +15,7 @@ workspace-checks.miri = false
 
 [dependencies]
 camino = { workspace = true, features = ["serde1"] }
+clap = { workspace = true, features = ["derive"], optional = true }
 serde = { workspace = true, features = ["derive", "std"] }
 sha2 = { workspace = true }
 uuid = { workspace = true, features = ["serde", "std", "v7"] }

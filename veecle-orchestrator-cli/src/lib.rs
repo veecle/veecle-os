@@ -10,7 +10,7 @@ use comfy_table::{Cell, Color, Table};
 use itertools::Itertools;
 use serde::de::DeserializeOwned;
 use veecle_net_utils::{BlockingSocketStream, UnresolvedMultiSocketAddress};
-use veecle_orchestrator_protocol::{Info, InstanceId, LinkTarget, Request, Response};
+use veecle_orchestrator_protocol::{Info, InstanceId, LinkTarget, Priority, Request, Response};
 
 /// Veecle OS Orchestrator CLI interface
 ///
@@ -65,7 +65,13 @@ enum Runtime {
     Remove { id: InstanceId },
 
     /// Start the runtime instance with the passed id.
-    Start { id: InstanceId },
+    Start {
+        id: InstanceId,
+
+        /// Priority level for the runtime process.
+        #[arg(long)]
+        priority: Option<Priority>,
+    },
 
     /// Stop the runtime instance with the passed id.
     Stop { id: InstanceId },
@@ -191,8 +197,8 @@ impl Arguments {
                 let () = send(&mut stream, Request::Remove(id))?;
                 println!("removed instance {id}");
             }
-            Command::Runtime(Runtime::Start { id }) => {
-                let () = send(&mut stream, Request::Start(id))?;
+            Command::Runtime(Runtime::Start { id, priority }) => {
+                let () = send(&mut stream, Request::Start { id, priority })?;
                 println!("started instance {id}");
             }
             Command::Runtime(Runtime::Stop { id }) => {

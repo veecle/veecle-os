@@ -13,7 +13,7 @@ use tokio::time::timeout;
 use tokio_util::codec::Framed;
 use tokio_util::sync::CancellationToken;
 use veecle_ipc_protocol::{ControlRequest, ControlResponse, EncodedStorable};
-use veecle_orchestrator_protocol::InstanceId;
+use veecle_orchestrator_protocol::{InstanceId, Priority};
 
 use crate::runtime::conductor::Command;
 use crate::telemetry::Exporter;
@@ -98,10 +98,16 @@ async fn handle_control_request(
 ) -> veecle_ipc_protocol::ControlResponse {
     let response: eyre::Result<_> = async {
         match request {
-            ControlRequest::StartRuntime { id } => {
+            ControlRequest::StartRuntime { id, priority } => {
                 let id = InstanceId(id);
+                let priority = priority.map(|p| match p {
+                    veecle_ipc_protocol::Priority::High => Priority::High,
+                    veecle_ipc_protocol::Priority::Normal => Priority::Normal,
+                    veecle_ipc_protocol::Priority::Low => Priority::Low,
+                });
                 send_command(command_tx, |response_tx| Command::StartInstance {
                     id,
+                    priority,
                     response_tx,
                 })
                 .await?;
@@ -259,7 +265,16 @@ impl RuntimeInstance {
     }
 
     /// Starts the process for this instance.
-    pub(crate) fn start(&mut self) -> Result<()> {
+    pub(crate) fn start(&mut self, priority: Option<Priority>) -> Result<()> {
+        /// Sets the process priority for the given PID.
+        fn set_priority(pid: u32, priority: Priority) -> std::io::Result<()> {
+            let pid = rustix::process::Pid::from_raw(pid as i32).ok_or_else(|| {
+                std::io::Error::new(std::io::ErrorKind::InvalidInput, "invalid PID")
+            })?;
+            rustix::process::setpriority_process(Some(pid), priority.to_nice_value())
+                .map_err(std::io::Error::from)
+        }
+
         if self.process.is_some() {
             bail!("instance id {} is already running", self.id);
         }
@@ -273,6 +288,16 @@ impl RuntimeInstance {
             .env("VEECLE_RUNTIME_ID", self.id.to_string())
             .spawn()
             .wrap_err_with(|| format!("starting runtime process '{binary}'"))?;
+
+        #[expect(
+            clippy::collapsible_if,
+            reason = "separate data query from error handling"
+        )]
+        if let Some((priority, pid)) = priority.zip(process.id()) {
+            if let Err(error) = set_priority(pid, priority) {
+                tracing::warn!("failed to set priority for runtime {}: {}", self.id, error);
+            }
+        }
 
         self.process = Some(process);
 

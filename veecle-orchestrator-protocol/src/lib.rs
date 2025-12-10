@@ -18,6 +18,33 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
+/// Priority level for a runtime process.
+#[derive(
+    Clone, Copy, Debug, Default, Deserialize, Serialize, Eq, PartialEq, Hash, Ord, PartialOrd,
+)]
+#[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
+#[serde(rename_all = "lowercase")]
+pub enum Priority {
+    /// High priority (nice value -10).
+    High,
+    /// Normal priority (nice value 0).
+    #[default]
+    Normal,
+    /// Low priority (nice value 10).
+    Low,
+}
+
+impl Priority {
+    /// Converts the priority level to a nice value.
+    pub fn to_nice_value(self) -> i32 {
+        match self {
+            Self::High => -10,
+            Self::Normal => 0,
+            Self::Low => 10,
+        }
+    }
+}
+
 /// Identifies a runtime instance that has been added to a Veecle OS Orchestrator.
 ///
 /// The same runtime binary may be added multiple times with unique ids.
@@ -102,7 +129,16 @@ pub enum Request {
     /// Start the runtime instance with the passed id.
     ///
     /// Responds with <code>[Response]<()></code>.
-    Start(InstanceId),
+    Start {
+        /// The id of the instance to start.
+        id: InstanceId,
+
+        /// The priority level for the runtime process.
+        ///
+        /// If not specified, defaults to [`Priority::Normal`].
+        #[serde(default)]
+        priority: Option<Priority>,
+    },
 
     /// Stop the runtime instance with the passed id.
     ///
@@ -171,7 +207,7 @@ impl Request {
             Self::Add { .. } => "Add",
             Self::AddWithBinary { .. } => "AddWithBinary",
             Self::Remove(_) => "Remove",
-            Self::Start(_) => "Start",
+            Self::Start { .. } => "Start",
             Self::Stop(_) => "Stop",
             Self::Link { .. } => "Link",
             Self::Info => "Info",
