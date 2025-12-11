@@ -79,8 +79,8 @@ where
         self.waiter.read(|value| {
             let value = value.as_ref();
 
-            // TODO(DEV-532): add debug format
-            veecle_telemetry::trace!("Slot read", type_name = self.waiter.inner_type_name());
+            veecle_telemetry::trace!("Slot read", value = format_args!("{value:?}"));
+
             f(value)
         })
     }
@@ -92,11 +92,7 @@ where
 
         let value = self.waiter.take(span.context());
 
-        // TODO(DEV-532): add debug format
-        veecle_telemetry::trace!(
-            "Slot value taken.",
-            type_name = self.waiter.inner_type_name()
-        );
+        veecle_telemetry::trace!("Slot value taken", value = format_args!("{value:?}"));
 
         value
     }

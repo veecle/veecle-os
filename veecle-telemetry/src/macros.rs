@@ -360,9 +360,9 @@ macro_rules! fatal {
 /// Empty attributes:
 /// ```rust
 /// use veecle_telemetry::attributes;
-/// use veecle_telemetry::value::KeyValue;
+/// use veecle_telemetry::protocol::transient;
 ///
-/// let attrs: &[KeyValue] = attributes!(); // Creates an empty slice
+/// let attrs: &[transient::KeyValue<'_>] = attributes!(); // Creates an empty slice
 /// ```
 #[macro_export]
 macro_rules! attributes {

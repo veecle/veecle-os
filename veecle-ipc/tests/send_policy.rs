@@ -20,7 +20,7 @@ struct TestData {
 #[tokio::test]
 #[cfg_attr(coverage_nightly, coverage(off))]
 async fn test_drop_policy_behavior() {
-    let (sender, mut receiver) = mpsc::channel::<Message<'static>>(2);
+    let (sender, mut receiver) = mpsc::channel::<Message>(2);
 
     for index in 0..2 {
         sender

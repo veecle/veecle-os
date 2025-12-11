@@ -74,8 +74,7 @@ where
                 .as_ref()
                 .expect("initialized reader should only access initialized values");
 
-            // TODO(DEV-532): add debug format
-            veecle_telemetry::trace!("Slot read", type_name = self.waiter.inner_type_name());
+            veecle_telemetry::trace!("Slot read", value = format_args!("{value:?}"));
             f(value)
         })
     }
