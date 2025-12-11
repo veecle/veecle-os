@@ -39,16 +39,22 @@ use crate::types::{ListType, StringType, list_from_slice};
 use crate::value::KeyValue;
 
 /// A specialised form of [`list_from_slice`] for attributes.
-pub fn attribute_list_from_slice<'a>(slice: &'a [KeyValue<'a>]) -> AttributeListType<'a> {
-    list_from_slice::<KeyValue<'a>>(slice)
+pub fn attribute_list_from_slice<'a, V>(slice: &'a [KeyValue<'a, V>]) -> AttributeListType<'a, V>
+where
+    V: Clone,
+{
+    list_from_slice::<KeyValue<'a, V>>(slice)
 }
 
 /// Type alias for a list of attributes.
-pub type AttributeListType<'a> = ListType<'a, KeyValue<'a>>;
+pub type AttributeListType<'a, V> = ListType<'a, KeyValue<'a, V>>;
 
 #[cfg(feature = "alloc")]
-impl ToStatic for AttributeListType<'_> {
-    type Static = AttributeListType<'static>;
+impl<V> ToStatic for AttributeListType<'_, V>
+where
+    V: ToStatic,
+{
+    type Static = AttributeListType<'static, V::Static>;
 
     fn to_static(&self) -> Self::Static {
         self.iter()
@@ -227,18 +233,24 @@ impl<'de> serde::Deserialize<'de> for ThreadId {
 /// allowing messages from different executions to be properly correlated.
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "alloc", derive(Deserialize))]
-pub struct InstanceMessage<'a> {
+pub struct InstanceMessage<'a, V>
+where
+    V: Clone,
+{
     /// The thread this message belongs to
     pub thread_id: ThreadId,
 
     /// The telemetry message content
     #[serde(borrow)]
-    pub message: TelemetryMessage<'a>,
+    pub message: TelemetryMessage<'a, V>,
 }
 
 #[cfg(feature = "alloc")]
-impl ToStatic for InstanceMessage<'_> {
-    type Static = InstanceMessage<'static>;
+impl<V> ToStatic for InstanceMessage<'_, V>
+where
+    V: ToStatic,
+{
+    type Static = InstanceMessage<'static, V::Static>;
 
     fn to_static(&self) -> Self::Static {
         InstanceMessage {
@@ -254,18 +266,24 @@ impl ToStatic for InstanceMessage<'_> {
 /// collected and exported by the system.
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "alloc", derive(Deserialize))]
-pub enum TelemetryMessage<'a> {
+pub enum TelemetryMessage<'a, V>
+where
+    V: Clone,
+{
     /// A structured log message with severity and attributes
-    Log(#[serde(borrow)] LogMessage<'a>),
+    Log(#[serde(borrow)] LogMessage<'a, V>),
     /// A time synchronization message for clock coordination
     TimeSync(TimeSyncMessage),
     /// A distributed tracing message (spans, events, links)
-    Tracing(#[serde(borrow)] TracingMessage<'a>),
+    Tracing(#[serde(borrow)] TracingMessage<'a, V>),
 }
 
 #[cfg(feature = "alloc")]
-impl ToStatic for TelemetryMessage<'_> {
-    type Static = TelemetryMessage<'static>;
+impl<V> ToStatic for TelemetryMessage<'_, V>
+where
+    V: ToStatic,
+{
+    type Static = TelemetryMessage<'static, V::Static>;
 
     fn to_static(&self) -> Self::Static {
         match self {
@@ -313,7 +331,10 @@ pub enum Severity {
 /// Log messages can be optionally correlated with traces by including trace and span IDs when available.
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "alloc", derive(Deserialize))]
-pub struct LogMessage<'a> {
+pub struct LogMessage<'a, V>
+where
+    V: Clone,
+{
     /// Timestamp in nanoseconds since Unix epoch (or system start)
     pub time_unix_nano: u64,
     /// The severity level of this log message
@@ -325,12 +346,15 @@ pub struct LogMessage<'a> {
 
     /// Key-value attributes providing additional context
     #[serde(borrow)]
-    pub attributes: AttributeListType<'a>,
+    pub attributes: AttributeListType<'a, V>,
 }
 
 #[cfg(feature = "alloc")]
-impl ToStatic for LogMessage<'_> {
-    type Static = LogMessage<'static>;
+impl<V> ToStatic for LogMessage<'_, V>
+where
+    V: ToStatic,
+{
+    type Static = LogMessage<'static, V::Static>;
 
     fn to_static(&self) -> Self::Static {
         LogMessage {
@@ -360,9 +384,12 @@ pub struct TimeSyncMessage {
 /// generated during span lifecycle management and tracing operations.
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "alloc", derive(Deserialize))]
-pub enum TracingMessage<'a> {
+pub enum TracingMessage<'a, V>
+where
+    V: Clone,
+{
     /// A new span has been created
-    CreateSpan(#[serde(borrow)] SpanCreateMessage<'a>),
+    CreateSpan(#[serde(borrow)] SpanCreateMessage<'a, V>),
     /// A span has been entered (made current)
     EnterSpan(SpanEnterMessage),
     /// A span has been exited (no longer current)
@@ -370,16 +397,19 @@ pub enum TracingMessage<'a> {
     /// A span has been closed (completed)
     CloseSpan(SpanCloseMessage),
     /// An event has been added to a span
-    AddEvent(#[serde(borrow)] SpanAddEventMessage<'a>),
+    AddEvent(#[serde(borrow)] SpanAddEventMessage<'a, V>),
     /// A link has been added to a span
     AddLink(SpanAddLinkMessage),
     /// An attribute has been set on a span
-    SetAttribute(#[serde(borrow)] SpanSetAttributeMessage<'a>),
+    SetAttribute(#[serde(borrow)] SpanSetAttributeMessage<'a, V>),
 }
 
 #[cfg(feature = "alloc")]
-impl ToStatic for TracingMessage<'_> {
-    type Static = TracingMessage<'static>;
+impl<V> ToStatic for TracingMessage<'_, V>
+where
+    V: ToStatic,
+{
+    type Static = TracingMessage<'static, V::Static>;
 
     fn to_static(&self) -> Self::Static {
         match self {
@@ -400,7 +430,10 @@ impl ToStatic for TracingMessage<'_> {
 /// in the trace, including its identity, timing, and initial attributes.
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "alloc", derive(Deserialize))]
-pub struct SpanCreateMessage<'a> {
+pub struct SpanCreateMessage<'a, V>
+where
+    V: Clone,
+{
     /// The unique identifier (within the associated process) for this span.
     pub span_id: SpanId,
 
@@ -413,12 +446,15 @@ pub struct SpanCreateMessage<'a> {
 
     /// Initial attributes attached to the span
     #[serde(borrow)]
-    pub attributes: AttributeListType<'a>,
+    pub attributes: AttributeListType<'a, V>,
 }
 
 #[cfg(feature = "alloc")]
-impl ToStatic for SpanCreateMessage<'_> {
-    type Static = SpanCreateMessage<'static>;
+impl<V> ToStatic for SpanCreateMessage<'_, V>
+where
+    V: ToStatic,
+{
+    type Static = SpanCreateMessage<'static, V::Static>;
 
     fn to_static(&self) -> Self::Static {
         SpanCreateMessage {
@@ -462,19 +498,25 @@ pub struct SpanCloseMessage {
 
 /// Message indicating an attribute has been set on a span.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct SpanSetAttributeMessage<'a> {
+pub struct SpanSetAttributeMessage<'a, V>
+where
+    V: Clone,
+{
     /// The span the attribute is being set on, if [`None`] then this applies to the "current span"
     /// as determined by tracking [`SpanEnterMessage`] and [`SpanExitMessage`] pairs.
     pub span_id: Option<SpanId>,
 
     /// The attribute being set
     #[serde(borrow)]
-    pub attribute: KeyValue<'a>,
+    pub attribute: KeyValue<'a, V>,
 }
 
 #[cfg(feature = "alloc")]
-impl ToStatic for SpanSetAttributeMessage<'_> {
-    type Static = SpanSetAttributeMessage<'static>;
+impl<V> ToStatic for SpanSetAttributeMessage<'_, V>
+where
+    V: ToStatic,
+{
+    type Static = SpanSetAttributeMessage<'static, V::Static>;
 
     fn to_static(&self) -> Self::Static {
         SpanSetAttributeMessage {
@@ -487,7 +529,10 @@ impl ToStatic for SpanSetAttributeMessage<'_> {
 /// Message indicating an event has been added to a span.
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "alloc", derive(Deserialize))]
-pub struct SpanAddEventMessage<'a> {
+pub struct SpanAddEventMessage<'a, V>
+where
+    V: Clone,
+{
     /// The span the event is being added to, if [`None`] then this applies to the "current span"
     /// as determined by tracking [`SpanEnterMessage`] and [`SpanExitMessage`] pairs.
     pub span_id: Option<SpanId>,
@@ -501,12 +546,15 @@ pub struct SpanAddEventMessage<'a> {
 
     /// Attributes providing additional context for the event
     #[serde(borrow)]
-    pub attributes: AttributeListType<'a>,
+    pub attributes: AttributeListType<'a, V>,
 }
 
 #[cfg(feature = "alloc")]
-impl ToStatic for SpanAddEventMessage<'_> {
-    type Static = SpanAddEventMessage<'static>;
+impl<V> ToStatic for SpanAddEventMessage<'_, V>
+where
+    V: ToStatic,
+{
+    type Static = SpanAddEventMessage<'static, V::Static>;
 
     fn to_static(&self) -> Self::Static {
         SpanAddEventMessage {
@@ -530,6 +578,61 @@ pub struct SpanAddLinkMessage {
 
     /// The span context being linked to
     pub link: SpanContext,
+}
+
+/// Type aliases for transient usage (with `format_args!` support).
+///
+/// These aliases use [`TransientValue`](crate::value::TransientValue) which may contain non-Send types like `format_args!`.
+/// Use these for local telemetry operations that don't need to cross thread boundaries.
+pub mod transient {
+    use crate::value::TransientValue;
+
+    /// Key-value pair with transient value (supports `format_args!`).
+    pub type KeyValue<'a> = super::KeyValue<'a, TransientValue<'a>>;
+    /// Attribute list with transient values (supports `format_args!`).
+    pub type AttributeList<'a> = super::AttributeListType<'a, TransientValue<'a>>;
+    /// Instance message with transient values (supports `format_args!`).
+    pub type InstanceMessage<'a> = super::InstanceMessage<'a, TransientValue<'a>>;
+    /// Telemetry message with transient values (supports `format_args!`).
+    pub type TelemetryMessage<'a> = super::TelemetryMessage<'a, TransientValue<'a>>;
+    /// Log message with transient values (supports `format_args!`).
+    pub type LogMessage<'a> = super::LogMessage<'a, TransientValue<'a>>;
+    /// Tracing message with transient values (supports `format_args!`).
+    pub type TracingMessage<'a> = super::TracingMessage<'a, TransientValue<'a>>;
+    /// Span create message with transient values (supports `format_args!`).
+    pub type SpanCreateMessage<'a> = super::SpanCreateMessage<'a, TransientValue<'a>>;
+    /// Span set attribute message with transient values (supports `format_args!`).
+    pub type SpanSetAttributeMessage<'a> = super::SpanSetAttributeMessage<'a, TransientValue<'a>>;
+    /// Span add event message with transient values (supports `format_args!`).
+    pub type SpanAddEventMessage<'a> = super::SpanAddEventMessage<'a, TransientValue<'a>>;
+}
+
+/// Type aliases for owned/sendable usage (IPC, serialization).
+///
+/// These aliases use [`OwnedValue`](crate::value::OwnedValue) which is fully owned and Send-safe.
+/// Use these for telemetry that needs to cross thread boundaries or be serialized.
+#[cfg(feature = "alloc")]
+pub mod owned {
+    use crate::value::OwnedValue;
+
+    /// Key-value pair with owned value (Send-safe, for IPC).
+    pub type KeyValue = super::KeyValue<'static, OwnedValue>;
+    /// Attribute list with owned values (Send-safe, for IPC).
+    pub type AttributeList = super::AttributeListType<'static, OwnedValue>;
+    /// Instance message with owned values (Send-safe, for IPC).
+    pub type InstanceMessage = super::InstanceMessage<'static, OwnedValue>;
+    /// Telemetry message with owned values (Send-safe, for IPC).
+    pub type TelemetryMessage = super::TelemetryMessage<'static, OwnedValue>;
+    /// Log message with owned values (Send-safe, for IPC).
+    pub type LogMessage = super::LogMessage<'static, OwnedValue>;
+    /// Tracing message with owned values (Send-safe, for IPC).
+    pub type TracingMessage = super::TracingMessage<'static, OwnedValue>;
+    /// Span create message with owned values (Send-safe, for IPC).
+    pub type SpanCreateMessage = super::SpanCreateMessage<'static, OwnedValue>;
+    /// Span set attribute message with owned values (Send-safe, for IPC).
+    pub type SpanSetAttributeMessage = super::SpanSetAttributeMessage<'static, OwnedValue>;
+    /// Span add event message with owned values (Send-safe, for IPC).
+    pub type SpanAddEventMessage = super::SpanAddEventMessage<'static, OwnedValue>;
 }
 
 #[cfg(test)]
@@ -595,7 +698,7 @@ mod tests {
     fn string_type_conversions() {
         let static_str: StringType<'static> = "static".into();
 
-        let _event = SpanAddEventMessage {
+        let _event: transient::SpanAddEventMessage = SpanAddEventMessage {
             span_id: Some(SpanId(0)),
             name: static_str,
             time_unix_nano: 0,
@@ -604,7 +707,7 @@ mod tests {
 
         let borrowed_str: StringType = "borrowed".into();
 
-        let _event = SpanAddEventMessage {
+        let _event: transient::SpanAddEventMessage = SpanAddEventMessage {
             span_id: Some(SpanId(0)),
             name: borrowed_str,
             time_unix_nano: 0,
@@ -618,7 +721,7 @@ mod tests {
         let string = String::from("owned");
         let owned: StringType<'static> = StringType::from(string);
 
-        let _event = SpanAddEventMessage {
+        let _event: transient::SpanAddEventMessage = SpanAddEventMessage {
             span_id: Some(SpanId(0)),
             name: owned,
             time_unix_nano: 0,
@@ -631,7 +734,7 @@ mod tests {
     fn to_static_conversion() {
         use alloc::string::String;
 
-        use crate::value::Value;
+        use crate::value::TransientValue;
 
         // Create some data with non-static lifetime
         let borrowed_name_str = "test_span";
@@ -641,7 +744,7 @@ mod tests {
         let owned_value = String::from("test_value");
         let attribute = KeyValue {
             key: owned_key.as_str().into(),
-            value: Value::String(owned_value.as_str().into()),
+            value: TransientValue::String(owned_value.as_str().into()),
         };
 
         let attributes = [attribute];
@@ -659,7 +762,7 @@ mod tests {
             message: telemetry_message,
         };
 
-        let static_message: InstanceMessage<'static> = instance_message.to_static();
+        let static_message: InstanceMessage<'static, _> = instance_message.to_static();
 
         // Verify the conversion worked - the static message should have the same data
         if let TelemetryMessage::Tracing(TracingMessage::AddEvent(span_event)) =

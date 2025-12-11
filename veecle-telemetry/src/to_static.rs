@@ -22,7 +22,7 @@ use alloc::borrow::Cow;
 /// A trait for converting types with lifetime parameters to equivalent types with 'static lifetime.
 pub trait ToStatic: Clone {
     /// The same type but with 'static lifetime and owned data.
-    type Static: 'static + Clone + Send + Sync;
+    type Static: 'static + Clone;
 
     /// Converts this type to the equivalent type with 'static lifetime.
     ///

@@ -10,21 +10,30 @@ use crate::protocol::{
     SpanSetAttributeMessage, TelemetryMessage, ThreadId, TracingMessage,
 };
 
-struct CreateAndParent<'a> {
+struct CreateAndParent<'a, V>
+where
+    V: Clone,
+{
     parent: Option<SpanId>,
-    span_create: SpanCreateMessage<'a>,
+    span_create: SpanCreateMessage<'a, V>,
 }
 
-struct TelemetryData<'a> {
-    spans: Vec<CreateAndParent<'a>>,
+struct TelemetryData<'a, V>
+where
+    V: Clone,
+{
+    spans: Vec<CreateAndParent<'a, V>>,
     links: BTreeMap<Option<SpanId>, Vec<SpanAddLinkMessage>>,
-    attributes: BTreeMap<Option<SpanId>, Vec<SpanSetAttributeMessage<'a>>>,
-    events: BTreeMap<Option<SpanId>, Vec<SpanAddEventMessage<'a>>>,
-    logs: BTreeMap<Option<SpanId>, Vec<LogMessage<'a>>>,
+    attributes: BTreeMap<Option<SpanId>, Vec<SpanSetAttributeMessage<'a, V>>>,
+    events: BTreeMap<Option<SpanId>, Vec<SpanAddEventMessage<'a, V>>>,
+    logs: BTreeMap<Option<SpanId>, Vec<LogMessage<'a, V>>>,
     execution_contexts: BTreeMap<ThreadId, Vec<SpanId>>,
 }
 
-impl TelemetryData<'_> {
+impl<V> TelemetryData<'_, V>
+where
+    V: Clone,
+{
     fn context_for(&mut self, thread_id: ThreadId) -> &mut Vec<SpanId> {
         self.execution_contexts.entry(thread_id).or_default()
     }
@@ -34,7 +43,10 @@ impl TelemetryData<'_> {
     }
 }
 
-pub fn format_telemetry_tree(messages: Vec<InstanceMessage>) -> String {
+pub fn format_telemetry_tree<V>(messages: Vec<InstanceMessage<V>>) -> String
+where
+    V: Clone + core::fmt::Display,
+{
     let mut telemetry_data = TelemetryData {
         spans: Vec::new(),
         events: BTreeMap::new(),
@@ -105,9 +117,10 @@ pub fn format_telemetry_tree(messages: Vec<InstanceMessage>) -> String {
     result
 }
 
-fn format_attributes<'a, I>(attrs: I, result: &mut String)
+fn format_attributes<'a, I, V>(attrs: I, result: &mut String)
 where
-    I: Iterator<Item = &'a crate::value::KeyValue<'a>>,
+    I: Iterator<Item = &'a crate::value::KeyValue<'a, V>>,
+    V: core::fmt::Display + 'a,
 {
     for (i, attr) in attrs.enumerate() {
         if i > 0 {
@@ -117,12 +130,14 @@ where
     }
 }
 
-fn build_tree_string(
-    data: &TelemetryData,
+fn build_tree_string<V>(
+    data: &TelemetryData<V>,
     parent_span_id: Option<SpanId>,
     depth: usize,
     result: &mut String,
-) {
+) where
+    V: Clone + core::fmt::Display,
+{
     // Find the span with the given `parent_span_id`.
     for span in data
         .spans

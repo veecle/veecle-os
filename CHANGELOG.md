@@ -17,6 +17,9 @@
 
 ## Veecle Telemetry
 
+* **breaking** Telemetry protocol types (`InstanceMessage`, `TelemetryMessage`, `LogMessage`, etc.) are now generic over value types to support formatting in `no_std` environments.
+  Use `transient::*` type aliases for local telemetry operations (supports `format_args!`) and `owned::*` aliases for deserialization and cross-thread communication.
+  The `Export` trait now accepts `transient::InstanceMessage<'_>` instead of `InstanceMessage<'_>`.
 * Added `ConsolePrettyExporter` for pretty printed telemetry output for non-production use-cases.
 
 ## Veecle Telemetry VSCode Extension

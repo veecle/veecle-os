@@ -1,17 +1,17 @@
 use tokio::sync::mpsc;
 use veecle_telemetry::collector::Export;
-use veecle_telemetry::protocol::InstanceMessage;
+use veecle_telemetry::protocol::{owned, transient};
 use veecle_telemetry::to_static::ToStatic;
 
 /// An [`Export`] implementer that forwards telemetry messages via IPC.
 #[derive(Debug)]
 pub struct Exporter {
-    sender: mpsc::Sender<InstanceMessage<'static>>,
+    sender: mpsc::Sender<owned::InstanceMessage>,
 }
 
 impl Exporter {
     /// Creates a new IPC telemetry exporter.
-    pub fn new(sender: mpsc::Sender<InstanceMessage<'static>>) -> Self {
+    pub fn new(sender: mpsc::Sender<owned::InstanceMessage>) -> Self {
         Self { sender }
     }
 }
@@ -22,7 +22,7 @@ impl Export for Exporter {
     /// This method converts the telemetry message to a static lifetime
     /// and sends it through the IPC channel. If the channel is full or closed,
     /// the message is dropped to avoid blocking telemetry collection.
-    fn export(&self, message: InstanceMessage<'_>) {
+    fn export(&self, message: transient::InstanceMessage<'_>) {
         let _ = self.sender.try_send(message.to_static());
     }
 }
@@ -33,9 +33,7 @@ mod tests {
     use core::num::NonZeroU64;
     use tokio::sync::mpsc;
     use veecle_telemetry::collector::Export;
-    use veecle_telemetry::protocol::{
-        InstanceMessage, LogMessage, ProcessId, Severity, TelemetryMessage, ThreadId,
-    };
+    use veecle_telemetry::protocol::{ProcessId, Severity, ThreadId, owned, transient};
 
     use super::Exporter;
 
@@ -47,9 +45,9 @@ mod tests {
         let (sender, mut receiver) = mpsc::channel(1);
         let exporter = Exporter::new(sender);
 
-        let test_message = InstanceMessage {
+        let test_message = transient::InstanceMessage {
             thread_id: THREAD_ID,
-            message: TelemetryMessage::Log(LogMessage {
+            message: transient::TelemetryMessage::Log(transient::LogMessage {
                 time_unix_nano: 1000000000,
                 severity: Severity::Info,
                 body: "test log message".into(),
@@ -62,7 +60,7 @@ mod tests {
         let message = receiver.recv().await.expect("should receive message");
         assert_eq!(message.thread_id, THREAD_ID);
         match message.message {
-            TelemetryMessage::Log(message) => {
+            owned::TelemetryMessage::Log(message) => {
                 assert_eq!(message.time_unix_nano, 1000000000);
                 assert_eq!(message.severity, Severity::Info);
                 assert_eq!(message.body.as_ref(), "test log message");
@@ -78,9 +76,9 @@ mod tests {
 
         drop(receiver);
 
-        let test_message = InstanceMessage {
+        let test_message = transient::InstanceMessage {
             thread_id: THREAD_ID,
-            message: TelemetryMessage::Log(LogMessage {
+            message: transient::TelemetryMessage::Log(transient::LogMessage {
                 time_unix_nano: 2000000000,
                 severity: Severity::Error,
                 body: "error log message".into(),

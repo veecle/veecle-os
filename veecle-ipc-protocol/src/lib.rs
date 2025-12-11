@@ -7,7 +7,7 @@ use std::borrow::Cow;
 use tokio_util::bytes::BytesMut;
 use tokio_util::codec::{Decoder, Encoder, LinesCodec, LinesCodecError};
 pub use uuid::Uuid;
-use veecle_telemetry::to_static::ToStatic;
+use veecle_telemetry::protocol::owned;
 
 /// Priority level for a runtime process.
 #[derive(Clone, Copy, Debug, Default, serde::Deserialize, serde::Serialize)]
@@ -61,13 +61,13 @@ pub enum ControlResponse {
 
 /// A message between a runtime instance and the `veecle-orchestrator`.
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub enum Message<'a> {
+pub enum Message {
     /// A data value going between the local instance and another runtime instance (both input and output).
     Storable(EncodedStorable),
 
     /// A telemetry message from `veecle-telemetry` system.
-    #[serde(borrow)]
-    Telemetry(veecle_telemetry::protocol::InstanceMessage<'a>),
+    #[serde(deserialize_with = "deserialize_instance_message")]
+    Telemetry(owned::InstanceMessage),
 
     /// A control request sent from a runtime to the orchestrator.
     ControlRequest(ControlRequest),
@@ -76,16 +76,21 @@ pub enum Message<'a> {
     ControlResponse(ControlResponse),
 }
 
-impl<'a> Message<'a> {
-    /// Converts this message to have a static lifetime.
-    pub fn to_static(self) -> Message<'static> {
-        match self {
-            Message::Storable(storable) => Message::Storable(storable),
-            Message::Telemetry(message) => Message::Telemetry(message.to_static()),
-            Message::ControlRequest(request) => Message::ControlRequest(request),
-            Message::ControlResponse(response) => Message::ControlResponse(response),
-        }
-    }
+/// Deserializes into a fully owned [`owned::InstanceMessage`].
+///
+/// This is necessary to avoid lifetimes in `Message` from the `Cow` inside `InstanceMessage`.
+///
+/// TODO(#185): should not be needed once #185 is implemented.
+fn deserialize_instance_message<'de, D>(deserializer: D) -> Result<owned::InstanceMessage, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::Deserialize;
+    use veecle_telemetry::protocol::InstanceMessage;
+    use veecle_telemetry::to_static::ToStatic;
+    use veecle_telemetry::value::OwnedValue;
+
+    InstanceMessage::<OwnedValue>::deserialize(deserializer).map(|message| message.to_static())
 }
 
 /// A data value going between the local instance and another runtime instance (both input and output).
@@ -152,29 +157,25 @@ impl Codec {
 }
 
 impl Decoder for Codec {
-    type Item = Message<'static>;
+    type Item = Message;
     type Error = CodecError;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
         let Some(line) = self.lines.decode(src)? else {
             return Ok(None);
         };
-        Ok(Some(
-            serde_json::from_str::<Message>(&line).map(|message| message.to_static())?,
-        ))
+        Ok(Some(serde_json::from_str::<Message>(&line)?))
     }
 
     fn decode_eof(&mut self, buffer: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
         let Some(line) = self.lines.decode_eof(buffer)? else {
             return Ok(None);
         };
-        Ok(Some(
-            serde_json::from_str::<Message>(&line).map(|message| message.to_static())?,
-        ))
+        Ok(Some(serde_json::from_str::<Message>(&line)?))
     }
 }
 
-impl Encoder<&Message<'_>> for Codec {
+impl Encoder<&Message> for Codec {
     type Error = CodecError;
 
     fn encode(&mut self, item: &Message, dst: &mut BytesMut) -> Result<(), Self::Error> {
