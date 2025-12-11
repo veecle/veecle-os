@@ -92,6 +92,16 @@ fn selection_content_ui(
 fn span_details_ui(ui: &mut egui::Ui, selection_state: &SelectionState, span: SpanRef) {
     metadata_details_ui(ui, &span.metadata);
 
+    collapsing_grid_ui(ui, "Context", |ui| {
+        ui.label("Thread");
+        ui.monospace(format!("{}", span.thread_id));
+        ui.end_row();
+
+        ui.label("Actor");
+        ui.monospace(&span.actor);
+        ui.end_row();
+    });
+
     collapsing_grid_ui(ui, "Fields", |ui| {
         for (key, value) in span.fields.iter() {
             ui.monospace(key);
@@ -168,6 +178,16 @@ fn span_details_ui(ui: &mut egui::Ui, selection_state: &SelectionState, span: Sp
 
 fn log_details_ui(ui: &mut egui::Ui, selection_state: &SelectionState, log: LogRef) {
     metadata_details_ui(ui, &log.metadata);
+
+    collapsing_grid_ui(ui, "Context", |ui| {
+        ui.label("Thread");
+        ui.monospace(format!("{}", log.thread_id));
+        ui.end_row();
+
+        ui.label("Actor");
+        ui.monospace(&log.actor);
+        ui.end_row();
+    });
 
     collapsing_grid_ui(ui, "Fields", |ui| {
         for (key, value) in log.fields.iter() {
