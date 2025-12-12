@@ -2,13 +2,13 @@ use alloc::collections::BTreeMap;
 use alloc::format;
 use alloc::string::String;
 use alloc::vec::Vec;
+use core::fmt::Write;
 
 use crate::SpanId;
 use crate::protocol::{
     InstanceMessage, LogMessage, SpanAddEventMessage, SpanAddLinkMessage, SpanCreateMessage,
     SpanSetAttributeMessage, TelemetryMessage, ThreadId, TracingMessage,
 };
-use crate::value::Value;
 
 struct CreateAndParent<'a> {
     parent: Option<SpanId>,
@@ -105,25 +105,6 @@ pub fn format_telemetry_tree(messages: Vec<InstanceMessage>) -> String {
     result
 }
 
-fn format_attribute_value(value: &Value, result: &mut String) {
-    match value {
-        Value::String(s) => {
-            result.push('"');
-            result.push_str(s);
-            result.push('"');
-        }
-        Value::Bool(b) => {
-            result.push_str(&format!("{b}"));
-        }
-        Value::I64(i) => {
-            result.push_str(&format!("{i}"));
-        }
-        Value::F64(f) => {
-            result.push_str(&format!("{f}"));
-        }
-    }
-}
-
 fn format_attributes<'a, I>(attrs: I, result: &mut String)
 where
     I: Iterator<Item = &'a crate::value::KeyValue<'a>>,
@@ -132,9 +113,7 @@ where
         if i > 0 {
             result.push_str(", ");
         }
-        result.push_str(&attr.key);
-        result.push('=');
-        format_attribute_value(&attr.value, result);
+        write!(result, "{attr}").unwrap();
     }
 }
 
@@ -169,11 +148,7 @@ fn build_tree_string(
                 for _ in 0..=depth {
                     result.push_str("    ");
                 }
-                result.push_str("+ attr: ");
-                result.push_str(&attr_msg.attribute.key);
-                result.push('=');
-                format_attribute_value(&attr_msg.attribute.value, result);
-                result.push('\n');
+                writeln!(result, "+ attr: {}", attr_msg.attribute).unwrap();
             }
         }
 

@@ -224,13 +224,13 @@ fn span_property() {
     assert_eq!(
         graph,
         indoc! {r#"
-            root [k1="v1", k2=2]
-                + attr: k3="v3"
-                + attr: k4="v4"
-                + attr: k5=5
+            root [k1: "v1", k2: 2]
+                + attr: k3: "v3"
+                + attr: k4: "v4"
+                + attr: k5: 5
                 span []
-                    + attr: k6="v6"
-                    + attr: k7=7
+                    + attr: k6: "v6"
+                    + attr: k7: 7
         "#}
     );
 }
@@ -289,13 +289,13 @@ fn current_span_integration() {
         graph,
         indoc! {r#"
             root []
-                + attr: runtime_attr="added_later"
+                + attr: runtime_attr: "added_later"
                 + link: span=0000000000000000123456789abcdef0:fedcba9876543210
-                + event: test_event [event_key="event_value", event_num=42]
-                child [child_attr=true]
-                    + attr: child_runtime_attr=100
+                + event: test_event [event_key: "event_value", event_num: 42]
+                child [child_attr: true]
+                    + attr: child_runtime_attr: 100
                     + link: span=00000000000000001111111111111111:2222222222222222
-                    + event: child_event [child_event_data="nested"]
+                    + event: child_event [child_event_data: "nested"]
         "#}
     );
 }
@@ -355,9 +355,9 @@ fn log_with_attributes() {
     assert_eq!(
         graph,
         indoc! {r#"
-            + log: [Debug] debug message [key1="value1", key2=42]
+            + log: [Debug] debug message [key1: "value1", key2: 42]
             + log: [Info] info message []
-            + log: [Warn] warning message [error_code=404]
+            + log: [Warn] warning message [error_code: 404]
         "#}
     );
 }
@@ -378,7 +378,7 @@ fn log_attribute_syntax_variations() {
     assert_eq!(
         graph,
         indoc! {r#"
-            + log: [Info] test identifier [my_var="test_value"]
+            + log: [Info] test identifier [my_var: "test_value"]
         "#}
     );
 
@@ -392,7 +392,7 @@ fn log_attribute_syntax_variations() {
     assert_eq!(
         graph,
         indoc! {"
-            + log: [Warn] test literal key [literal_key=123]
+            + log: [Warn] test literal key [literal_key: 123]
         "}
     );
 }
@@ -435,18 +435,18 @@ fn test_trailing_comma_support() {
     assert_eq!(
         graph,
         indoc! {r#"
-            test span [span_attr="value"]
-            test span [span_attr="value"]
+            test span [span_attr: "value"]
+            test span [span_attr: "value"]
             empty span []
             empty span []
             + log: [Trace] empty log []
             + log: [Trace] empty log []
-            + log: [Info] single attr [value=1]
-            + log: [Info] single attr [value=1]
-            + log: [Debug] multiple attrs [key1="val1", key2=42]
-            + log: [Debug] multiple attrs [key1="val1", key2=42]
-            + log: [Warn] mixed syntax [identifier="test", literal=true]
-            + log: [Warn] mixed syntax [identifier="test", literal=true]
+            + log: [Info] single attr [value: 1]
+            + log: [Info] single attr [value: 1]
+            + log: [Debug] multiple attrs [key1: "val1", key2: 42]
+            + log: [Debug] multiple attrs [key1: "val1", key2: 42]
+            + log: [Warn] mixed syntax [identifier: "test", literal: true]
+            + log: [Warn] mixed syntax [identifier: "test", literal: true]
         "#}
     );
 }
