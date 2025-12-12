@@ -55,6 +55,7 @@ use crate::SpanContext;
 use crate::collector::get_collector;
 #[cfg(feature = "enable")]
 use crate::id::SpanId;
+use crate::protocol::transient;
 #[cfg(feature = "enable")]
 use crate::protocol::{
     SpanAddEventMessage, SpanAddLinkMessage, SpanCloseMessage, SpanCreateMessage, SpanEnterMessage,
@@ -62,7 +63,6 @@ use crate::protocol::{
 };
 #[cfg(feature = "enable")]
 use crate::time::now;
-use crate::value::KeyValue;
 
 /// A distributed tracing span representing a unit of work.
 ///
@@ -72,12 +72,12 @@ use crate::value::KeyValue;
 /// # Examples
 ///
 /// ```rust
-/// use veecle_telemetry::{KeyValue, Span, Value};
+/// use veecle_telemetry::{KeyValue, Span, TransientValue};
 ///
 /// // Create a span with attributes
 /// let span = Span::new("database_query", &[
-///     KeyValue::new("table", Value::String("users".into())),
-///     KeyValue::new("operation", Value::String("SELECT".into())),
+///     KeyValue::new("table", TransientValue::String("users".into())),
+///     KeyValue::new("operation", TransientValue::String("SELECT".into())),
 /// ]);
 ///
 /// // Enter the span to make it active
@@ -143,11 +143,11 @@ impl Span {
     /// # Examples
     ///
     /// ```rust
-    /// use veecle_telemetry::{KeyValue, Span, Value};
+    /// use veecle_telemetry::{KeyValue, Span, TransientValue};
     ///
-    /// let span = Span::new("operation", &[KeyValue::new("user_id", Value::I64(123))]);
+    /// let span = Span::new("operation", &[KeyValue::new("user_id", TransientValue::I64(123))]);
     /// ```
-    pub fn new(name: &'static str, attributes: &'_ [KeyValue<'static>]) -> Self {
+    pub fn new(name: &'static str, attributes: &'_ [transient::KeyValue<'static>]) -> Self {
         #[cfg(not(feature = "enable"))]
         {
             let _ = (name, attributes);
@@ -253,13 +253,13 @@ impl Span {
     /// # Examples
     ///
     /// ```rust
-    /// use veecle_telemetry::{KeyValue, Span, Value};
+    /// use veecle_telemetry::{KeyValue, Span, TransientValue};
     ///
     /// let span = Span::new("database_query", &[]);
     /// span.add_event("query_started", &[]);
-    /// span.add_event("query_completed", &[KeyValue::new("rows_returned", Value::I64(42))]);
+    /// span.add_event("query_completed", &[KeyValue::new("rows_returned", TransientValue::I64(42))]);
     /// ```
-    pub fn add_event(&self, name: &'static str, attributes: &'_ [KeyValue<'static>]) {
+    pub fn add_event(&self, name: &'static str, attributes: &'_ [transient::KeyValue<'static>]) {
         #[cfg(not(feature = "enable"))]
         {
             let _ = (name, attributes);
@@ -321,13 +321,13 @@ impl Span {
     /// # Examples
     ///
     /// ```rust
-    /// use veecle_telemetry::{KeyValue, Span, Value};
+    /// use veecle_telemetry::{KeyValue, Span, TransientValue};
     ///
     /// let span = Span::new("user_operation", &[]);
-    /// span.set_attribute(KeyValue::new("user_id", Value::I64(123)));
-    /// span.set_attribute(KeyValue::new("operation_type", Value::String("update".into())));
+    /// span.set_attribute(KeyValue::new("user_id", TransientValue::I64(123)));
+    /// span.set_attribute(KeyValue::new("operation_type", TransientValue::String("update".into())));
     /// ```
-    pub fn set_attribute(&self, attribute: KeyValue<'static>) {
+    pub fn set_attribute(&self, attribute: transient::KeyValue<'static>) {
         #[cfg(not(feature = "enable"))]
         {
             let _ = attribute;
@@ -358,13 +358,13 @@ impl CurrentSpan {
     /// # Examples
     ///
     /// ```rust
-    /// use veecle_telemetry::{CurrentSpan, KeyValue, Value, span};
+    /// use veecle_telemetry::{CurrentSpan, KeyValue, TransientValue, span};
     ///
     /// let _guard = span!("operation").entered();
     /// CurrentSpan::add_event("checkpoint", &[]);
     /// CurrentSpan::add_event("milestone", &[KeyValue::new("progress", 75)]);
     /// ```
-    pub fn add_event(name: &'static str, attributes: &'_ [KeyValue<'static>]) {
+    pub fn add_event(name: &'static str, attributes: &'_ [transient::KeyValue<'static>]) {
         #[cfg(not(feature = "enable"))]
         {
             let _ = (name, attributes);
@@ -423,13 +423,13 @@ impl CurrentSpan {
     /// # Examples
     ///
     /// ```rust
-    /// use veecle_telemetry::{CurrentSpan, KeyValue, Value, span};
+    /// use veecle_telemetry::{CurrentSpan, KeyValue, TransientValue, span};
     ///
     /// let _guard = span!("operation").entered();
     /// CurrentSpan::set_attribute(KeyValue::new("user_id", 123));
     /// CurrentSpan::set_attribute(KeyValue::new("status", "success"));
     /// ```
-    pub fn set_attribute(attribute: KeyValue<'static>) {
+    pub fn set_attribute(attribute: transient::KeyValue<'static>) {
         #[cfg(not(feature = "enable"))]
         {
             let _ = attribute;
@@ -447,7 +447,7 @@ impl CurrentSpan {
 
 #[cfg(feature = "enable")]
 impl Span {
-    fn new_inner(name: &'static str, attributes: &'_ [KeyValue<'static>]) -> Self {
+    fn new_inner(name: &'static str, attributes: &'_ [transient::KeyValue<'static>]) -> Self {
         let span_id = SpanId::next_id();
 
         get_collector().new_span(SpanCreateMessage {
@@ -622,7 +622,7 @@ unsafe impl Sync for PhantomNotSend {}
 #[cfg(all(test, feature = "std"))]
 mod tests {
     use super::*;
-    use crate::{ProcessId, SpanContext, SpanId};
+    use crate::{KeyValue, ProcessId, SpanContext, SpanId};
 
     #[test]
     fn span_noop() {
@@ -648,6 +648,8 @@ mod tests {
 
     #[test]
     fn span_event() {
+        use crate::KeyValue;
+
         let span = Span::new("test_span", &[]);
 
         let event_attributes = [KeyValue::new("event_key", "event_value")];

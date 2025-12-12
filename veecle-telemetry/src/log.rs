@@ -23,10 +23,10 @@
 //! });
 //! ```
 
-use crate::KeyValue;
 #[cfg(feature = "enable")]
 use crate::collector::get_collector;
 use crate::protocol::Severity;
+use crate::protocol::transient;
 #[cfg(feature = "enable")]
 use crate::protocol::{LogMessage, attribute_list_from_slice};
 #[cfg(feature = "enable")]
@@ -52,7 +52,7 @@ use crate::time::now;
 /// ```rust
 /// use veecle_telemetry::log::log;
 /// use veecle_telemetry::protocol::Severity;
-/// use veecle_telemetry::{KeyValue, Value, span};
+/// use veecle_telemetry::{KeyValue, TransientValue, span};
 ///
 /// // Simple log message
 /// log(Severity::Info, "Server started", &[]);
@@ -74,7 +74,7 @@ use crate::time::now;
 /// When the `enable` feature is disabled, this function compiles to a no-op
 /// and has zero runtime overhead.
 #[doc(hidden)]
-pub fn log(severity: Severity, body: &'static str, attributes: &'_ [KeyValue<'static>]) {
+pub fn log(severity: Severity, body: &str, attributes: &'_ [transient::KeyValue<'_>]) {
     #[cfg(not(feature = "enable"))]
     {
         let _ = (severity, body, attributes);

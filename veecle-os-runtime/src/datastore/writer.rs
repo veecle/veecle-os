@@ -129,14 +129,11 @@ where
             self.ready().await;
             self.waiter.update_generation();
 
-            let type_name = self.slot.inner_type_name();
-
             self.slot.modify(
                 |value| {
                     f(value);
 
-                    // TODO(DEV-532): add debug format
-                    veecle_telemetry::trace!("Slot modified", type_name);
+                    veecle_telemetry::trace!("Slot modified", value = format_args!("{value:?}"));
                 },
                 span_context,
             );
@@ -151,11 +148,11 @@ where
     /// This method takes a closure to ensure the reference is not held across await points.
     #[veecle_telemetry::instrument]
     pub fn read<U>(&self, f: impl FnOnce(Option<&T::DataType>) -> U) -> U {
-        let type_name = self.slot.inner_type_name();
         self.slot.read(|value| {
             let value = value.as_ref();
-            // TODO(DEV-532): add debug format
-            veecle_telemetry::trace!("Slot read", type_name);
+
+            veecle_telemetry::trace!("Slot read", value = format_args!("{value:?}"));
+
             f(value)
         })
     }

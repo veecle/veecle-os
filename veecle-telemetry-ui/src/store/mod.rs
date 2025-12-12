@@ -12,10 +12,10 @@ use anyhow::Context;
 use egui::Color32;
 use indexmap::{IndexMap, IndexSet};
 use serde::{Deserialize, Serialize};
-use veecle_telemetry::protocol::{
-    InstanceMessage, ProcessId, TelemetryMessage, ThreadId, TracingMessage,
-};
-use veecle_telemetry::{SpanContext, SpanId as TelemetrySpanId, Value as TelemetryValue};
+use veecle_telemetry::protocol::owned::{LogMessage, TracingMessage};
+use veecle_telemetry::protocol::{ProcessId, ThreadId, owned};
+use veecle_telemetry::value::OwnedValue as TelemetryValue;
+use veecle_telemetry::{SpanContext, SpanId as TelemetrySpanId};
 #[cfg(target_arch = "wasm32")]
 use web_time::Instant;
 
@@ -123,9 +123,13 @@ impl Store {
             return Ok(());
         }
 
-        let message: InstanceMessage =
+        use veecle_telemetry::protocol::InstanceMessage;
+        use veecle_telemetry::to_static::ToStatic;
+        use veecle_telemetry::value::OwnedValue;
+
+        let message: InstanceMessage<OwnedValue> =
             serde_json::from_str(line).context("parsing instance message")?;
-        self.process_message(message);
+        self.process_message(message.to_static());
 
         Ok(())
     }
@@ -178,24 +182,24 @@ impl Store {
     /// Processes a single message from a trace file.
     ///
     /// Can also be used to process streaming data live.
-    pub fn process_message(&mut self, instance_message: InstanceMessage) {
+    pub fn process_message(&mut self, instance_message: owned::InstanceMessage) {
         // ensure the program span is inserted.
         self.ensure_program_span();
 
-        let InstanceMessage {
+        let owned::InstanceMessage {
             // TODO(DEV-605): support filtering by thread.
             thread_id: thread,
             message,
         } = instance_message;
 
         match message {
-            TelemetryMessage::Tracing(tracing_msg) => {
+            owned::TelemetryMessage::Tracing(tracing_msg) => {
                 self.process_tracing_message(thread, tracing_msg);
             }
-            TelemetryMessage::Log(log_msg) => {
+            owned::TelemetryMessage::Log(log_msg) => {
                 self.process_log_message(thread, log_msg);
             }
-            TelemetryMessage::TimeSync(_) => {
+            owned::TelemetryMessage::TimeSync(_) => {
                 // TODO(DEV-601): handle these messages.
             }
         }
@@ -430,11 +434,7 @@ impl Store {
     }
 
     /// Processes a single log message.
-    fn process_log_message(
-        &mut self,
-        thread_id: ThreadId,
-        log_msg: veecle_telemetry::protocol::LogMessage,
-    ) {
+    fn process_log_message(&mut self, thread_id: ThreadId, log_msg: LogMessage) {
         let timestamp = self.update_timestamp(log_msg.time_unix_nano);
 
         // Find the span this log belongs to, or use the program span.
@@ -670,10 +670,10 @@ impl std::fmt::Display for Value {
     }
 }
 
-impl From<TelemetryValue<'_>> for Value {
+impl From<TelemetryValue> for Value {
     fn from(value: TelemetryValue) -> Self {
         match value {
-            TelemetryValue::String(s) => Value::Str(s.as_ref().to_string()),
+            TelemetryValue::String(s) => Value::Str(s),
             TelemetryValue::Bool(b) => Value::Bool(b),
             TelemetryValue::I64(i) => Value::I64(i),
             TelemetryValue::F64(f) => Value::F64(f),

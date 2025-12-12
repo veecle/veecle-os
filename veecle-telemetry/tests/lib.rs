@@ -23,10 +23,11 @@ mod exporter {
 
     use veecle_telemetry::collector::{ProcessId, TestExporter};
     use veecle_telemetry::protocol::InstanceMessage;
+    use veecle_telemetry::value::OwnedValue;
 
     /// Initializes the lazy lock which sets the exporter.
     pub fn set_exporter() -> ExporterHandle {
-        static EXPORTER: LazyLock<Arc<Mutex<Vec<InstanceMessage<'static>>>>> =
+        static EXPORTER: LazyLock<Arc<Mutex<Vec<InstanceMessage<'static, OwnedValue>>>>> =
             LazyLock::new(|| {
                 let (reporter, collected_spans) = TestExporter::new();
 
@@ -45,11 +46,11 @@ mod exporter {
     }
 
     pub struct ExporterHandle {
-        message_buffer: Arc<Mutex<Vec<InstanceMessage<'static>>>>,
+        message_buffer: Arc<Mutex<Vec<InstanceMessage<'static, OwnedValue>>>>,
     }
 
     impl ExporterHandle {
-        pub fn take_messages(&self) -> Vec<InstanceMessage<'static>> {
+        pub fn take_messages(&self) -> Vec<InstanceMessage<'static, OwnedValue>> {
             self.message_buffer.lock().unwrap().drain(..).collect()
         }
     }
@@ -394,6 +395,23 @@ fn log_attribute_syntax_variations() {
         indoc! {"
             + log: [Warn] test literal key [literal_key: 123]
         "}
+    );
+}
+
+#[test]
+#[serial]
+fn formatted_attributes() {
+    let exporter = set_exporter();
+
+    let orange = "orange";
+    veecle_telemetry::info!("message", ferris = format_args!("red or {orange}"));
+
+    let graph = format_telemetry_tree(exporter.take_messages());
+    assert_eq!(
+        graph,
+        indoc! {r#"
+            + log: [Info] message [ferris: "red or orange"]
+        "#}
     );
 }
 

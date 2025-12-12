@@ -44,39 +44,14 @@ pub async fn ticker_reader(mut reader: InitializedReader<'_, Tick>) -> Infallibl
             .wait_for_update()
             .await
             .read(|&Tick { at: tick_at }| {
-                info!(
-                    "last tick was at",
-                    tick_at = {
-                        // TODO(DEV-532): write a formatted string without `alloc`.
-                        #[cfg(feature = "alloc")]
-                        {
-                            alloc::format!("{tick_at:?}")
-                        }
-                        #[cfg(not(feature = "alloc"))]
-                        {
-                            i64::try_from(tick_at.duration_since(Instant::MIN).unwrap().as_millis())
-                                .unwrap()
-                        }
-                    }
-                );
+                info!("last tick was at", tick_at = format_args!("{tick_at:?}"));
+
                 if let Some(previous) = previous
                     && let Some(elapsed) = tick_at.duration_since(previous)
                 {
-                    let _ = elapsed;
-                    info!(
-                        "since last tick",
-                        elapsed = {
-                            #[cfg(feature = "alloc")]
-                            {
-                                alloc::format!("{elapsed:?}")
-                            }
-                            #[cfg(not(feature = "alloc"))]
-                            {
-                                i64::try_from(elapsed.as_millis()).unwrap()
-                            }
-                        }
-                    );
+                    info!("since last tick", elapsed = format_args!("{elapsed:?}"));
                 }
+
                 if previous
                     .replace(tick_at)
                     .and_then(|previous| tick_at.duration_since(previous))

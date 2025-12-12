@@ -42,14 +42,13 @@ pub use pretty_exporter::ConsolePrettyExporter;
 #[doc(hidden)]
 pub use test_exporter::TestExporter;
 
-use crate::protocol::InstanceMessage;
 #[cfg(feature = "enable")]
 pub use crate::protocol::ProcessId;
+use crate::protocol::transient;
 #[cfg(feature = "enable")]
 use crate::protocol::{
-    LogMessage, SpanAddEventMessage, SpanAddLinkMessage, SpanCloseMessage, SpanCreateMessage,
-    SpanEnterMessage, SpanExitMessage, SpanSetAttributeMessage, TelemetryMessage, ThreadId,
-    TracingMessage,
+    SpanAddLinkMessage, SpanCloseMessage, SpanEnterMessage, SpanExitMessage, TelemetryMessage,
+    ThreadId, TracingMessage,
 };
 
 /// Trait for exporting telemetry data to external systems.
@@ -61,13 +60,13 @@ use crate::protocol::{
 ///
 /// ```rust
 /// use veecle_telemetry::collector::Export;
-/// use veecle_telemetry::protocol::InstanceMessage;
+/// use veecle_telemetry::protocol::transient;
 ///
 /// #[derive(Debug)]
 /// struct CustomExporter;
 ///
 /// impl Export for CustomExporter {
-///     fn export(&self, message: InstanceMessage<'_>) {
+///     fn export(&self, message: transient::InstanceMessage<'_>) {
 ///         // Custom export logic here
 ///         println!("Exporting: {:?}", message);
 ///     }
@@ -78,7 +77,7 @@ pub trait Export: Debug {
     ///
     /// This method is called for each telemetry message that needs to be exported.
     /// The implementation should handle the message appropriately based on its type.
-    fn export(&self, message: InstanceMessage<'_>);
+    fn export(&self, message: transient::InstanceMessage<'_>);
 }
 
 /// The global telemetry collector.
@@ -109,7 +108,7 @@ struct NopExporter;
 
 #[cfg(feature = "enable")]
 impl Export for NopExporter {
-    fn export(&self, _: InstanceMessage) {}
+    fn export(&self, _: transient::InstanceMessage) {}
 }
 
 // The GLOBAL_COLLECTOR static holds a pointer to the global exporter. It is protected by
@@ -268,12 +267,12 @@ impl Collector {
     /// collector.collect_external(message);
     /// ```
     #[inline]
-    pub fn collect_external(&self, message: InstanceMessage<'_>) {
+    pub fn collect_external(&self, message: transient::InstanceMessage<'_>) {
         self.inner.exporter.export(message);
     }
 
     #[inline]
-    pub(crate) fn new_span(&self, span: SpanCreateMessage<'_>) {
+    pub(crate) fn new_span(&self, span: transient::SpanCreateMessage<'_>) {
         self.tracing_message(TracingMessage::CreateSpan(span));
     }
 
@@ -293,7 +292,7 @@ impl Collector {
     }
 
     #[inline]
-    pub(crate) fn span_event(&self, event: SpanAddEventMessage<'_>) {
+    pub(crate) fn span_event(&self, event: transient::SpanAddEventMessage<'_>) {
         self.tracing_message(TracingMessage::AddEvent(event));
     }
 
@@ -303,12 +302,13 @@ impl Collector {
     }
 
     #[inline]
-    pub(crate) fn span_attribute(&self, attribute: SpanSetAttributeMessage<'_>) {
+    pub(crate) fn span_attribute(&self, attribute: transient::SpanSetAttributeMessage<'_>) {
         self.tracing_message(TracingMessage::SetAttribute(attribute));
     }
 
     #[inline]
-    pub(crate) fn log_message(&self, log: LogMessage<'_>) {
+    pub(crate) fn log_message(&self, log: transient::LogMessage<'_>) {
+        use crate::protocol::InstanceMessage;
         self.inner.exporter.export(InstanceMessage {
             thread_id: ThreadId::current(self.inner.process_id),
             message: TelemetryMessage::Log(log),
@@ -316,7 +316,8 @@ impl Collector {
     }
 
     #[inline]
-    fn tracing_message(&self, message: TracingMessage<'_>) {
+    fn tracing_message(&self, message: transient::TracingMessage<'_>) {
+        use crate::protocol::InstanceMessage;
         self.inner.exporter.export(InstanceMessage {
             thread_id: ThreadId::current(self.inner.process_id),
             message: TelemetryMessage::Tracing(message),

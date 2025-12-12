@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 use std::vec::Vec;
 
 use super::Export;
-use crate::protocol::InstanceMessage;
+use crate::protocol::owned;
 use crate::to_static::ToStatic;
 
 /// An exporter for testing that stores all telemetry messages in memory.
@@ -12,7 +12,7 @@ use crate::to_static::ToStatic;
 #[derive(Debug)]
 pub struct TestExporter {
     /// Shared vector storing all exported telemetry messages
-    pub spans: Arc<Mutex<Vec<InstanceMessage<'static>>>>,
+    pub spans: Arc<Mutex<Vec<owned::InstanceMessage>>>,
 }
 
 impl TestExporter {
@@ -30,7 +30,7 @@ impl TestExporter {
     /// // Use exporter for telemetry collection
     /// // Check messages for verification
     /// ```
-    pub fn new() -> (Self, Arc<Mutex<Vec<InstanceMessage<'static>>>>) {
+    pub fn new() -> (Self, Arc<Mutex<Vec<owned::InstanceMessage>>>) {
         let spans = Arc::new(Mutex::new(Vec::new()));
         (
             Self {
@@ -42,7 +42,7 @@ impl TestExporter {
 }
 
 impl Export for TestExporter {
-    fn export(&self, message: InstanceMessage<'_>) {
+    fn export(&self, message: crate::protocol::transient::InstanceMessage<'_>) {
         self.spans.lock().unwrap().push(message.to_static());
     }
 }

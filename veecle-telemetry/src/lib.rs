@@ -113,5 +113,7 @@ pub mod value;
 
 pub use id::{ProcessId, SpanContext, SpanId};
 pub use span::{CurrentSpan, Span, SpanGuard, SpanGuardRef};
-pub use value::{KeyValue, Value};
+#[cfg(feature = "alloc")]
+pub use value::OwnedValue;
+pub use value::{KeyValue, TransientValue};
 pub use veecle_telemetry_macros::instrument;

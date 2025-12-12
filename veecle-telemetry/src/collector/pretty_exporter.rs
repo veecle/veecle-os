@@ -1,5 +1,5 @@
 use super::Export;
-use crate::protocol::{InstanceMessage, LogMessage, TelemetryMessage};
+use crate::protocol::transient;
 use std::string::String;
 
 /// Exporter that pretty prints telemetry messages to stderr.
@@ -30,17 +30,18 @@ impl ConsolePrettyExporter {
 impl Export for ConsolePrettyExporter {
     fn export(
         &self,
-        InstanceMessage {
+        transient::InstanceMessage {
             thread_id: _,
             message,
-        }: InstanceMessage,
+        }: transient::InstanceMessage,
     ) {
         format_message(message, std::io::stderr());
     }
 }
 
-fn format_message(message: TelemetryMessage, mut output: impl std::io::Write) {
-    if let TelemetryMessage::Log(LogMessage {
+fn format_message(message: transient::TelemetryMessage, mut output: impl std::io::Write) {
+    use crate::protocol::TelemetryMessage;
+    if let TelemetryMessage::Log(transient::LogMessage {
         time_unix_nano,
         severity,
         body,
@@ -84,7 +85,7 @@ fn format_message(message: TelemetryMessage, mut output: impl std::io::Write) {
 mod tests {
     use super::format_message;
     use crate::macros::attributes;
-    use crate::protocol::{LogMessage, Severity, TelemetryMessage};
+    use crate::protocol::{Severity, TelemetryMessage, transient};
     use indoc::indoc;
     use pretty_assertions::assert_eq;
     use std::vec::Vec;
@@ -153,7 +154,7 @@ mod tests {
 
         for (time_unix_nano, severity, body, attributes) in messages {
             format_message(
-                TelemetryMessage::Log(LogMessage {
+                TelemetryMessage::Log(transient::LogMessage {
                     time_unix_nano,
                     severity,
                     body: body.into(),

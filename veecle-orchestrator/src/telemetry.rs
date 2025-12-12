@@ -9,14 +9,13 @@ use tokio::sync::mpsc;
 use tokio::time::{Duration, sleep};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::{error, info, warn};
-use veecle_telemetry::protocol::InstanceMessage;
-use veecle_telemetry::to_static::ToStatic;
+use veecle_telemetry::protocol::owned;
 
 use veecle_net_utils::UnresolvedSocketAddress;
 
 #[derive(Debug)]
 struct ExporterState {
-    sender: mpsc::UnboundedSender<InstanceMessage<'static>>,
+    sender: mpsc::UnboundedSender<owned::InstanceMessage>,
     task: tokio::task::JoinHandle<()>,
 }
 
@@ -41,10 +40,9 @@ impl Exporter {
     }
 
     /// Exports a telemetry message by forwarding it via TCP.
-    pub fn export(&self, message: InstanceMessage<'_>) {
-        let static_message = message.to_static();
+    pub fn export(&self, message: owned::InstanceMessage) {
         if let Some(state) = &*self.state.lock().unwrap()
-            && let Err(error) = state.sender.send(static_message)
+            && let Err(error) = state.sender.send(message)
         {
             warn!("Failed to send telemetry message to forwarding task: {error}");
         }
@@ -104,7 +102,7 @@ async fn ensure_connection<'a>(
 #[tracing::instrument(skip_all, fields(%server_address))]
 async fn telemetry_forwarding_task(
     server_address: &UnresolvedSocketAddress,
-    receiver: mpsc::UnboundedReceiver<InstanceMessage<'static>>,
+    receiver: mpsc::UnboundedReceiver<owned::InstanceMessage>,
 ) {
     let mut connection: Option<TcpStream> = None;
     let mut pending_line: Option<String> = None;
