@@ -102,7 +102,7 @@ impl ThreadId {
 
             #[cfg(not(feature = "std"))]
             {
-                panic!("not yet supported")
+                NonZeroU64::new(1).unwrap()
             }
         })
     }

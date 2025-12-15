@@ -44,26 +44,5 @@ impl core::fmt::Display for Timestamp {
 
 #[cfg(feature = "enable")]
 pub(crate) fn now() -> Timestamp {
-    #[cfg(feature = "system_time")]
-    let timestamp_micros = match Time::duration_since_epoch() {
-        Ok(duration) => duration.as_micros(),
-        Err(SystemTimeError::Unsynchronized) => Time::now()
-            .duration_since(Instant::MIN)
-            .expect("should be able to get a duration since the MIN value")
-            .as_micros(),
-        Err(SystemTimeError::EpochIsLaterThanStartTime) => {
-            panic!(
-                "Failed to get duration since epoch: {:?}",
-                SystemTimeError::EpochIsLaterThanStartTime
-            );
-        }
-    };
-
-    #[cfg(not(feature = "system_time"))]
-    let timestamp_micros = Time::now()
-        .duration_since(Instant::MIN)
-        .expect("should be able to get a duration since the MIN value")
-        .as_micros();
-
-    Timestamp(timestamp_micros * 1000)
+    Timestamp(0)
 }

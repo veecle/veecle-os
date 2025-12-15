@@ -88,11 +88,6 @@ extern crate std;
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-#[cfg(all(feature = "enable", not(any(feature = "std", feature = "freertos"))))]
-compile_error! {
-    "veecle_telemetry requires that either the `std` (default) or the `freertos` feature is enabled to work"
-}
-
 pub mod collector;
 pub mod future;
 pub mod id;
