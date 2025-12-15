@@ -20,7 +20,7 @@ type Inputs = Arc<Mutex<HashMap<&'static str, mpsc::Sender<String>>>>;
 #[derive(Debug)]
 struct OutputTx {
     storable: mpsc::Sender<EncodedStorable>,
-    telemetry: mpsc::Sender<veecle_telemetry::protocol::InstanceMessage<'static>>,
+    telemetry: mpsc::Sender<veecle_telemetry::protocol::owned::InstanceMessage>,
     control: mpsc::Sender<ControlRequest>,
 }
 
@@ -28,7 +28,7 @@ struct OutputTx {
 #[derive(Debug)]
 struct OutputRx {
     storable: mpsc::Receiver<EncodedStorable>,
-    telemetry: mpsc::Receiver<veecle_telemetry::protocol::InstanceMessage<'static>>,
+    telemetry: mpsc::Receiver<veecle_telemetry::protocol::owned::InstanceMessage>,
     control: mpsc::Receiver<ControlRequest>,
 }
 
@@ -37,7 +37,7 @@ impl OutputRx {
     ///
     /// Purposefully prioritizes the more important channels to drain first.
     /// This may lead to the low priority channels never being serviced if we are not keeping up.
-    async fn recv(&mut self) -> Option<Message<'static>> {
+    async fn recv(&mut self) -> Option<Message> {
         Some(tokio::select! {
             biased; // Polls all branches in order to guarantee prioritization.
             Some(control) = self.control.recv() => Message::ControlRequest(control),

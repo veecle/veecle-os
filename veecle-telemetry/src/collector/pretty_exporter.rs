@@ -1,5 +1,5 @@
 use super::Export;
-use crate::protocol::{InstanceMessage, LogMessage, TelemetryMessage};
+use crate::protocol::transient::{InstanceMessage, LogMessage, TelemetryMessage};
 use std::string::String;
 
 /// Exporter that pretty prints telemetry messages to stderr.
@@ -84,7 +84,8 @@ fn format_message(message: TelemetryMessage, mut output: impl std::io::Write) {
 mod tests {
     use super::format_message;
     use crate::macros::attributes;
-    use crate::protocol::{LogMessage, Severity, TelemetryMessage};
+    use crate::protocol::Severity;
+    use crate::protocol::transient::{LogMessage, TelemetryMessage};
     use indoc::indoc;
     use pretty_assertions::assert_eq;
     use std::vec::Vec;

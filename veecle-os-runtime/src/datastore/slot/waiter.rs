@@ -44,10 +44,6 @@ where
         self.slot.read(f)
     }
 
-    pub(crate) fn inner_type_name(&self) -> &'static str {
-        self.slot.inner_type_name()
-    }
-
     pub(crate) async fn wait(&self) {
         if let Err(generational::MissedUpdate { current, expected }) = self.waiter.wait().await {
             // While we are unsure about timing and such, I would at least keep a warning
