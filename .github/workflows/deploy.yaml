@@ -41,7 +41,7 @@ jobs:
 
       - run: just build-private-docs
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: docs-private
           path: target/doc
@@ -69,7 +69,7 @@ jobs:
 
       - run: just build-user-manual
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: user-manual
           path: docs/user-manual/book
@@ -91,7 +91,7 @@ jobs:
 
       - run: just veecle-telemetry-ui/build-wasm
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: veecle-telemetry-ui-wasm
           path: veecle-telemetry-ui/dist
