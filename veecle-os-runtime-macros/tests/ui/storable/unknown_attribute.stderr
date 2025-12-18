@@ -1,0 +1,5 @@
+error: unknown attribute argument
+ --> tests/ui/storable/unknown_attribute.rs:2:12
+  |
+2 | #[storable(foo = "bar")]
+  |            ^^^

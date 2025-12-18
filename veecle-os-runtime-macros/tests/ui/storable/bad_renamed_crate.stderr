@@ -1,10 +1,10 @@
-error: Unexpected meta-item format `list`
- --> tests/ui/storable/bad_renamed_crate.rs:8:12
+error: expected `=`
+ --> tests/ui/storable/bad_renamed_crate.rs:8:17
   |
 8 | #[storable(crate())]
-  |            ^^^^^
+  |                 ^
 
-error: Duplicate field `crate`
+error: setting `crate` argument multiple times
   --> tests/ui/storable/bad_renamed_crate.rs:13:41
    |
 13 | #[storable(crate = ::veecle_os_runtime, crate = ::veecle_os_runtime2)]

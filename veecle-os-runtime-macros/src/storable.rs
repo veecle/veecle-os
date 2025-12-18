@@ -1,11 +1,8 @@
-use darling::FromDeriveInput;
 use proc_macro2::Ident;
 use quote::quote;
-use syn::{GenericParam, Generics, Lifetime, Path};
+use syn::{DeriveInput, GenericParam, Generics, Lifetime, Path};
 
 /// Parses the struct/enum that is marked with the `Storable` derive macro.
-#[derive(FromDeriveInput)]
-#[darling(attributes(storable), supports(any))]
 pub struct StorableDerive {
     /// The struct/enum ident.
     ident: Ident,
@@ -14,11 +11,69 @@ pub struct StorableDerive {
     /// The `Storable` data type.
     data_type: Option<syn::Type>,
     /// The name of the Veecle OS crate for renaming.
-    #[darling(rename = "crate")]
     veecle_os_runtime: Option<Path>,
 }
 
 impl StorableDerive {
+    /// Parses a `DeriveInput` to extract storable attributes.
+    fn from_derive_input(input: DeriveInput) -> syn::Result<Self> {
+        let ident = input.ident;
+        let generics = input.generics;
+
+        let mut data_type = None;
+        let mut veecle_os_runtime = None;
+
+        // Iterate through attributes to find #[storable(...)]
+        for attr in input.attrs {
+            if !attr.path().is_ident("storable") {
+                continue;
+            }
+
+            attr.parse_nested_meta(|meta| {
+                match meta
+                    .path
+                    .get_ident()
+                    .map(|ident| ident.to_string())
+                    .as_deref()
+                {
+                    Some("data_type") => {
+                        if data_type.is_some() {
+                            return Err(meta.error("setting `data_type` argument multiple times"));
+                        }
+
+                        let parsed = meta.value()?.parse::<syn::LitStr>()?.parse::<syn::Type>()?;
+
+                        data_type = Some(parsed);
+                    }
+                    Some("crate") => {
+                        if veecle_os_runtime.is_some() {
+                            return Err(meta.error("setting `crate` argument multiple times"));
+                        }
+
+                        let value = meta.value()?;
+                        let parsed = if value.peek(syn::LitStr) {
+                            value.parse::<syn::LitStr>()?.parse::<syn::Path>()?
+                        } else {
+                            value.parse::<syn::Path>()?
+                        };
+
+                        veecle_os_runtime = Some(parsed);
+                    }
+                    _ => return Err(meta.error("unknown attribute argument")),
+                }
+
+                Ok(())
+            })?;
+        }
+
+        Ok(Self {
+            ident,
+            generics,
+            data_type,
+            veecle_os_runtime,
+        })
+    }
+
     /// Generates the derive implementation.
     fn generate_impl(&self) -> syn::Result<proc_macro2::TokenStream> {
         let lifetimes_without_constraints = self.lifetimes_without_constraints();
@@ -88,7 +143,7 @@ impl StorableDerive {
 /// Implementation of the `Storable` derive macro.
 pub fn impl_derive_storable(
     input: proc_macro2::TokenStream,
-) -> darling::Result<proc_macro2::TokenStream> {
-    let parsed_input = StorableDerive::from_derive_input(&syn::parse2(input)?)?;
-    Ok(parsed_input.generate_impl()?)
+) -> syn::Result<proc_macro2::TokenStream> {
+    let parsed_input = StorableDerive::from_derive_input(syn::parse2(input)?)?;
+    parsed_input.generate_impl()
 }

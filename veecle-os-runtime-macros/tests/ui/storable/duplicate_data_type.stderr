@@ -1,0 +1,5 @@
+error: setting `data_type` argument multiple times
+ --> tests/ui/storable/duplicate_data_type.rs:2:30
+  |
+2 | #[storable(data_type = "u8", data_type = "u16")]
+  |                              ^^^^^^^^^
