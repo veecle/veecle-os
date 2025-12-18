@@ -41,7 +41,30 @@ impl StorableDerive {
                             return Err(meta.error("setting `data_type` argument multiple times"));
                         }
 
-                        let parsed = meta.value()?.parse::<syn::LitStr>()?.parse::<syn::Type>()?;
+                        let value = meta.value()?;
+
+                        // Check if user provided a string literal (was previously supported).
+                        if value.peek(syn::LitStr) {
+                            let literal = value.parse::<syn::LitStr>()?;
+                            let string = literal.value();
+                            return Err(syn::Error::new(
+                                literal.span(),
+                                format!("string literal syntax is not supported, use `data_type = {string}` instead"),
+                            ));
+                        }
+
+                        let parsed = value.parse::<syn::Type>().map_err(|error| {
+                            syn::Error::new(
+                                error.span(),
+                                format!("expected a type for `data_type` argument: {}", error),
+                            )
+                        })?;
+
+                        // Check if there are remaining tokens after the type (but not if it's a
+                        // comma, which separates attribute arguments).
+                        if !value.is_empty() && !value.peek(syn::Token![,]) {
+                            return Err(value.error("expected a type for `data_type` argument: found extra tokens after type"));
+                        }
 
                         data_type = Some(parsed);
                     }
@@ -51,11 +74,29 @@ impl StorableDerive {
                         }
 
                         let value = meta.value()?;
-                        let parsed = if value.peek(syn::LitStr) {
-                            value.parse::<syn::LitStr>()?.parse::<syn::Path>()?
-                        } else {
-                            value.parse::<syn::Path>()?
-                        };
+
+                        // Check if user provided a string literal (was previously supported).
+                        if value.peek(syn::LitStr) {
+                            let literal = value.parse::<syn::LitStr>()?;
+                            let string = literal.value();
+                            return Err(syn::Error::new(
+                                literal.span(),
+                                format!("string literal syntax is not supported, use `crate = {string}` instead"),
+                            ));
+                        }
+
+                        let parsed = syn::Path::parse_mod_style(value).map_err(|error| {
+                            syn::Error::new(
+                                error.span(),
+                                format!("expected a path for `crate` argument: {}", error),
+                            )
+                        })?;
+
+                        // Check if there are remaining tokens after the path (but not if it's a
+                        // comma, which separates attribute arguments).
+                        if !value.is_empty() && !value.peek(syn::Token![,]) {
+                            return Err(value.error("expected a path for `crate` argument: found extra tokens after path"));
+                        }
 
                         veecle_os_runtime = Some(parsed);
                     }

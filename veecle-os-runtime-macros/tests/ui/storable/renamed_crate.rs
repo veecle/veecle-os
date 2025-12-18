@@ -11,7 +11,12 @@ pub struct Sensor0 {
 }
 
 #[derive(Debug, veecle_os_runtime_macros::Storable)]
-#[storable(crate = self::fake_veecle_os_runtime, data_type = "u8")]
+#[storable(crate = self::fake_veecle_os_runtime, data_type = u8)]
 pub struct Sensor1;
+
+// Check that attribute order doesn't matter.
+#[derive(Debug, veecle_os_runtime_macros::Storable)]
+#[storable(data_type = u8, crate = self::fake_veecle_os_runtime)]
+pub struct Sensor2;
 
 fn main() {}

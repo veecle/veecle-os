@@ -22,7 +22,7 @@
 //! use veecle_os_runtime::Storable;
 //!
 //! #[derive(Debug, Storable)]
-//! #[storable(data_type = "Chunk<'static, u8>")]
+//! #[storable(data_type = Chunk<'static, u8>)]
 //! pub struct Data;
 //!
 //! #[veecle_os_runtime::actor]

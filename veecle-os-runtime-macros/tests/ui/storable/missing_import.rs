@@ -3,7 +3,7 @@ mod inner {
 }
 
 #[derive(Debug, PartialEq, veecle_os_runtime_macros::Storable)]
-#[storable(data_type = "Vec<Inner>")]
+#[storable(data_type = Vec<Inner>)]
 pub struct Sensor;
 
 fn value() -> u8 {

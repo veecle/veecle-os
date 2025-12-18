@@ -1,3 +1,9 @@
+error: string literal syntax is not supported, use `crate = ::veecle_os_runtime` instead
+ --> tests/ui/storable/bad_renamed_crate.rs:2:20
+  |
+2 | #[storable(crate = "::veecle_os_runtime")]
+  |                    ^^^^^^^^^^^^^^^^^^^^^
+
 error: expected `=`
  --> tests/ui/storable/bad_renamed_crate.rs:8:17
   |
@@ -9,3 +15,21 @@ error: setting `crate` argument multiple times
    |
 13 | #[storable(crate = ::veecle_os_runtime, crate = ::veecle_os_runtime2)]
    |                                         ^^^^^
+
+error: expected a path for `crate` argument: expected identifier
+  --> tests/ui/storable/bad_renamed_crate.rs:19:20
+   |
+19 | #[storable(crate = 1)]
+   |                    ^
+
+error: expected a path for `crate` argument: expected path segment after `::`
+  --> tests/ui/storable/bad_renamed_crate.rs:25:25
+   |
+25 | #[storable(crate = foo::1)]
+   |                         ^
+
+error: expected a path for `crate` argument: found extra tokens after path
+  --> tests/ui/storable/bad_renamed_crate.rs:32:23
+   |
+32 | #[storable(crate = foo<5>)]
+   |                       ^

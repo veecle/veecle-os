@@ -1,5 +1,5 @@
 error: setting `data_type` argument multiple times
- --> tests/ui/storable/duplicate_data_type.rs:2:30
+ --> tests/ui/storable/duplicate_data_type.rs:2:28
   |
-2 | #[storable(data_type = "u8", data_type = "u16")]
-  |                              ^^^^^^^^^
+2 | #[storable(data_type = u8, data_type = u16)]
+  |                            ^^^^^^^^^
