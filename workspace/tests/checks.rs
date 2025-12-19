@@ -73,7 +73,7 @@ fn get_workspace_lints(manifest: &toml::Table) -> Option<bool> {
 fn make_root_package_trials(base: &Utf8Path, package: &Package, capture: bool) -> Vec<Trial> {
     let dir = package.manifest_path.parent().unwrap();
     let package_relative = dir.strip_prefix(base).unwrap();
-    let relative = format_args!("veecle_os::{package_relative}");
+    let relative = format_args!("veecle-os::{package_relative}");
 
     let mut trials = vec![Trial::test(format!("{relative}::workspace-lints"), {
         let manifest_path = package.manifest_path.to_owned();
@@ -392,13 +392,13 @@ fn main() -> std::process::ExitCode {
         vec![]
     } else {
         vec![
-            Trial::test("veecle_os::tombi::fmt", move || {
+            Trial::test("veecle-os::tombi::fmt", move || {
                 Command::new("tombi")
                     .args(["format", "--offline", "--check"])
                     .current_dir(manifest_dir)
                     .run_as_test(capture)
             }),
-            Trial::test("veecle_os::tombi::lint", move || {
+            Trial::test("veecle-os::tombi::lint", move || {
                 Command::new("tombi")
                     .args(["lint", "--offline"])
                     .current_dir(manifest_dir)
@@ -412,7 +412,7 @@ fn main() -> std::process::ExitCode {
     let root_workspace_trials = if cfg!(coverage) {
         vec![]
     } else {
-        vec![Trial::test("veecle_os::vet", {
+        vec![Trial::test("veecle-os::vet", {
             move || {
                 Command::new("cargo")
                     .args(["vet", "check", "--locked"])
