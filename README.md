@@ -35,7 +35,7 @@ use veecle_os::runtime::{InitializedReader, Storable, Writer};
 use veecle_os::telemetry::collector::{ConsolePrettyExporter, set_exporter, ProcessId};
 
 #[derive(Debug, Storable)]
-#[storable(data_type = "Instant")]
+#[storable(data_type = Instant)]
 pub struct Tick;
 
 /// Emits a timestamp every second.
