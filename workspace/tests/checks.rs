@@ -135,9 +135,6 @@ fn make_workspace_trials(base: &Utf8Path, workspace: &Metadata, capture: bool) -
     }
 
     let workspace_packages = workspace_packages(workspace).collect::<Vec<_>>();
-    let contains_lib = workspace_packages
-        .iter()
-        .any(|package| package.targets.iter().any(|target| target.is_lib()));
     let contains_bin = workspace_packages
         .iter()
         .any(|package| package.targets.iter().any(|target| target.is_bin()));
@@ -205,18 +202,6 @@ fn make_workspace_trials(base: &Utf8Path, workspace: &Metadata, capture: bool) -
             }
         }),
     ];
-    if contains_lib {
-        trials.push(Trial::test(format!("{relative}::doc-test"), {
-            let dir = workspace_directory.to_owned();
-            move || {
-                Command::new("cargo")
-                    .args(["test", "--doc"])
-                    .current_dir(dir)
-                    .clear_non_inheritable_env_vars()
-                    .run_as_test(capture)
-            }
-        }))
-    }
 
     if contains_bin {
         trials.push(Trial::test(format!("{relative}::build-bins"), {
@@ -272,6 +257,33 @@ fn make_workspace_trials(base: &Utf8Path, workspace: &Metadata, capture: bool) -
             move || {
                 Command::new("cargo")
                     .args(["fmt", "--check"])
+                    .current_dir(dir)
+                    .clear_non_inheritable_env_vars()
+                    .run_as_test(capture)
+            }
+        }));
+    }
+
+    // Run doc-tests for each crate as `nextest` does not include them itself.
+    for package in workspace_packages
+        .iter()
+        .filter(|package| package.targets.iter().any(|target| target.is_lib()))
+    {
+        let package_relative = package
+            .manifest_path
+            .strip_prefix(base)
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_owned();
+        let relative = format_args!("{relative}::{package_relative}");
+        let package_name = package.name.clone();
+
+        trials.push(Trial::test(format!("{relative}::doc-test"), {
+            let dir = workspace_directory.to_owned();
+            move || {
+                Command::new("cargo")
+                    .args(["test", "--doc", "-p", &package_name])
                     .current_dir(dir)
                     .clear_non_inheritable_env_vars()
                     .run_as_test(capture)
