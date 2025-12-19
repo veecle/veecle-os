@@ -135,9 +135,6 @@ fn make_workspace_trials(base: &Utf8Path, workspace: &Metadata, capture: bool) -
     }
 
     let workspace_packages = workspace_packages(workspace).collect::<Vec<_>>();
-    let contains_bin = workspace_packages
-        .iter()
-        .any(|package| package.targets.iter().any(|target| target.is_bin()));
     let mut trials = vec![
         Trial::test(format!("{relative}::clippy"), {
             let dir = workspace_directory.to_owned();
@@ -202,19 +199,6 @@ fn make_workspace_trials(base: &Utf8Path, workspace: &Metadata, capture: bool) -
             }
         }),
     ];
-
-    if contains_bin {
-        trials.push(Trial::test(format!("{relative}::build-bins"), {
-            let dir = workspace_directory.to_owned();
-            move || {
-                Command::new("cargo")
-                    .args(["build", "--bins"])
-                    .current_dir(dir)
-                    .clear_non_inheritable_env_vars()
-                    .run_as_test(capture)
-            }
-        }))
-    }
 
     for package_manifest_path in workspace_packages
         .iter()
@@ -284,6 +268,33 @@ fn make_workspace_trials(base: &Utf8Path, workspace: &Metadata, capture: bool) -
             move || {
                 Command::new("cargo")
                     .args(["test", "--doc", "-p", &package_name])
+                    .current_dir(dir)
+                    .clear_non_inheritable_env_vars()
+                    .run_as_test(capture)
+            }
+        }));
+    }
+
+    // Build binaries for each crate to verify they compile successfully.
+    for package in workspace_packages
+        .iter()
+        .filter(|package| package.targets.iter().any(|target| target.is_bin()))
+    {
+        let package_relative = package
+            .manifest_path
+            .strip_prefix(base)
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_owned();
+        let relative = format_args!("{relative}::{package_relative}");
+        let package_name = package.name.clone();
+
+        trials.push(Trial::test(format!("{relative}::build-bins"), {
+            let dir = workspace_directory.to_owned();
+            move || {
+                Command::new("cargo")
+                    .args(["build", "--bins", "-p", &package_name])
                     .current_dir(dir)
                     .clear_non_inheritable_env_vars()
                     .run_as_test(capture)
