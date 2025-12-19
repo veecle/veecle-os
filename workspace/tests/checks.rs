@@ -200,21 +200,19 @@ fn make_workspace_trials(base: &Utf8Path, workspace: &Metadata, capture: bool) -
         }),
     ];
 
-    for package_manifest_path in workspace_packages
-        .iter()
-        .map(|package| package.manifest_path.clone())
-    {
-        let package_relative = package_manifest_path
+    for package in workspace_packages.iter() {
+        let package_relative = package
+            .manifest_path
             .strip_prefix(base)
             .unwrap()
             .parent()
             .unwrap()
             .to_owned();
-        let relative = format_args!("{relative}::{package_relative}");
+        let relative = format!("{relative}::{package_relative}");
 
         trials.push(Trial::test(format!("{relative}::cargo-config-toml"), {
             let workspace_root = workspace_directory.to_owned();
-            let mut manifest_directory = package_manifest_path.parent().unwrap().to_owned();
+            let mut manifest_directory = package.manifest_path.parent().unwrap().to_owned();
 
             move || {
                 // Search the package manifest directory and all parent directories for ".cargo/config.toml" until the
@@ -237,7 +235,7 @@ fn make_workspace_trials(base: &Utf8Path, workspace: &Metadata, capture: bool) -
 
         // Run `cargo fmt` per crate to include which crate failed the formatting check in the test summary.
         trials.push(Trial::test(format!("{relative}::fmt"), {
-            let dir = package_manifest_path.parent().unwrap().to_owned();
+            let dir = package.manifest_path.parent().unwrap().to_owned();
             move || {
                 Command::new("cargo")
                     .args(["fmt", "--check"])
@@ -246,105 +244,68 @@ fn make_workspace_trials(base: &Utf8Path, workspace: &Metadata, capture: bool) -
                     .run_as_test(capture)
             }
         }));
-    }
 
-    // Run doc-tests for each crate as `nextest` does not include them itself.
-    for package in workspace_packages
-        .iter()
-        .filter(|package| package.targets.iter().any(|target| target.is_lib()))
-    {
-        let package_relative = package
-            .manifest_path
-            .strip_prefix(base)
-            .unwrap()
-            .parent()
-            .unwrap()
-            .to_owned();
-        let relative = format_args!("{relative}::{package_relative}");
-        let package_name = package.name.clone();
+        // Run doc-tests for each crate as `nextest` does not include them itself.
+        if package.targets.iter().any(|target| target.is_lib()) {
+            let package_name = package.name.clone();
 
-        trials.push(Trial::test(format!("{relative}::doc-test"), {
-            let dir = workspace_directory.to_owned();
-            move || {
-                Command::new("cargo")
-                    .args(["test", "--doc", "-p", &package_name])
-                    .current_dir(dir)
-                    .clear_non_inheritable_env_vars()
-                    .run_as_test(capture)
+            trials.push(Trial::test(format!("{relative}::doc-test"), {
+                let dir = workspace_directory.to_owned();
+                move || {
+                    Command::new("cargo")
+                        .args(["test", "--doc", "-p", &package_name])
+                        .current_dir(dir)
+                        .clear_non_inheritable_env_vars()
+                        .run_as_test(capture)
+                }
+            }));
+        }
+
+        // Build binaries for each crate to verify they compile successfully.
+        if package.targets.iter().any(|target| target.is_bin()) {
+            let package_name = package.name.clone();
+
+            trials.push(Trial::test(format!("{relative}::build-bins"), {
+                let dir = workspace_directory.to_owned();
+                move || {
+                    Command::new("cargo")
+                        .args(["build", "--bins", "-p", &package_name])
+                        .current_dir(dir)
+                        .clear_non_inheritable_env_vars()
+                        .run_as_test(capture)
+                }
+            }));
+        }
+
+        // Creates a test for each publishable package (`package.publish.is_none()`), to verify that it does not depend on non-publishable packages (`is_some()`).
+        if package.publish.is_none() {
+            let mut unpublishable_dependencies = vec![];
+            for dependency in &package.dependencies {
+                let Some(workspace_dependency) = workspace_packages
+                    .iter()
+                    .find(|workspace_package| *workspace_package.name == dependency.name)
+                else {
+                    continue;
+                };
+
+                if workspace_dependency.publish.is_some() {
+                    unpublishable_dependencies.push(dependency.name.clone());
+                }
             }
-        }));
-    }
 
-    // Build binaries for each crate to verify they compile successfully.
-    for package in workspace_packages
-        .iter()
-        .filter(|package| package.targets.iter().any(|target| target.is_bin()))
-    {
-        let package_relative = package
-            .manifest_path
-            .strip_prefix(base)
-            .unwrap()
-            .parent()
-            .unwrap()
-            .to_owned();
-        let relative = format_args!("{relative}::{package_relative}");
-        let package_name = package.name.clone();
-
-        trials.push(Trial::test(format!("{relative}::build-bins"), {
-            let dir = workspace_directory.to_owned();
-            move || {
-                Command::new("cargo")
-                    .args(["build", "--bins", "-p", &package_name])
-                    .current_dir(dir)
-                    .clear_non_inheritable_env_vars()
-                    .run_as_test(capture)
-            }
-        }));
-    }
-
-    // Creates a test for each publishable package (`package.publish.is_none()`), to verify that it does not depend on non-publishable packages (`is_some()`).
-    for package in workspace_packages
-        .iter()
-        .filter(|package| package.publish.is_none())
-        .copied()
-    {
-        let package_manifest_path = package.manifest_path.clone();
-        let package_relative = package_manifest_path
-            .strip_prefix(base)
-            .unwrap()
-            .parent()
-            .unwrap()
-            .to_owned();
-        let relative = format_args!("{relative}::{package_relative}");
-        let package = package.clone();
-        let workspace_packages: Vec<Package> =
-            workspace_packages.iter().copied().cloned().collect();
-
-        trials.push(Trial::test(format!("{relative}::publishable"), {
-            move || {
-                let mut unpublishable_dependencies = vec![];
-                for dependency in &package.dependencies {
-                    let Some(workspace_dependency) = workspace_packages
-                        .iter()
-                        .find(|workspace_package| *workspace_package.name == dependency.name)
-                    else {
-                        continue;
-                    };
-
-                    if workspace_dependency.publish.is_some() {
-                        unpublishable_dependencies.push(dependency.name.clone());
+            trials.push(Trial::test(format!("{relative}::publishable"), {
+                move || {
+                    if unpublishable_dependencies.is_empty() {
+                        Ok(())
+                    } else {
+                        Err(
+                            format!("has non-publish dependencies: {unpublishable_dependencies:?}")
+                                .into(),
+                        )
                     }
                 }
-                if unpublishable_dependencies.is_empty() {
-                    Ok(())
-                } else {
-                    Err(
-                        format!("has non-publish dependencies: {unpublishable_dependencies:?}")
-                            .into(),
-                    )
-                }
-            }
-        }));
+            }));
+        }
     }
 
     trials
