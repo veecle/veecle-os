@@ -54,8 +54,6 @@ jobs:
           submodules: recursive
 
       - uses: ./.github/actions/setup-rustup
-      - uses: ./.github/actions/setup-arm-gnu-toolchain
-      - uses: ./.github/actions/setup-cmake
       - uses: ./.github/actions/setup-tools
         with:
           cargo-deny: true
@@ -78,7 +76,7 @@ jobs:
           --exclude=someip-test-service-tests
           --exclude=veecle-os-data-support-someip
           --exclude=veecle-os-data-support-someip-macros
-          -E '(not package(workspace)) | (test(/^veecle-os::/) & (not test(/::(clippy|doc)$/)))'
+          -E '(not package(workspace)) | (test(/^veecle-os::/) & (not test(/::(clippy|doc)$/)) & (not test(/someip/)))'
           --no-fail-fast
 
   validate-trunk:
@@ -150,6 +148,8 @@ jobs:
           --package=someip-test-service-tests
           --package=veecle-os-data-support-someip
           --package=veecle-os-data-support-someip-macros
+          --package=workspace
+          -E '(not package(workspace)) | test(/^veecle-os::.*someip.*/)'
           --no-fail-fast
 
   validate-rust-workspaces:
