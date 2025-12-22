@@ -60,11 +60,11 @@ runs:
       id: cache-cargo-deny
       with:
         path: ~/.cargo/bin/cargo-deny
-        key: cargo-deny-0.18.4-${{ runner.os }}-${{ runner.arch }}
+        key: cargo-deny-0.18.9-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
       if: inputs.cargo-deny == 'true' && steps.cache-cargo-deny.outputs.cache-hit != 'true'
       run: |
-        cargo install cargo-deny --version 0.18.4 --locked
+        cargo install cargo-deny --version 0.18.9 --locked
 
     # Cache and install cargo-llvm-cov
     - uses: actions/cache@v4
