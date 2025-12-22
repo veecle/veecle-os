@@ -12,9 +12,3 @@ who = "Wim Looman <wim.looman@veecle.io>"
 criteria = "safe-to-run"
 version = "0.2.2"
 notes = "Very brief audit just to verify it doesn't do anything outside using proc-macro APIs."
-
-[[audits.paste]]
-who = "Wim Looman <wim.looman@veecle.io>"
-criteria = "safe-to-deploy"
-violation = "*"
-notes = "We ignore the unmaintained advisory as we use it as a dev-dependency, but don't want it to become a real dependency"
