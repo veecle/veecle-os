@@ -577,7 +577,7 @@ version = "0.1.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.embassy-net]]
-version = "0.7.1"
+version = "0.8.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.embassy-net-driver]]
@@ -616,12 +616,24 @@ criteria = "safe-to-deploy"
 version = "0.6.1"
 criteria = "safe-to-deploy"
 
+[[exemptions.embedded-io]]
+version = "0.7.1"
+criteria = "safe-to-deploy"
+
 [[exemptions.embedded-io-adapters]]
 version = "0.6.2"
+criteria = "safe-to-run"
+
+[[exemptions.embedded-io-adapters]]
+version = "0.7.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.embedded-io-async]]
 version = "0.6.1"
+criteria = "safe-to-deploy"
+
+[[exemptions.embedded-io-async]]
+version = "0.7.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.embedded-nal]]
@@ -629,7 +641,7 @@ version = "0.9.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.embedded-nal-async]]
-version = "0.8.0"
+version = "0.9.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.encoding_rs]]

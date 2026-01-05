@@ -4,9 +4,9 @@ version = 4
 
 [[package]]
 name = "aligned"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "377e4c0ba83e4431b10df45c1d4666f178ea9c552cac93e60c3a88bf32785923"
+checksum = "ee4508988c62edf04abd8d92897fca0c2995d907ce1dfeaf369dac3716a40685"
 dependencies = [
  "as-slice",
 ]
@@ -61,9 +61,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bitflags"
-version = "2.9.1"
+version = "2.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b8e56985ec62d17e9c1001dc89c88ecd7dc08e47eba5ec7c29c7b5eeecde967"
+checksum = "812e12b5285cc515a9c72a5c1d3b6d46a19dac5acfef5265968c166106e31dd3"
 
 [[package]]
 name = "block-device-driver"
@@ -237,15 +237,15 @@ dependencies = [
 
 [[package]]
 name = "embassy-net"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0558a231a47e7d4a06a28b5278c92e860f1200f24821d2f365a2f40fe3f3c7b2"
+checksum = "71f0aa32082b7df00164f485322d6edab59122c9718b363b07ec23424c2c06a0"
 dependencies = [
  "document-features",
  "embassy-net-driver",
  "embassy-sync",
  "embassy-time",
- "embedded-io-async",
+ "embedded-io-async 0.7.0",
  "embedded-nal-async",
  "heapless",
  "managed",
@@ -266,7 +266,7 @@ checksum = "0d972eab325cc96afee98f80a91ca6b00249b6356dc0fdbff68b70c200df9fae"
 dependencies = [
  "aligned",
  "bit_field",
- "bitflags 2.9.1",
+ "bitflags 2.10.0",
  "block-device-driver",
  "cfg-if",
  "cortex-m",
@@ -288,8 +288,8 @@ dependencies = [
  "embedded-hal 1.0.0",
  "embedded-hal-async",
  "embedded-hal-nb",
- "embedded-io",
- "embedded-io-async",
+ "embedded-io 0.6.1",
+ "embedded-io-async 0.6.1",
  "embedded-storage",
  "embedded-storage-async",
  "futures-util",
@@ -314,7 +314,7 @@ checksum = "73974a3edbd0bd286759b3d483540f0ebef705919a5f56f4fc7709066f71689b"
 dependencies = [
  "cfg-if",
  "critical-section",
- "embedded-io-async",
+ "embedded-io-async 0.6.1",
  "futures-core",
  "futures-sink",
  "heapless",
@@ -362,7 +362,7 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17119855ccc2d1f7470a39756b12068454ae27a3eabb037d940b5c03d9c77b7a"
 dependencies = [
- "embedded-io-async",
+ "embedded-io-async 0.6.1",
 ]
 
 [[package]]
@@ -427,12 +427,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "edd0f118536f44f5ccd48bcb8b111bdc3de888b58c74639dfb034a357d0f206d"
 
 [[package]]
+name = "embedded-io"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9eb1aa714776b75c7e67e1da744b81a129b3ff919c8712b5e1b32252c1f07cc7"
+
+[[package]]
 name = "embedded-io-async"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3ff09972d4073aa8c299395be75161d582e7629cd663171d62af73c8d50dba3f"
 dependencies = [
- "embedded-io",
+ "embedded-io 0.6.1",
+]
+
+[[package]]
+name = "embedded-io-async"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2564b9f813c544241430e147d8bc454815ef9ac998878d30cc3055449f7fd4c0"
+dependencies = [
+ "embedded-io 0.7.1",
 ]
 
 [[package]]
@@ -446,11 +461,11 @@ dependencies = [
 
 [[package]]
 name = "embedded-nal-async"
-version = "0.8.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76959917cd2b86f40a98c28dd5624eddd1fa69d746241c8257eac428d83cb211"
+checksum = "eb5a1bd585135d302f8f6d7de329310938093da6271b37a6c94b8798795c0c6d"
 dependencies = [
- "embedded-io-async",
+ "embedded-io-async 0.7.0",
  "embedded-nal",
 ]
 
@@ -975,7 +990,7 @@ dependencies = [
 name = "veecle-os-examples-common"
 version = "0.0.0"
 dependencies = [
- "embedded-io-async",
+ "embedded-io-async 0.7.0",
  "futures",
  "serde",
  "veecle-os",
@@ -992,7 +1007,7 @@ dependencies = [
  "embassy-net",
  "embassy-stm32",
  "embassy-time",
- "embedded-io-async",
+ "embedded-io-async 0.7.0",
  "heapless",
  "panic-halt",
  "static_cell",
@@ -1030,7 +1045,7 @@ dependencies = [
 name = "veecle-osal-api"
 version = "0.1.0"
 dependencies = [
- "embedded-io-async",
+ "embedded-io-async 0.7.0",
  "futures",
  "serde",
 ]
@@ -1042,8 +1057,8 @@ dependencies = [
  "embassy-net",
  "embassy-time",
  "embedded-hal-async",
- "embedded-io",
- "embedded-io-async",
+ "embedded-io 0.7.1",
+ "embedded-io-async 0.7.0",
  "futures",
  "rtt-target",
  "veecle-osal-api",

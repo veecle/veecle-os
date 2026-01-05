@@ -1333,15 +1333,15 @@ checksum = "2fc328bf943af66b80b98755db9106bf7e7471b0cf47dc8559cd9a6be504cc9c"
 
 [[package]]
 name = "embassy-net"
-version = "0.7.1"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0558a231a47e7d4a06a28b5278c92e860f1200f24821d2f365a2f40fe3f3c7b2"
+checksum = "71f0aa32082b7df00164f485322d6edab59122c9718b363b07ec23424c2c06a0"
 dependencies = [
  "document-features",
  "embassy-net-driver",
  "embassy-sync",
  "embassy-time",
- "embedded-io-async",
+ "embedded-io-async 0.7.0",
  "embedded-nal-async",
  "heapless",
  "managed",
@@ -1362,7 +1362,7 @@ checksum = "73974a3edbd0bd286759b3d483540f0ebef705919a5f56f4fc7709066f71689b"
 dependencies = [
  "cfg-if",
  "critical-section",
- "embedded-io-async",
+ "embedded-io-async 0.6.1",
  "futures-core",
  "futures-sink",
  "heapless",
@@ -1436,13 +1436,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "edd0f118536f44f5ccd48bcb8b111bdc3de888b58c74639dfb034a357d0f206d"
 
 [[package]]
+name = "embedded-io"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9eb1aa714776b75c7e67e1da744b81a129b3ff919c8712b5e1b32252c1f07cc7"
+
+[[package]]
 name = "embedded-io-adapters"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90ccf22c3feffc79593914c0b4be9a2ed6b11e44cf1f84fd6b77d2ee92de0077"
 dependencies = [
- "embedded-io",
- "embedded-io-async",
+ "embedded-io 0.6.1",
+ "embedded-io-async 0.6.1",
+ "tokio",
+]
+
+[[package]]
+name = "embedded-io-adapters"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c900a1c087f1f7d17cdc84a1290df91521cd90933efa76d68e568385d889f2f4"
+dependencies = [
+ "embedded-io 0.7.1",
+ "embedded-io-async 0.7.0",
  "tokio",
 ]
 
@@ -1452,7 +1469,16 @@ version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3ff09972d4073aa8c299395be75161d582e7629cd663171d62af73c8d50dba3f"
 dependencies = [
- "embedded-io",
+ "embedded-io 0.6.1",
+]
+
+[[package]]
+name = "embedded-io-async"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2564b9f813c544241430e147d8bc454815ef9ac998878d30cc3055449f7fd4c0"
+dependencies = [
+ "embedded-io 0.7.1",
 ]
 
 [[package]]
@@ -1466,11 +1492,11 @@ dependencies = [
 
 [[package]]
 name = "embedded-nal-async"
-version = "0.8.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76959917cd2b86f40a98c28dd5624eddd1fa69d746241c8257eac428d83cb211"
+checksum = "eb5a1bd585135d302f8f6d7de329310938093da6271b37a6c94b8798795c0c6d"
 dependencies = [
- "embedded-io-async",
+ "embedded-io-async 0.7.0",
  "embedded-nal",
 ]
 
@@ -4943,7 +4969,7 @@ dependencies = [
 name = "veecle-osal-api"
 version = "0.1.0"
 dependencies = [
- "embedded-io-async",
+ "embedded-io-async 0.7.0",
  "futures",
  "serde",
  "tokio",
@@ -4958,7 +4984,7 @@ name = "veecle-osal-api"
 version = "0.1.0"
 source = "git+https://github.com/veecle/veecle-os?branch=main#3e7fc6b4ba0d2fa9cdee60c643674fd00095b448"
 dependencies = [
- "embedded-io-async",
+ "embedded-io-async 0.6.1",
  "futures",
  "serde",
 ]
@@ -4973,8 +4999,8 @@ dependencies = [
  "embassy-net-driver",
  "embassy-time",
  "embedded-hal-async",
- "embedded-io",
- "embedded-io-async",
+ "embedded-io 0.7.1",
+ "embedded-io-async 0.7.0",
  "futures",
  "heapless",
  "rtt-target",
@@ -4997,9 +5023,9 @@ dependencies = [
 name = "veecle-osal-std"
 version = "0.1.0"
 dependencies = [
- "embedded-io",
- "embedded-io-adapters",
- "embedded-io-async",
+ "embedded-io 0.7.1",
+ "embedded-io-adapters 0.7.0",
+ "embedded-io-async 0.7.0",
  "futures",
  "rand 0.9.2",
  "socket2",
@@ -5013,9 +5039,9 @@ name = "veecle-osal-std"
 version = "0.1.0"
 source = "git+https://github.com/veecle/veecle-os?branch=main#3e7fc6b4ba0d2fa9cdee60c643674fd00095b448"
 dependencies = [
- "embedded-io",
- "embedded-io-adapters",
- "embedded-io-async",
+ "embedded-io 0.6.1",
+ "embedded-io-adapters 0.6.2",
+ "embedded-io-async 0.6.1",
  "futures",
  "rand 0.9.2",
  "socket2",
