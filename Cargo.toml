@@ -40,7 +40,7 @@ exclude = ["target"]
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.91"
+rust-version = "1.92"
 description = "Veecle OS"
 homepage = "https://veecle.io/"
 repository = "https://github.com/veecle/veecle-os"
