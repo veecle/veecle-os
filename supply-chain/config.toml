@@ -153,15 +153,15 @@ version = "1.13.3"
 criteria = "safe-to-run"
 
 [[exemptions.async-fs]]
-version = "2.1.2"
+version = "2.2.0"
 criteria = "safe-to-run"
 
 [[exemptions.async-io]]
-version = "2.5.0"
+version = "2.6.0"
 criteria = "safe-to-run"
 
 [[exemptions.async-lock]]
-version = "3.4.1"
+version = "3.4.2"
 criteria = "safe-to-run"
 
 [[exemptions.async-net]]
@@ -169,7 +169,7 @@ version = "2.0.0"
 criteria = "safe-to-run"
 
 [[exemptions.async-process]]
-version = "2.3.0"
+version = "2.5.0"
 criteria = "safe-to-run"
 
 [[exemptions.async-recursion]]
@@ -177,7 +177,7 @@ version = "1.1.1"
 criteria = "safe-to-run"
 
 [[exemptions.async-signal]]
-version = "0.2.10"
+version = "0.2.13"
 criteria = "safe-to-run"
 
 [[exemptions.async-task]]
@@ -317,11 +317,11 @@ version = "1.8.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.clap]]
-version = "4.5.53"
+version = "4.5.54"
 criteria = "safe-to-run"
 
 [[exemptions.clap_builder]]
-version = "4.5.53"
+version = "4.5.54"
 criteria = "safe-to-run"
 
 [[exemptions.clap_derive]]
@@ -637,7 +637,7 @@ version = "0.8.35"
 criteria = "safe-to-deploy"
 
 [[exemptions.endi]]
-version = "1.1.0"
+version = "1.1.1"
 criteria = "safe-to-run"
 
 [[exemptions.enum-map]]
@@ -649,11 +649,11 @@ version = "0.17.0"
 criteria = "safe-to-run"
 
 [[exemptions.enumflags2]]
-version = "0.7.11"
+version = "0.7.12"
 criteria = "safe-to-run"
 
 [[exemptions.enumflags2_derive]]
-version = "0.7.11"
+version = "0.7.12"
 criteria = "safe-to-run"
 
 [[exemptions.enumn]]
@@ -1013,7 +1013,7 @@ version = "1.5.0"
 criteria = "safe-to-run"
 
 [[exemptions.libc]]
-version = "0.2.178"
+version = "0.2.179"
 criteria = "safe-to-deploy"
 
 [[exemptions.libloading]]
@@ -1126,10 +1126,6 @@ criteria = "safe-to-run"
 
 [[exemptions.new_debug_unreachable]]
 version = "1.0.6"
-criteria = "safe-to-run"
-
-[[exemptions.nix]]
-version = "0.29.0"
 criteria = "safe-to-run"
 
 [[exemptions.nix]]
@@ -1581,11 +1577,11 @@ version = "1.0.4"
 criteria = "safe-to-run"
 
 [[exemptions.serial_test]]
-version = "3.2.0"
+version = "3.3.1"
 criteria = "safe-to-run"
 
 [[exemptions.serial_test_derive]]
-version = "3.2.0"
+version = "3.3.1"
 criteria = "safe-to-run"
 
 [[exemptions.servo_arc]]
@@ -1693,7 +1689,7 @@ version = "1.0.109"
 criteria = "safe-to-run"
 
 [[exemptions.syn]]
-version = "2.0.111"
+version = "2.0.113"
 criteria = "safe-to-deploy"
 
 [[exemptions.synstructure]]
@@ -1761,7 +1757,7 @@ version = "1.10.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio]]
-version = "1.48.0"
+version = "1.49.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio-macros]]
@@ -1769,7 +1765,7 @@ version = "2.6.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.tokio-stream]]
-version = "0.1.17"
+version = "0.1.18"
 criteria = "safe-to-run"
 
 [[exemptions.tokio-tungstenite]]
@@ -1777,7 +1773,7 @@ version = "0.28.0"
 criteria = "safe-to-run"
 
 [[exemptions.tokio-util]]
-version = "0.7.17"
+version = "0.7.18"
 criteria = "safe-to-run"
 
 [[exemptions.toml]]
@@ -2257,11 +2253,11 @@ version = "0.8.0"
 criteria = "safe-to-run"
 
 [[exemptions.zbus]]
-version = "5.6.0"
+version = "5.12.0"
 criteria = "safe-to-run"
 
 [[exemptions.zbus_macros]]
-version = "5.6.0"
+version = "5.12.0"
 criteria = "safe-to-run"
 
 [[exemptions.zbus_names]]
@@ -2301,13 +2297,13 @@ version = "1.0.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.zvariant]]
-version = "5.5.1"
+version = "5.8.0"
 criteria = "safe-to-run"
 
 [[exemptions.zvariant_derive]]
-version = "5.5.1"
+version = "5.8.0"
 criteria = "safe-to-run"
 
 [[exemptions.zvariant_utils]]
-version = "3.2.0"
+version = "3.2.1"
 criteria = "safe-to-run"
