@@ -1,34 +1,6 @@
-//! Structured logging functionality with multiple severity levels.
-//!
-//! This module provides the core logging infrastructure for the telemetry system.
-//! It supports structured logging with key-value attributes and automatically
-//! correlates log messages with active spans when available.
-//!
-//! # Severity Levels
-//!
-//! The logging system supports multiple severity levels:
-//! - [`Severity::Trace`] - Very detailed debugging information
-//! - [`Severity::Debug`] - Detailed debugging information
-//! - [`Severity::Info`] - General informational messages
-//! - [`Severity::Warn`] - Warning messages for potential issues
-//! - [`Severity::Error`] - Error messages for serious problems
-//! - [`Severity::Fatal`] - Fatal error messages for critical failures
-//!
-//! # Examples
-//!
-//! ```rust
-//! veecle_telemetry::info!("Operation completed", {
-//!     "duration_ms" = 150,
-//!     "success" = true
-//! });
-//! ```
-
 #[cfg(feature = "enable")]
 use crate::collector::get_collector;
-use crate::protocol::Severity;
 use crate::protocol::transient;
-#[cfg(feature = "enable")]
-use crate::protocol::{LogMessage, attribute_list_from_slice};
 #[cfg(feature = "enable")]
 use crate::time::now;
 
@@ -50,9 +22,9 @@ use crate::time::now;
 /// # Examples
 ///
 /// ```rust
+/// use veecle_telemetry::span;
 /// use veecle_telemetry::log::log;
-/// use veecle_telemetry::protocol::Severity;
-/// use veecle_telemetry::{KeyValue, TransientValue, span};
+/// use veecle_telemetry::protocol::transient::{Severity, KeyValue};
 ///
 /// // Simple log message
 /// log(Severity::Info, "Server started", &[]);
@@ -73,8 +45,11 @@ use crate::time::now;
 ///
 /// When the `enable` feature is disabled, this function compiles to a no-op
 /// and has zero runtime overhead.
-#[doc(hidden)]
-pub fn log(severity: Severity, body: &str, attributes: &'_ [transient::KeyValue<'_>]) {
+pub fn log<'a>(
+    severity: transient::Severity,
+    body: &'a str,
+    attributes: &'a [transient::KeyValue<'a>],
+) {
     #[cfg(not(feature = "enable"))]
     {
         let _ = (severity, body, attributes);
@@ -82,11 +57,11 @@ pub fn log(severity: Severity, body: &str, attributes: &'_ [transient::KeyValue<
 
     #[cfg(feature = "enable")]
     {
-        let log_message = LogMessage {
+        let log_message = transient::LogMessage {
             time_unix_nano: now().as_nanos(),
             severity,
-            body: body.into(),
-            attributes: attribute_list_from_slice(attributes),
+            body,
+            attributes,
         };
 
         get_collector().log_message(log_message);

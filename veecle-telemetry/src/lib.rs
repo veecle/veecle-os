@@ -96,10 +96,11 @@ compile_error! {
 pub mod collector;
 pub mod future;
 pub mod id;
+#[doc(hidden)]
 pub mod log;
 #[doc(hidden)]
 pub mod macro_helpers;
-pub mod macros;
+mod macros;
 pub mod protocol;
 mod span;
 #[cfg(feature = "alloc")]
@@ -107,13 +108,7 @@ mod span;
 pub mod test_helpers;
 #[cfg(feature = "enable")]
 mod time;
-pub mod to_static;
-pub mod types;
-pub mod value;
 
 pub use id::{ProcessId, SpanContext, SpanId};
 pub use span::{CurrentSpan, Span, SpanGuard, SpanGuardRef};
-#[cfg(feature = "alloc")]
-pub use value::OwnedValue;
-pub use value::{KeyValue, TransientValue};
 pub use veecle_telemetry_macros::instrument;

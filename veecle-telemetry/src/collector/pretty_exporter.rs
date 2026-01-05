@@ -83,9 +83,8 @@ fn format_message(message: TelemetryMessage, mut output: impl std::io::Write) {
 #[cfg(test)]
 mod tests {
     use super::format_message;
-    use crate::macros::attributes;
-    use crate::protocol::Severity;
-    use crate::protocol::transient::{LogMessage, TelemetryMessage};
+    use crate::attributes;
+    use crate::protocol::transient::{LogMessage, Severity, TelemetryMessage};
     use indoc::indoc;
     use pretty_assertions::assert_eq;
     use std::vec::Vec;
@@ -157,8 +156,8 @@ mod tests {
                 TelemetryMessage::Log(LogMessage {
                     time_unix_nano,
                     severity,
-                    body: body.into(),
-                    attributes: attributes.into(),
+                    body,
+                    attributes,
                 }),
                 &mut output,
             );

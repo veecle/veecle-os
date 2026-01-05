@@ -2,8 +2,7 @@ use std::sync::{Arc, Mutex};
 use std::vec::Vec;
 
 use super::Export;
-use crate::protocol::owned;
-use crate::to_static::ToStatic;
+use crate::protocol::{owned, transient};
 
 /// An exporter for testing that stores all telemetry messages in memory.
 ///
@@ -42,7 +41,7 @@ impl TestExporter {
 }
 
 impl Export for TestExporter {
-    fn export(&self, message: crate::protocol::transient::InstanceMessage<'_>) {
-        self.spans.lock().unwrap().push(message.to_static());
+    fn export(&self, message: transient::InstanceMessage<'_>) {
+        self.spans.lock().unwrap().push(message.into());
     }
 }

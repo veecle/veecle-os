@@ -12,10 +12,10 @@ use anyhow::Context;
 use egui::Color32;
 use indexmap::{IndexMap, IndexSet};
 use serde::{Deserialize, Serialize};
-use veecle_telemetry::protocol::owned::{InstanceMessage, LogMessage, TracingMessage};
-use veecle_telemetry::protocol::{ProcessId, ThreadId, owned};
-use veecle_telemetry::value::OwnedValue as TelemetryValue;
-use veecle_telemetry::{SpanContext, SpanId as TelemetrySpanId};
+use veecle_telemetry::protocol::owned::{
+    InstanceMessage, LogMessage, ProcessId, Severity, SpanContext, SpanId as TelemetrySpanId,
+    TelemetryMessage, ThreadId, TracingMessage, Value as TelemetryValue,
+};
 #[cfg(target_arch = "wasm32")]
 use web_time::Instant;
 
@@ -123,10 +123,9 @@ impl Store {
             return Ok(());
         }
 
-        // TODO(#185): switch to deserializing `owned::InstanceMessage` directly.
-        let message: veecle_telemetry::protocol::InstanceMessage<TelemetryValue> =
+        let message: InstanceMessage =
             serde_json::from_str(line).context("parsing instance message")?;
-        self.process_message(veecle_telemetry::to_static::ToStatic::to_static(&message));
+        self.process_message(message);
 
         Ok(())
     }
@@ -190,13 +189,13 @@ impl Store {
         } = instance_message;
 
         match message {
-            owned::TelemetryMessage::Tracing(tracing_msg) => {
+            TelemetryMessage::Tracing(tracing_msg) => {
                 self.process_tracing_message(thread, tracing_msg);
             }
-            owned::TelemetryMessage::Log(log_msg) => {
+            TelemetryMessage::Log(log_msg) => {
                 self.process_log_message(thread, log_msg);
             }
-            owned::TelemetryMessage::TimeSync(_) => {
+            TelemetryMessage::TimeSync(_) => {
                 // TODO(DEV-601): handle these messages.
             }
         }
@@ -240,7 +239,7 @@ impl Store {
                 let fields: IndexMap<String, Value> = span_msg
                     .attributes
                     .iter()
-                    .map(|kv| (kv.key.as_ref().to_string(), Value::from(kv.value.clone())))
+                    .map(|kv| (kv.key.as_str().to_string(), Value::from(kv.value.clone())))
                     .collect();
 
                 let actor = fields
@@ -253,7 +252,7 @@ impl Store {
                 self.actors.insert(actor.clone());
 
                 let metadata = Metadata {
-                    name: span_msg.name.as_ref().to_string(),
+                    name: span_msg.name.as_str().to_string(),
                     target: "unknown".to_string(),
                     // Default level
                     level: Level::Info,
@@ -362,14 +361,14 @@ impl Store {
                 let fields: IndexMap<String, Value> = event_msg
                     .attributes
                     .iter()
-                    .map(|kv| (kv.key.as_ref().to_string(), Value::from(kv.value.clone())))
+                    .map(|kv| (kv.key.as_str().to_string(), Value::from(kv.value.clone())))
                     .collect();
 
-                let message = event_msg.name.as_ref().to_string();
+                let message = event_msg.name.as_str().to_string();
 
                 // TODO(DEV-584): add file or module path.
                 let metadata = Metadata {
-                    name: event_msg.name.as_ref().to_string(),
+                    name: event_msg.name.as_str().to_string(),
                     target: "unknown".to_string(),
                     level: Level::Info,
                     file: None,
@@ -423,7 +422,7 @@ impl Store {
                     .get_mut(&span_context)
                     .expect("span should exist");
 
-                let key = attr_msg.attribute.key.as_ref().to_string();
+                let key = attr_msg.attribute.key.as_str().to_string();
                 let value = Value::from(attr_msg.attribute.value);
                 span.fields.insert(key, value);
             }
@@ -453,10 +452,10 @@ impl Store {
         let fields: IndexMap<String, Value> = log_msg
             .attributes
             .iter()
-            .map(|kv| (kv.key.as_ref().to_string(), Value::from(kv.value.clone())))
+            .map(|kv| (kv.key.as_str().to_string(), Value::from(kv.value.clone())))
             .collect();
 
-        let message = log_msg.body.as_ref().to_string();
+        let message = log_msg.body.as_str().to_string();
 
         // TODO(DEV-584): add file or module path.
         let metadata = Metadata {
@@ -760,21 +759,21 @@ pub enum Level {
     Trace,
 }
 
-impl From<veecle_telemetry::protocol::Severity> for Level {
-    fn from(value: veecle_telemetry::protocol::Severity) -> Self {
+impl From<Severity> for Level {
+    fn from(value: Severity) -> Self {
         Level::from(&value)
     }
 }
 
-impl From<&veecle_telemetry::protocol::Severity> for Level {
-    fn from(value: &veecle_telemetry::protocol::Severity) -> Self {
+impl From<&Severity> for Level {
+    fn from(value: &Severity) -> Self {
         match *value {
-            veecle_telemetry::protocol::Severity::Error => Level::Error,
-            veecle_telemetry::protocol::Severity::Warn => Level::Warn,
-            veecle_telemetry::protocol::Severity::Info => Level::Info,
-            veecle_telemetry::protocol::Severity::Debug => Level::Debug,
-            veecle_telemetry::protocol::Severity::Trace => Level::Trace,
-            veecle_telemetry::protocol::Severity::Fatal => Level::Error,
+            Severity::Error => Level::Error,
+            Severity::Warn => Level::Warn,
+            Severity::Info => Level::Info,
+            Severity::Debug => Level::Debug,
+            Severity::Trace => Level::Trace,
+            Severity::Fatal => Level::Error,
         }
     }
 }

@@ -66,7 +66,6 @@ pub enum Message {
     Storable(EncodedStorable),
 
     /// A telemetry message from `veecle-telemetry` system.
-    #[serde(deserialize_with = "deserialize_instance_message")]
     Telemetry(owned::InstanceMessage),
 
     /// A control request sent from a runtime to the orchestrator.
@@ -74,23 +73,6 @@ pub enum Message {
 
     /// A response to a control request sent from the orchestrator to a runtime.
     ControlResponse(ControlResponse),
-}
-
-/// Deserializes into a fully owned [`owned::InstanceMessage`].
-///
-/// This is necessary to avoid lifetimes in `Message` from the `Cow` inside `InstanceMessage`.
-///
-/// TODO(#185): should not be needed once #185 is implemented.
-fn deserialize_instance_message<'de, D>(deserializer: D) -> Result<owned::InstanceMessage, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    use serde::Deserialize;
-    use veecle_telemetry::protocol::InstanceMessage;
-    use veecle_telemetry::to_static::ToStatic;
-    use veecle_telemetry::value::OwnedValue;
-
-    InstanceMessage::<OwnedValue>::deserialize(deserializer).map(|message| message.to_static())
 }
 
 /// A data value going between the local instance and another runtime instance (both input and output).

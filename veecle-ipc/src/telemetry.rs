@@ -1,7 +1,6 @@
 use tokio::sync::mpsc;
 use veecle_telemetry::collector::Export;
 use veecle_telemetry::protocol::{owned, transient};
-use veecle_telemetry::to_static::ToStatic;
 
 /// An [`Export`] implementer that forwards telemetry messages via IPC.
 #[derive(Debug)]
@@ -19,11 +18,11 @@ impl Exporter {
 impl Export for Exporter {
     /// Exports a telemetry message by forwarding it via IPC.
     ///
-    /// This method converts the telemetry message to a static lifetime
+    /// This method converts the telemetry message to owned types
     /// and sends it through the IPC channel. If the channel is full or closed,
     /// the message is dropped to avoid blocking telemetry collection.
     fn export(&self, message: transient::InstanceMessage<'_>) {
-        let _ = self.sender.try_send(message.to_static());
+        let _ = self.sender.try_send(message.into());
     }
 }
 
@@ -33,7 +32,8 @@ mod tests {
     use core::num::NonZeroU64;
     use tokio::sync::mpsc;
     use veecle_telemetry::collector::Export;
-    use veecle_telemetry::protocol::{ProcessId, Severity, ThreadId, owned, transient};
+    use veecle_telemetry::protocol::base::{ProcessId, Severity, ThreadId};
+    use veecle_telemetry::protocol::{owned, transient};
 
     use super::Exporter;
 
@@ -50,7 +50,7 @@ mod tests {
             message: transient::TelemetryMessage::Log(transient::LogMessage {
                 time_unix_nano: 1000000000,
                 severity: Severity::Info,
-                body: "test log message".into(),
+                body: "test log message",
                 attributes: Default::default(),
             }),
         };
@@ -63,7 +63,7 @@ mod tests {
             owned::TelemetryMessage::Log(message) => {
                 assert_eq!(message.time_unix_nano, 1000000000);
                 assert_eq!(message.severity, Severity::Info);
-                assert_eq!(message.body.as_ref(), "test log message");
+                assert_eq!(message.body.as_str(), "test log message");
             }
             _ => panic!("Expected Log message"),
         }
@@ -81,7 +81,7 @@ mod tests {
             message: transient::TelemetryMessage::Log(transient::LogMessage {
                 time_unix_nano: 2000000000,
                 severity: Severity::Error,
-                body: "error log message".into(),
+                body: "error log message",
                 attributes: Default::default(),
             }),
         };
