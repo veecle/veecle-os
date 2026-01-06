@@ -34,6 +34,14 @@
 * **breaking** Change return type of `veecle_os_data_support_someip::serialize::SerializeExt::serialize` to match its documentation.
 * Add `serialize_with_serializable` to `veecle_os_data_support_someip::header::Header` to allow serializing without intermediate buffer.
 
+## Veecle OSAL API
+
+* **breaking** Updated `embedded-io*` to version `0.7`.
+
+## Veecle OSAL Embassy
+
+* **breaking** Updated `embassy-net` to version `0.8.0`.
+
 # 0.1.0
 
 * Initial release.

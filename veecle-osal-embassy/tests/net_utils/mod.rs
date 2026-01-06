@@ -12,12 +12,37 @@ async fn net_task(mut runner: embassy_net::Runner<'static, Loopback>) -> ! {
     runner.run().await
 }
 
+/// Advances mock time to allow smoltcp timers to expire.
+///
+/// Tests use `embassy-time` with the `mock-driver` feature, which provides a mock clock
+/// that does not advance automatically.
+/// smoltcp relies on time-based delays for various TCP operations, including delayed ACK
+/// (acknowledgment packets sent after a 10ms delay to allow piggybacking on data packets).
+///
+/// Without this task continuously advancing mock time, smoltcp's timers would never expire,
+/// causing operations like `flush()` to hang indefinitely waiting for ACKs.
+///
+/// This task advances mock time by 1ms on each poll and immediately reschedules itself.
+/// When mock time is advanced, the `MockDriver` automatically wakes any expired timers,
+/// which triggers the network runner to poll smoltcp and process pending operations.
+#[embassy_executor::task]
+async fn time_advance_task() -> ! {
+    use std::task::Poll;
+    core::future::poll_fn(|cx| {
+        embassy_time::MockDriver::get().advance(embassy_time::Duration::from_millis(1));
+        cx.waker().wake_by_ref();
+        Poll::Pending
+    })
+    .await
+}
+
 #[embassy_executor::task]
 async fn main_task(
     spawner: Spawner,
     interface_address: IpAddr,
     test_function: fn(Stack<'static>, Spawner),
 ) {
+    spawner.spawn(time_advance_task()).unwrap();
     let device = Loopback::new();
 
     let config = match interface_address {

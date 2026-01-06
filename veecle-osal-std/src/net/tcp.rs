@@ -70,6 +70,12 @@ impl<'s> embedded_io_async::Write for TcpConnection<'s> {
             .await
             .map_err(IntoOsalError::into_osal_error)
     }
+
+    async fn flush(&mut self) -> Result<(), Self::Error> {
+        embedded_io_async::Write::flush(&mut self.stream)
+            .await
+            .map_err(IntoOsalError::into_osal_error)
+    }
 }
 
 impl veecle_osal_api::net::tcp::TcpSocket for TcpSocket {
