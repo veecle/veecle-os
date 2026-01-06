@@ -3,8 +3,8 @@
 use core::format_args;
 use embassy_executor::Spawner;
 use embassy_net::{EthernetAddress, Stack, StackResources};
-use embassy_stm32::eth::{Ethernet, GenericPhy, PacketQueue};
-use embassy_stm32::peripherals::ETH;
+use embassy_stm32::eth::{Ethernet, GenericPhy, PacketQueue, Sma};
+use embassy_stm32::peripherals::{ETH, ETH_SMA};
 use embassy_stm32::rng::Rng;
 use embassy_stm32::time::Hertz;
 use embassy_stm32::{Config, Peripherals, bind_interrupts, eth, peripherals, rng};
@@ -18,7 +18,10 @@ bind_interrupts!(pub struct Irqs {
 
 #[embassy_executor::task]
 pub async fn net_task(
-    mut runner: embassy_net::Runner<'static, Ethernet<'static, ETH, GenericPhy>>,
+    mut runner: embassy_net::Runner<
+        'static,
+        Ethernet<'static, ETH, GenericPhy<Sma<'static, ETH_SMA>>>,
+    >,
 ) -> ! {
     runner.run().await
 }
@@ -42,16 +45,16 @@ pub fn initialize_networking(
         peripherals.ETH,
         Irqs,
         peripherals.PA1,
-        peripherals.PA2,
-        peripherals.PC1,
         peripherals.PA7,
         peripherals.PC4,
         peripherals.PC5,
         peripherals.PG13,
         peripherals.PB13,
         peripherals.PG11,
-        GenericPhy::new_auto(),
         mac_address.0,
+        peripherals.ETH_SMA,
+        peripherals.PA2,
+        peripherals.PC1,
     );
 
     // Init network stack
