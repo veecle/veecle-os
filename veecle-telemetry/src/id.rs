@@ -136,7 +136,7 @@ impl ThreadId {
 impl fmt::Display for ThreadId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let Self { process, raw } = self;
-        write!(f, "{process}:{raw:032x}")
+        write!(f, "{process}:{raw:016x}")
     }
 }
 
@@ -444,8 +444,9 @@ impl<'de> serde::Deserialize<'de> for SpanContext {
 mod tests {
     use std::collections::HashSet;
     use std::format;
-    use std::string::String;
     use std::vec::Vec;
+
+    use test_case::test_case;
 
     use super::*;
 
@@ -472,242 +473,6 @@ mod tests {
     }
 
     #[test]
-    fn span_id_formatting() {
-        assert_eq!(format!("{}", SpanId(0)), "0000000000000000");
-        assert_eq!(format!("{}", SpanId(u64::MAX)), "ffffffffffffffff");
-        assert_eq!(
-            format!("{}", SpanId(0xFEDCBA9876543210)),
-            "fedcba9876543210"
-        );
-        assert_eq!(format!("{}", SpanId(0x123)), "0000000000000123");
-    }
-
-    #[test]
-    fn span_id_from_str() {
-        assert_eq!(
-            "fedcba9876543210".parse::<SpanId>().unwrap(),
-            SpanId(0xFEDCBA9876543210)
-        );
-        assert_eq!(
-            "FEDCBA9876543210".parse::<SpanId>().unwrap(),
-            SpanId(0xFEDCBA9876543210)
-        );
-        assert_eq!("0000000000000000".parse::<SpanId>().unwrap(), SpanId(0));
-        assert_eq!(
-            "ffffffffffffffff".parse::<SpanId>().unwrap(),
-            SpanId(u64::MAX)
-        );
-        assert_eq!("123".parse::<SpanId>().unwrap(), SpanId(0x123));
-
-        assert!("xyz".parse::<SpanId>().is_err());
-        assert!("".parse::<SpanId>().is_err());
-    }
-
-    #[test]
-    fn span_id_format_from_str_roundtrip() {
-        let test_cases = [0u64, 1, 0x123, 0xFEDCBA9876543210, u64::MAX, u64::MAX - 1];
-
-        for value in test_cases {
-            let span_id = SpanId(value);
-            let formatted = format!("{span_id}");
-            let parsed = formatted.parse::<SpanId>().unwrap();
-            assert_eq!(span_id, parsed, "Failed roundtrip for value {value:#x}");
-        }
-    }
-
-    #[test]
-    fn span_id_serde_roundtrip() {
-        let test_cases = [
-            SpanId(0),
-            SpanId(1),
-            SpanId(0x123),
-            SpanId(0xFEDCBA9876543210),
-            SpanId(u64::MAX),
-            SpanId(u64::MAX - 1),
-        ];
-
-        for original in test_cases {
-            let json = serde_json::to_string(&original).unwrap();
-            let deserialized: SpanId = serde_json::from_str(&json).unwrap();
-            assert_eq!(
-                original, deserialized,
-                "JSON roundtrip failed for {:#x}",
-                original.0
-            );
-        }
-    }
-
-    #[test]
-    fn span_context_serde_roundtrip() {
-        let test_cases = [
-            SpanContext::new(ProcessId::from_raw(0), SpanId(0)),
-            SpanContext::new(
-                ProcessId::from_raw(0x123456789ABCDEF0FEDCBA9876543210),
-                SpanId(0xFEDCBA9876543210),
-            ),
-            SpanContext::new(ProcessId::from_raw(u128::MAX), SpanId(u64::MAX)),
-            SpanContext::new(ProcessId::from_raw(1), SpanId(1)),
-        ];
-
-        for original in test_cases {
-            let json = serde_json::to_string(&original).unwrap();
-            let deserialized: SpanContext = serde_json::from_str(&json).unwrap();
-            assert_eq!(
-                original.process_id, deserialized.process_id,
-                "JSON roundtrip failed for process_id"
-            );
-            assert_eq!(
-                original.span_id, deserialized.span_id,
-                "JSON roundtrip failed for span_id"
-            );
-        }
-    }
-
-    #[test]
-    fn span_id_serialization_format() {
-        let span_id = SpanId(0xFEDCBA9876543210);
-        let json = serde_json::to_string(&span_id).unwrap();
-
-        let expected_le_bytes = 0xFEDCBA9876543210u64.to_le_bytes();
-        let mut expected_hex = String::new();
-        for byte in &expected_le_bytes {
-            expected_hex.push_str(&format!("{byte:02x}"));
-        }
-        let expected_json = format!("\"{expected_hex}\"");
-
-        assert_eq!(json, expected_json);
-    }
-
-    #[test]
-    fn span_context_new_and_fields() {
-        let process_id = ProcessId::from_raw(0x123);
-        let span_id = SpanId(0x456);
-        let context = SpanContext::new(process_id, span_id);
-
-        assert_eq!(context.process_id, process_id);
-        assert_eq!(context.span_id, span_id);
-    }
-
-    #[test]
-    fn process_id_format_from_str_roundtrip() {
-        let test_cases = [
-            0u128,
-            1,
-            0x123,
-            0xFEDCBA9876543210,
-            0x123456789ABCDEF0FEDCBA9876543210,
-            u128::MAX,
-            u128::MAX - 1,
-        ];
-
-        for value in test_cases {
-            let process_id = ProcessId::from_raw(value);
-            let formatted = format!("{process_id}");
-            let parsed = formatted.parse::<ProcessId>().unwrap();
-            assert_eq!(process_id, parsed, "Failed roundtrip for value {value:#x}");
-        }
-    }
-
-    #[test]
-    fn process_id_serde_roundtrip() {
-        let test_cases = [
-            ProcessId::from_raw(0),
-            ProcessId::from_raw(1),
-            ProcessId::from_raw(0x123),
-            ProcessId::from_raw(0xFEDCBA9876543210),
-            ProcessId::from_raw(0x123456789ABCDEF0FEDCBA9876543210),
-            ProcessId::from_raw(u128::MAX),
-            ProcessId::from_raw(u128::MAX - 1),
-        ];
-
-        for original in test_cases {
-            let json = serde_json::to_string(&original).unwrap();
-            let deserialized: ProcessId = serde_json::from_str(&json).unwrap();
-            assert_eq!(
-                original,
-                deserialized,
-                "JSON roundtrip failed for {:#x}",
-                original.to_raw()
-            );
-        }
-    }
-
-    #[test]
-    fn thread_id_format_from_str_roundtrip() {
-        let test_cases = [
-            ThreadId::from_raw(ProcessId::from_raw(0), NonZeroU64::new(1).unwrap()),
-            ThreadId::from_raw(
-                ProcessId::from_raw(0x123456789ABCDEF0FEDCBA9876543210),
-                NonZeroU64::new(0xFEDCBA9876543210).unwrap(),
-            ),
-            ThreadId::from_raw(
-                ProcessId::from_raw(u128::MAX),
-                NonZeroU64::new(u64::MAX).unwrap(),
-            ),
-            ThreadId::from_raw(ProcessId::from_raw(1), NonZeroU64::new(1).unwrap()),
-        ];
-
-        for thread_id in test_cases {
-            let formatted = format!("{thread_id}");
-            let parsed = formatted.parse::<ThreadId>().unwrap();
-            assert_eq!(
-                thread_id,
-                parsed,
-                "Failed roundtrip for {:#x}:{:#x}",
-                thread_id.process.to_raw(),
-                thread_id.raw(),
-            );
-        }
-    }
-
-    #[test]
-    fn thread_id_serde_roundtrip() {
-        let test_cases = [
-            ThreadId::from_raw(ProcessId::from_raw(0), NonZeroU64::new(1).unwrap()),
-            ThreadId::from_raw(
-                ProcessId::from_raw(0x123456789ABCDEF0FEDCBA9876543210),
-                NonZeroU64::new(0xFEDCBA9876543210).unwrap(),
-            ),
-            ThreadId::from_raw(
-                ProcessId::from_raw(u128::MAX),
-                NonZeroU64::new(u64::MAX).unwrap(),
-            ),
-            ThreadId::from_raw(ProcessId::from_raw(1), NonZeroU64::new(1).unwrap()),
-        ];
-
-        for original in test_cases {
-            let json = serde_json::to_string(&original).unwrap();
-            let deserialized: ThreadId = serde_json::from_str(&json).unwrap();
-            assert_eq!(original, deserialized);
-        }
-    }
-
-    #[test]
-    fn span_context_format_from_str_roundtrip() {
-        let test_cases = [
-            SpanContext::new(ProcessId::from_raw(0), SpanId(0)),
-            SpanContext::new(
-                ProcessId::from_raw(0x123456789ABCDEF0FEDCBA9876543210),
-                SpanId(0xFEDCBA9876543210),
-            ),
-            SpanContext::new(ProcessId::from_raw(u128::MAX), SpanId(u64::MAX)),
-            SpanContext::new(ProcessId::from_raw(1), SpanId(1)),
-        ];
-
-        for context in test_cases {
-            let formatted = format!("{context}");
-            let parsed = formatted.parse::<SpanContext>().unwrap();
-            assert_eq!(
-                context,
-                parsed,
-                "Failed roundtrip for {:#x}:{:#x}",
-                context.process_id.to_raw(),
-                context.span_id.0
-            );
-        }
-    }
-
-    #[test]
     fn span_id_next_id_produces_non_zero_values() {
         let ids: Vec<SpanId> = (0..100).map(|_| SpanId::next_id()).collect();
 
@@ -722,5 +487,137 @@ mod tests {
                 "SpanId::next_id() should produce unique values"
             );
         }
+    }
+
+    #[test_case(SpanId(0), r#""0000000000000000""#, "0000000000000000")]
+    #[test_case(SpanId(1), r#""0100000000000000""#, "0000000000000001")]
+    #[test_case(SpanId(0x123), r#""2301000000000000""#, "0000000000000123")]
+    #[test_case(SpanId(u64::MAX), r#""ffffffffffffffff""#, "ffffffffffffffff")]
+    #[test_case(
+        SpanId(0xFEDCBA9876543210),
+        r#""1032547698badcfe""#,
+        "fedcba9876543210"
+    )]
+    #[test_case(
+        ProcessId::from_raw(0),
+        r#""00000000000000000000000000000000""#,
+        "00000000000000000000000000000000"
+    )]
+    #[test_case(
+        ProcessId::from_raw(1),
+        r#""01000000000000000000000000000000""#,
+        "00000000000000000000000000000001"
+    )]
+    #[test_case(
+        ProcessId::from_raw(0x123),
+        r#""23010000000000000000000000000000""#,
+        "00000000000000000000000000000123"
+    )]
+    #[test_case(
+        ProcessId::from_raw(0x123456789ABCDEF0FEDCBA9876543210),
+        r#""1032547698badcfef0debc9a78563412""#,
+        "123456789abcdef0fedcba9876543210"
+    )]
+    #[test_case(
+        ProcessId::from_raw(u128::MAX),
+        r#""ffffffffffffffffffffffffffffffff""#,
+        "ffffffffffffffffffffffffffffffff"
+    )]
+    #[test_case(
+        ThreadId::from_raw(ProcessId::from_raw(0), NonZeroU64::new(1).unwrap()),
+        r#""00000000000000000000000000000000:0100000000000000""#,
+        "00000000000000000000000000000000:0000000000000001"
+    )]
+    #[test_case(
+        ThreadId::from_raw(ProcessId::from_raw(0x123), NonZeroU64::new(0x456).unwrap()),
+        r#""23010000000000000000000000000000:5604000000000000""#,
+        "00000000000000000000000000000123:0000000000000456"
+    )]
+    #[test_case(
+        ThreadId::from_raw(ProcessId::from_raw(u128::MAX), NonZeroU64::new(u64::MAX).unwrap()),
+        r#""ffffffffffffffffffffffffffffffff:ffffffffffffffff""#,
+        "ffffffffffffffffffffffffffffffff:ffffffffffffffff"
+    )]
+    #[test_case(
+        ThreadId::from_raw(
+            ProcessId::from_raw(0x123456789ABCDEF0FEDCBA9876543210),
+            NonZeroU64::new(0xFEDCBA9876543210).unwrap(),
+        ),
+        r#""1032547698badcfef0debc9a78563412:1032547698badcfe""#,
+        "123456789abcdef0fedcba9876543210:fedcba9876543210"
+    )]
+    #[test_case(
+        SpanContext::new(ProcessId::from_raw(0), SpanId(0)),
+        r#""00000000000000000000000000000000:0000000000000000""#,
+        "00000000000000000000000000000000:0000000000000000"
+    )]
+    #[test_case(
+        SpanContext::new(ProcessId::from_raw(0x123), SpanId(0x456)),
+        r#""23010000000000000000000000000000:5604000000000000""#,
+        "00000000000000000000000000000123:0000000000000456"
+    )]
+    #[test_case(
+        SpanContext::new(ProcessId::from_raw(u128::MAX), SpanId(u64::MAX)),
+        r#""ffffffffffffffffffffffffffffffff:ffffffffffffffff""#,
+        "ffffffffffffffffffffffffffffffff:ffffffffffffffff"
+    )]
+    #[test_case(
+        SpanContext::new(
+            ProcessId::from_raw(0x123456789ABCDEF0FEDCBA9876543210),
+            SpanId(0xFEDCBA9876543210)
+        ),
+        r#""1032547698badcfef0debc9a78563412:1032547698badcfe""#,
+        "123456789abcdef0fedcba9876543210:fedcba9876543210"
+    )]
+    fn serialization<T>(value: T, expected_json: &str, expected_display: &str)
+    where
+        T: fmt::Display
+            + serde::Serialize
+            + FromStr<Err: fmt::Debug>
+            + serde::de::DeserializeOwned
+            + fmt::Debug
+            + Eq,
+    {
+        assert_eq!(serde_json::to_string(&value).unwrap(), expected_json);
+        assert_eq!(value, serde_json::from_str::<T>(expected_json).unwrap());
+
+        assert_eq!(format!("{value}"), expected_display);
+        assert_eq!(value, T::from_str(expected_display).unwrap());
+    }
+
+    #[test_case("")]
+    #[test_case("xyz")]
+    fn span_id_from_str_error(input: &str) {
+        assert!(SpanId::from_str(input).is_err());
+    }
+
+    #[test_case("")]
+    #[test_case("ffffffffffffffffffffffffffffffff0")]
+    #[test_case("xyz")]
+    fn process_id_from_str_error(input: &str) {
+        assert!(ProcessId::from_str(input).is_err());
+    }
+
+    #[test_case("")]
+    #[test_case("00000000000000000000000000000000")]
+    #[test_case("00000000000000000000000000000000:0000000000000000")]
+    #[test_case("00000000000000000000000000000000:xyz")]
+    #[test_case("00000000000000000000000000000001:")]
+    #[test_case(":0000000000000001")]
+    #[test_case("xyz")]
+    #[test_case("xyz:0000000000000001")]
+    fn thread_id_from_str_error(input: &str) {
+        assert!(ThreadId::from_str(input).is_err());
+    }
+
+    #[test_case("")]
+    #[test_case("00000000000000000000000000000000")]
+    #[test_case("00000000000000000000000000000000:xyz")]
+    #[test_case("00000000000000000000000000000001:")]
+    #[test_case(":0000000000000000")]
+    #[test_case("xyz")]
+    #[test_case("xyz:0000000000000000")]
+    fn span_context_from_str_error(input: &str) {
+        assert!(SpanContext::from_str(input).is_err());
     }
 }

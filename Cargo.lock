@@ -5090,6 +5090,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serial_test",
+ "test-case",
  "tokio",
  "veecle-osal-freertos",
  "veecle-osal-std 0.1.0",
