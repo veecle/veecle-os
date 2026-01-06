@@ -11,6 +11,4 @@
 
 /veecle-os-runtime*               @arctic-alpaca @Nemo157
 
-/veecle-telemetry*                @ForsakenHarmony
-
 **/Cargo.lock
