@@ -21,7 +21,6 @@ in pkgs.mkShell {
     cargo-about
     cargo-deny
     cargo-nextest
-    cargo-vet
     cmake
     editorconfig-checker
     gcc

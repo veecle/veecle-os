@@ -407,26 +407,10 @@ fn main() -> std::process::ExitCode {
         ]
     };
 
-    // Trials that run on the root workspace.
-    // Skipped in coverage runs.
-    let root_workspace_trials = if cfg!(coverage) {
-        vec![]
-    } else {
-        vec![Trial::test("veecle-os::vet", {
-            move || {
-                Command::new("cargo")
-                    .args(["vet", "check", "--locked"])
-                    .current_dir(manifest_dir)
-                    .run_as_test(capture)
-            }
-        })]
-    };
-
     let trials: Vec<Trial> = non_root_workspace_trials
         .chain(all_workspaces_trials)
         .chain(root_package_trials)
         .chain(global_trials)
-        .chain(root_workspace_trials)
         .collect();
 
     libtest_mimic::run(&args, trials).exit_code()

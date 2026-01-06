@@ -114,7 +114,6 @@ This will generally closely track the latest released version and updating is no
 * `veecle-os-data-support-*` and `*-someip-*`: code to support different data formats and transports, such as CAN.
 * [`workspace`](workspace/): validation support.
 * [`.vale`](.vale/): configuration for [Vale](https://vale.sh/), a prose linter for code and documentation.
-* [`supply-chain`](supply-chain/): configuration for [`cargo-vet`](https://mozilla.github.io/cargo-vet/).
 * [`external`](external/): code from external projects.
   The Veecle OS repository includes code from other projects, so that developers can make changes across repositories in a single commit.
 * [`veecle-orchestrator`](veecle-orchestrator/), `veecle-orchestrator-*`, [`veecle-ipc`](veecle-ipc/), `veecle-ipc-*`: multi-runtime orchestrator prototype.
