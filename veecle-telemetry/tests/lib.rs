@@ -14,31 +14,29 @@ use serial_test::serial;
 use tokio::runtime::Builder;
 
 use veecle_telemetry::future::FutureExt;
-use veecle_telemetry::protocol::Severity;
+use veecle_telemetry::protocol::transient::{KeyValue, Severity};
 use veecle_telemetry::test_helpers::format_telemetry_tree;
-use veecle_telemetry::{CurrentSpan, KeyValue, Span, SpanContext, instrument, span};
+use veecle_telemetry::{CurrentSpan, Span, SpanContext, instrument, span};
 
 mod exporter {
     use std::sync::{Arc, LazyLock, Mutex};
 
     use veecle_telemetry::collector::{ProcessId, TestExporter};
-    use veecle_telemetry::protocol::InstanceMessage;
-    use veecle_telemetry::value::OwnedValue;
+    use veecle_telemetry::protocol::owned::InstanceMessage;
 
     /// Initializes the lazy lock which sets the exporter.
     pub fn set_exporter() -> ExporterHandle {
-        static EXPORTER: LazyLock<Arc<Mutex<Vec<InstanceMessage<'static, OwnedValue>>>>> =
-            LazyLock::new(|| {
-                let (reporter, collected_spans) = TestExporter::new();
+        static EXPORTER: LazyLock<Arc<Mutex<Vec<InstanceMessage>>>> = LazyLock::new(|| {
+            let (reporter, collected_spans) = TestExporter::new();
 
-                veecle_telemetry::collector::set_exporter(
-                    ProcessId::random(&mut rand::rng()),
-                    Box::leak(Box::new(reporter)),
-                )
-                .expect("exporter was not set yet");
+            veecle_telemetry::collector::set_exporter(
+                ProcessId::random(&mut rand::rng()),
+                Box::leak(Box::new(reporter)),
+            )
+            .expect("exporter was not set yet");
 
-                collected_spans
-            });
+            collected_spans
+        });
 
         ExporterHandle {
             message_buffer: EXPORTER.clone(),
@@ -46,11 +44,11 @@ mod exporter {
     }
 
     pub struct ExporterHandle {
-        message_buffer: Arc<Mutex<Vec<InstanceMessage<'static, OwnedValue>>>>,
+        message_buffer: Arc<Mutex<Vec<InstanceMessage>>>,
     }
 
     impl ExporterHandle {
-        pub fn take_messages(&self) -> Vec<InstanceMessage<'static, OwnedValue>> {
+        pub fn take_messages(&self) -> Vec<InstanceMessage> {
             self.message_buffer.lock().unwrap().drain(..).collect()
         }
     }
@@ -404,13 +402,15 @@ fn formatted_attributes() {
     let exporter = set_exporter();
 
     let orange = "orange";
-    veecle_telemetry::info!("message", ferris = format_args!("red or {orange}"));
+    veecle_telemetry::info!("message", ferris = format!("red or {orange}"));
+    veecle_telemetry::info!("message", ferris = format_args!("{orange} or red"));
 
     let graph = format_telemetry_tree(exporter.take_messages());
     assert_eq!(
         graph,
         indoc! {r#"
             + log: [Info] message [ferris: "red or orange"]
+            + log: [Info] message [ferris: "orange or red"]
         "#}
     );
 }

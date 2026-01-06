@@ -145,7 +145,7 @@ impl Parse for Arguments {
 /// ```
 /// # extern crate alloc;
 /// # use veecle_telemetry::Span;
-/// # use veecle_telemetry::value::KeyValue;
+/// # use veecle_telemetry::protocol::transient::KeyValue;
 ///
 /// fn simple() {
 ///     let __guard__ = Span::new("example::simple", &[]).entered();
@@ -293,7 +293,7 @@ fn generate_properties(
         .iter()
         .map(|Property { key, value, span }| {
             quote_spanned!(*span=>
-                #veecle_telemetry_crate::value::KeyValue::new(#key, #value)
+                #veecle_telemetry_crate::protocol::transient::KeyValue::new(#key, #value)
             )
         });
     let properties = Punctuated::<_, Token![,]>::from_iter(properties);

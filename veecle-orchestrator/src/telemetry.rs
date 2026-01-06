@@ -9,17 +9,17 @@ use tokio::sync::mpsc;
 use tokio::time::{Duration, sleep};
 use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
 use tracing::{error, info, warn};
-use veecle_telemetry::protocol::owned;
+use veecle_telemetry::protocol::owned::InstanceMessage;
 
 use veecle_net_utils::UnresolvedSocketAddress;
 
 #[derive(Debug)]
 struct ExporterState {
-    sender: mpsc::UnboundedSender<owned::InstanceMessage>,
+    sender: mpsc::UnboundedSender<InstanceMessage>,
     task: tokio::task::JoinHandle<()>,
 }
 
-/// Telemetry exporter that forwards InstanceMessage to `veecle-telemetry-server` via TCP.
+/// Telemetry exporter that forwards [`InstanceMessage`] to `veecle-telemetry-server` via TCP.
 #[derive(Debug)]
 pub struct Exporter {
     state: Mutex<Option<ExporterState>>,
@@ -40,7 +40,7 @@ impl Exporter {
     }
 
     /// Exports a telemetry message by forwarding it via TCP.
-    pub fn export(&self, message: owned::InstanceMessage) {
+    pub fn export(&self, message: InstanceMessage) {
         if let Some(state) = &*self.state.lock().unwrap()
             && let Err(error) = state.sender.send(message)
         {
@@ -102,7 +102,7 @@ async fn ensure_connection<'a>(
 #[tracing::instrument(skip_all, fields(%server_address))]
 async fn telemetry_forwarding_task(
     server_address: &UnresolvedSocketAddress,
-    receiver: mpsc::UnboundedReceiver<owned::InstanceMessage>,
+    receiver: mpsc::UnboundedReceiver<InstanceMessage>,
 ) {
     let mut connection: Option<TcpStream> = None;
     let mut pending_line: Option<String> = None;

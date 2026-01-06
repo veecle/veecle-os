@@ -1,32 +1,3 @@
-//! Macros for structured logging and telemetry.
-//!
-//! This module provides convenient macros for creating spans, adding events, and logging
-//! messages with various severity levels.
-//! The macros provide a more ergonomic interface compared to the lower-level functions and handle attribute creation
-//! automatically.
-//!
-//! # Span Creation
-//!
-//! - `span!`: Creates a new span with optional attributes
-//! - `event!`: Adds an event to the current span
-//!
-//! # Logging Macros
-//!
-//! - `log!`: Generic logging macro that accepts a severity level
-//! - `trace!`: Logs trace-level messages (most verbose)
-//! - `debug!`: Logs debug-level messages
-//! - `info!`: Logs informational messages
-//! - `warn!`: Logs warning messages
-//! - `error!`: Logs error messages
-//! - `fatal!`: Logs fatal error messages
-//!
-//! # Attribute Handling
-//!
-//! - `attributes!`: Creates a slice of key-value attributes
-//! - `attribute!`: Creates a single key-value attribute
-//!
-//! All macros support flexible attribute syntax for adding contextual information.
-
 /// Creates a new span.
 ///
 /// A span represents a unit of work or operation that has a beginning and end.
@@ -94,7 +65,7 @@ macro_rules! event {
 /// Log a simple message:
 /// ```rust
 /// use veecle_telemetry::log;
-/// use veecle_telemetry::protocol::Severity;
+/// use veecle_telemetry::protocol::base::Severity;
 ///
 /// log!(Severity::Info, "Application started");
 /// ```
@@ -102,7 +73,7 @@ macro_rules! event {
 /// Log a message with attributes:
 /// ```rust
 /// use veecle_telemetry::log;
-/// use veecle_telemetry::protocol::Severity;
+/// use veecle_telemetry::protocol::base::Severity;
 ///
 /// let port = 8080;
 /// let version = "1.0.0";
@@ -140,7 +111,7 @@ macro_rules! log {
 #[macro_export]
 macro_rules! trace {
     ($($args:tt)*) => {
-        $crate::log!($crate::protocol::Severity::Trace, $($args)*);
+        $crate::log!($crate::protocol::base::Severity::Trace, $($args)*);
     };
 }
 
@@ -169,7 +140,7 @@ macro_rules! trace {
 #[macro_export]
 macro_rules! debug {
     ($($args:tt)*) => {
-        $crate::log!($crate::protocol::Severity::Debug, $($args)*);
+        $crate::log!($crate::protocol::base::Severity::Debug, $($args)*);
     };
 }
 
@@ -203,7 +174,7 @@ macro_rules! debug {
 #[macro_export]
 macro_rules! info {
     ($($args:tt)*) => {
-        $crate::log!($crate::protocol::Severity::Info, $($args)*);
+        $crate::log!($crate::protocol::base::Severity::Info, $($args)*);
     };
 }
 
@@ -237,7 +208,7 @@ macro_rules! info {
 #[macro_export]
 macro_rules! warn {
     ($($args:tt)*) => {
-        $crate::log!($crate::protocol::Severity::Warn, $($args)*);
+        $crate::log!($crate::protocol::base::Severity::Warn, $($args)*);
     };
 }
 
@@ -271,7 +242,7 @@ macro_rules! warn {
 #[macro_export]
 macro_rules! error {
     ($($args:tt)*) => {
-        $crate::log!($crate::protocol::Severity::Error, $($args)*);
+        $crate::log!($crate::protocol::base::Severity::Error, $($args)*);
     };
 }
 
@@ -305,7 +276,7 @@ macro_rules! error {
 #[macro_export]
 macro_rules! fatal {
     ($($args:tt)*) => {
-        $crate::log!($crate::protocol::Severity::Fatal, $($args)*);
+        $crate::log!($crate::protocol::base::Severity::Fatal, $($args)*);
     };
 }
 
@@ -360,9 +331,9 @@ macro_rules! fatal {
 /// Empty attributes:
 /// ```rust
 /// use veecle_telemetry::attributes;
-/// use veecle_telemetry::protocol::transient;
+/// use veecle_telemetry::protocol::transient::KeyValue;
 ///
-/// let attrs: &[transient::KeyValue<'_>] = attributes!(); // Creates an empty slice
+/// let attrs: &[KeyValue<'_>] = attributes!(); // Creates an empty slice
 /// ```
 #[macro_export]
 macro_rules! attributes {
@@ -373,7 +344,6 @@ macro_rules! attributes {
         $crate::attributes_inner!(@ { }, { $($kvs)* })
     };
 }
-pub use crate::attributes;
 
 /// The actual implementation of `attributes!`, separated out to avoid accidentally recursing into
 /// the `$($tt)*` case from the inner cases.
@@ -411,12 +381,12 @@ macro_rules! attributes_inner {
 #[macro_export]
 macro_rules! attribute {
     ($($key:ident)+ = $value:expr) => {
-        $crate::value::KeyValue::new(::core::stringify!($($key).+), $value)
+        $crate::protocol::transient::KeyValue::new(::core::stringify!($($key).+), &$value)
     };
     ($key:literal = $value:expr) => {
-        $crate::value::KeyValue::new($key, $value)
+        $crate::protocol::transient::KeyValue::new($key, &$value)
     };
     ($($key:ident)+) => {
-        $crate::value::KeyValue::new(::core::stringify!($($key).+), $($key).+)
+        $crate::protocol::transient::KeyValue::new(::core::stringify!($($key).+), &$($key).+)
     };
 }

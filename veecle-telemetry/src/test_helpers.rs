@@ -4,36 +4,26 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt::Write;
 
-use crate::SpanId;
-use crate::protocol::{
-    InstanceMessage, LogMessage, SpanAddEventMessage, SpanAddLinkMessage, SpanCreateMessage,
-    SpanSetAttributeMessage, TelemetryMessage, ThreadId, TracingMessage,
+use crate::protocol::owned::{
+    InstanceMessage, KeyValue, LogMessage, SpanAddEventMessage, SpanAddLinkMessage,
+    SpanCreateMessage, SpanId, SpanSetAttributeMessage, TelemetryMessage, ThreadId, TracingMessage,
 };
 
-struct CreateAndParent<'a, V>
-where
-    V: Clone,
-{
+struct CreateAndParent {
     parent: Option<SpanId>,
-    span_create: SpanCreateMessage<'a, V>,
+    span_create: SpanCreateMessage,
 }
 
-struct TelemetryData<'a, V>
-where
-    V: Clone,
-{
-    spans: Vec<CreateAndParent<'a, V>>,
+struct TelemetryData {
+    spans: Vec<CreateAndParent>,
     links: BTreeMap<Option<SpanId>, Vec<SpanAddLinkMessage>>,
-    attributes: BTreeMap<Option<SpanId>, Vec<SpanSetAttributeMessage<'a, V>>>,
-    events: BTreeMap<Option<SpanId>, Vec<SpanAddEventMessage<'a, V>>>,
-    logs: BTreeMap<Option<SpanId>, Vec<LogMessage<'a, V>>>,
+    attributes: BTreeMap<Option<SpanId>, Vec<SpanSetAttributeMessage>>,
+    events: BTreeMap<Option<SpanId>, Vec<SpanAddEventMessage>>,
+    logs: BTreeMap<Option<SpanId>, Vec<LogMessage>>,
     execution_contexts: BTreeMap<ThreadId, Vec<SpanId>>,
 }
 
-impl<V> TelemetryData<'_, V>
-where
-    V: Clone,
-{
+impl TelemetryData {
     fn context_for(&mut self, thread_id: ThreadId) -> &mut Vec<SpanId> {
         self.execution_contexts.entry(thread_id).or_default()
     }
@@ -43,10 +33,7 @@ where
     }
 }
 
-pub fn format_telemetry_tree<V>(messages: Vec<InstanceMessage<V>>) -> String
-where
-    V: Clone + core::fmt::Display,
-{
+pub fn format_telemetry_tree(messages: Vec<InstanceMessage>) -> String {
     let mut telemetry_data = TelemetryData {
         spans: Vec::new(),
         events: BTreeMap::new(),
@@ -117,12 +104,8 @@ where
     result
 }
 
-fn format_attributes<'a, I, V>(attrs: I, result: &mut String)
-where
-    I: Iterator<Item = &'a crate::value::KeyValue<'a, V>>,
-    V: core::fmt::Display + 'a,
-{
-    for (i, attr) in attrs.enumerate() {
+fn format_attributes(attrs: &[KeyValue], result: &mut String) {
+    for (i, attr) in attrs.iter().enumerate() {
         if i > 0 {
             result.push_str(", ");
         }
@@ -130,14 +113,12 @@ where
     }
 }
 
-fn build_tree_string<V>(
-    data: &TelemetryData<V>,
+fn build_tree_string(
+    data: &TelemetryData,
     parent_span_id: Option<SpanId>,
     depth: usize,
     result: &mut String,
-) where
-    V: Clone + core::fmt::Display,
-{
+) {
     // Find the span with the given `parent_span_id`.
     for span in data
         .spans
@@ -154,7 +135,7 @@ fn build_tree_string<V>(
 
         // Add creation attributes in brackets.
         result.push_str(" [");
-        format_attributes(span.span_create.attributes.iter(), result);
+        format_attributes(&span.span_create.attributes, result);
         result.push_str("]\n");
 
         // Add span-specific attributes.
@@ -184,9 +165,9 @@ fn build_tree_string<V>(
                     result.push_str("    ");
                 }
                 result.push_str("+ event: ");
-                result.push_str(&event.name);
+                result.push_str(event.name.as_ref());
                 result.push_str(" [");
-                format_attributes(event.attributes.iter(), result);
+                format_attributes(&event.attributes, result);
                 result.push_str("]\n");
             }
         }
@@ -199,9 +180,9 @@ fn build_tree_string<V>(
                 }
                 result.push_str(&format!(
                     "+ log: [{:?}] {} [",
-                    log_msg.severity, log_msg.body
+                    log_msg.severity, &log_msg.body
                 ));
-                format_attributes(log_msg.attributes.iter(), result);
+                format_attributes(&log_msg.attributes, result);
                 result.push_str("]\n");
             }
         }
@@ -216,9 +197,9 @@ fn build_tree_string<V>(
         for log_msg in unattached_logs {
             result.push_str(&format!(
                 "+ log: [{:?}] {} [",
-                log_msg.severity, log_msg.body
+                log_msg.severity, &log_msg.body
             ));
-            format_attributes(log_msg.attributes.iter(), result);
+            format_attributes(&log_msg.attributes, result);
             result.push_str("]\n");
         }
     }
