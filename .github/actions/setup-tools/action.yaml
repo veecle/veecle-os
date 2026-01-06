@@ -14,9 +14,6 @@ inputs:
   cargo-workspaces:
     description: cargo-workspaces
     default: "false"
-  cargo-vet:
-    description: cargo-vet
-    default: "false"
   convco:
     description: convco
     default: "false"
@@ -103,18 +100,6 @@ runs:
       if: inputs.cargo-workspaces == 'true' && steps.cache-cargo-workspaces.outputs.cache-hit != 'true'
       run: |
         cargo install cargo-workspaces --version 0.4.0 --locked
-
-    # Cache and install cargo-vet
-    - uses: actions/cache@v4
-      if: inputs.cargo-vet == 'true'
-      id: cache-cargo-vet
-      with:
-        path: ~/.cargo/bin/cargo-vet
-        key: cargo-vet-0.10.1-${{ runner.os }}-${{ runner.arch }}
-    - shell: bash
-      if: inputs.cargo-vet == 'true' && steps.cache-cargo-vet.outputs.cache-hit != 'true'
-      run: |
-        cargo install cargo-vet --version 0.10.1 --locked
 
     # Cache and install convco
     - uses: actions/cache@v4

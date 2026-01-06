@@ -58,7 +58,6 @@ jobs:
         with:
           cargo-deny: true
           cargo-nextest: true
-          cargo-vet: true
           tombi: true
 
       - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
@@ -128,7 +127,6 @@ jobs:
         with:
           cargo-deny: true
           cargo-nextest: true
-          cargo-vet: true
           tombi: true
 
       - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
@@ -166,7 +164,6 @@ jobs:
         with:
           cargo-deny: true
           cargo-nextest: true
-          cargo-vet: true
           tombi: true
 
       - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5

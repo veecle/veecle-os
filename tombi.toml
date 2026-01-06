@@ -1,5 +1,0 @@
-[files]
-exclude = [
-  "supply-chain/audits.toml",
-  "supply-chain/config.toml",
-]
