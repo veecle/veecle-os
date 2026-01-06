@@ -1,0 +1,121 @@
+# Automatically update lockfiles for dependabot PRs.
+name: dependabot-lockfiles.yaml
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+# Allow workflow to commit changes back to the PR.
+permissions:
+  contents: write
+
+# Cancel jobs for previous commits in the same branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  update-lockfiles:
+    runs-on: ubuntu-latest
+    # Only run on dependabot PRs.
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]'
+    steps:
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.VEECLE_CI_ACCESS_APP_ID }}
+          private-key: ${{ secrets.VEECLE_CI_ACCESS_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v6
+        with:
+          # Required to push commits back to the PR branch.
+          ref: ${{ github.head_ref }}
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - uses: ./.github/actions/setup-rustup
+      - uses: ./.github/actions/setup-tools
+        with:
+          just: true
+
+      - name: Update lockfiles
+        run: just update-lockfiles
+
+      - name: Commit and push lockfile changes
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          REPOSITORY: ${{ github.repository }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          # Check if there are changes to commit.
+          if ! git diff --quiet -- '**/Cargo.lock'; then
+            # Get current commit SHA.
+            expected_head_oid=$(git rev-parse HEAD)
+
+            # Find all changed Cargo.lock files and prepare additions array.
+            # Build JSON in a temporary file to avoid argument list length issues.
+            additions_file=$(mktemp)
+            echo "[]" > "$additions_file"
+
+            while IFS= read -r file; do
+              if [ -n "$file" ]; then
+                content=$(base64 -w 0 "$file")
+                jq --arg path "$file" --arg content "$content" \
+                  '. += [{path: $path, contents: $content}]' \
+                  "$additions_file" > "$additions_file.tmp" && mv "$additions_file.tmp" "$additions_file"
+              fi
+            done < <(git diff --name-only -- '**/Cargo.lock')
+
+            # Create commit via GitHub GraphQL API.
+            # `[dependabot skip]` is used to allow dependabot to rebase or
+            # force push over the commit.
+            headline="chore(deps): update lockfiles [dependabot skip]"
+            body="Signed-off-by: veecle-ci-access[bot] <171345049+veecle-ci-access[bot]@users.noreply.github.com>"
+
+            query_file=$(mktemp)
+            jq -n \
+              --arg repo "$REPOSITORY" \
+              --arg branch "$BRANCH" \
+              --arg headline "$headline" \
+              --arg body "$body" \
+              --arg expectedHeadOid "$expected_head_oid" \
+              --slurpfile additions "$additions_file" \
+              '{
+                query: "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { oid } } }",
+                variables: {
+                  input: {
+                    branch: {
+                      repositoryNameWithOwner: $repo,
+                      branchName: $branch
+                    },
+                    message: {
+                      headline: $headline,
+                      body: $body
+                    },
+                    fileChanges: {
+                      additions: $additions[0]
+                    },
+                    expectedHeadOid: $expectedHeadOid
+                  }
+                }
+              }' > "$query_file"
+
+            response=$(curl -X POST \
+              -H "Authorization: bearer ${GH_TOKEN}" \
+              -H "Content-Type: application/json" \
+              https://api.github.com/graphql \
+              -d @"$query_file")
+
+            commit_oid=$(echo "$response" | jq -r '.data.createCommitOnBranch.commit.oid')
+
+            if [ "$commit_oid" != "null" ] && [ -n "$commit_oid" ]; then
+              echo "Committed and pushed lockfile changes: $commit_oid"
+            else
+              echo "Failed to create commit"
+              echo "$response" | jq .
+              exit 1
+            fi
+          else
+            echo "No lockfile changes to commit"
+          fi
