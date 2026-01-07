@@ -34,7 +34,12 @@ async fn ping_actor(
 #[veecle_osal_std::main]
 async fn main() {
     let process_id = ProcessId::random(&mut rand::rng());
-    veecle_telemetry::collector::set_exporter(process_id, &ConsoleJsonExporter::DEFAULT)
+    veecle_telemetry::collector::build()
+        .process_id(process_id)
+        .exporter(&ConsoleJsonExporter::DEFAULT)
+        .time::<veecle_osal_std::time::Time>()
+        .thread::<veecle_osal_std::thread::Thread>()
+        .set_global()
         .expect("exporter was not set yet");
 
     veecle_os_runtime::execute! {

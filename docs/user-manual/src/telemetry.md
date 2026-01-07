@@ -7,7 +7,7 @@ Veecle OS has features to learn about the execution of Veecle OS applications.
 The [`veecle-telemetry` crate][`crate@veecle_telemetry`] provides functions to add events and spans to Rust programs.
 
 The Veecle OS crates themselves are instrumented, and you can instrument your code with the `veecle_os::telemetry` macros.
-Veecle OS applications can use a [collector][`fn@veecle_os::telemetry::collector::set_exporter`] to define where these events and spans are sent.
+Veecle OS applications can use a [collector builder][`fn@veecle_os::telemetry::collector::build`] to define where these events and spans are sent.
 
 For example, with a Veecle OS application that emits serialized traces, you can use [`probe-rs`](https://probe.rs/) to run the application on an embedded device and pipe the serialized data for further processing.
 

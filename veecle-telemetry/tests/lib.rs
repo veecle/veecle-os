@@ -27,13 +27,17 @@ mod exporter {
     /// Initializes the lazy lock which sets the exporter.
     pub fn set_exporter() -> ExporterHandle {
         static EXPORTER: LazyLock<Arc<Mutex<Vec<InstanceMessage>>>> = LazyLock::new(|| {
+            use veecle_osal_std::{thread::Thread, time::Time};
+
             let (reporter, collected_spans) = TestExporter::new();
 
-            veecle_telemetry::collector::set_exporter(
-                ProcessId::random(&mut rand::rng()),
-                Box::leak(Box::new(reporter)),
-            )
-            .expect("exporter was not set yet");
+            veecle_telemetry::collector::build()
+                .process_id(ProcessId::random(&mut rand::rng()))
+                .exporter(Box::leak(Box::new(reporter)))
+                .time::<Time>()
+                .thread::<Thread>()
+                .set_global()
+                .expect("exporter was not set yet");
 
             collected_spans
         });

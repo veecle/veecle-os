@@ -33,7 +33,7 @@ alloc = ["veecle-telemetry/alloc"]
 data-support-can = ["dep:veecle-os-data-support-can"]
 data-support-someip = ["dep:veecle-os-data-support-someip"]
 osal-embassy = ["dep:veecle-osal-embassy"]
-osal-freertos = ["dep:veecle-osal-freertos", "veecle-telemetry/freertos"]
+osal-freertos = ["dep:veecle-osal-freertos"]
 osal-std = ["dep:veecle-osal-std", "veecle-telemetry/std"]
 telemetry-enable = ["veecle-telemetry/enable"]
 

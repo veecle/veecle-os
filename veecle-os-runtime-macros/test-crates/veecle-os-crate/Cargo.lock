@@ -383,6 +383,7 @@ dependencies = [
  "pin-project",
  "rand",
  "serde",
+ "veecle-osal-api",
  "veecle-telemetry-macros",
 ]
 
