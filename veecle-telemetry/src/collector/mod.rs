@@ -22,6 +22,9 @@
 //! - [`ConsoleJsonExporter`] - Exports telemetry data as JSON to stdout
 //! - [`TestExporter`] - Collects telemetry data in memory for testing purposes
 
+mod collector;
+mod global;
+
 #[cfg(feature = "std")]
 mod json_exporter;
 #[cfg(feature = "std")]
@@ -30,9 +33,6 @@ mod pretty_exporter;
 mod test_exporter;
 
 use core::fmt::Debug;
-#[cfg(feature = "enable")]
-use core::sync::atomic::{AtomicUsize, Ordering};
-use core::{error, fmt};
 
 #[cfg(feature = "std")]
 pub use json_exporter::ConsoleJsonExporter;
@@ -42,15 +42,13 @@ pub use pretty_exporter::ConsolePrettyExporter;
 #[doc(hidden)]
 pub use test_exporter::TestExporter;
 
+pub use self::collector::Collector;
+pub use self::global::get_collector;
 #[cfg(feature = "enable")]
+pub use self::global::{SetExporterError, set_exporter};
+
 pub use crate::protocol::base::ProcessId;
 use crate::protocol::transient::InstanceMessage;
-#[cfg(feature = "enable")]
-use crate::protocol::transient::{
-    LogMessage, SpanAddEventMessage, SpanAddLinkMessage, SpanCloseMessage, SpanCreateMessage,
-    SpanEnterMessage, SpanExitMessage, SpanSetAttributeMessage, TelemetryMessage, ThreadId,
-    TracingMessage,
-};
 
 /// Trait for exporting telemetry data to external systems.
 ///
@@ -79,247 +77,4 @@ pub trait Export: Debug {
     /// This method is called for each telemetry message that needs to be exported.
     /// The implementation should handle the message appropriately based on its type.
     fn export(&self, message: InstanceMessage<'_>);
-}
-
-/// The global telemetry collector.
-///
-/// This structure manages the collection and export of telemetry data.
-/// It maintains a unique execution ID, handles trace ID generation, and coordinates with the
-/// configured exporter.
-///
-/// The collector is typically accessed through the [`get_collector`] function rather
-/// than being constructed directly.
-#[derive(Debug)]
-pub struct Collector {
-    #[cfg(feature = "enable")]
-    inner: CollectorInner,
-}
-
-#[cfg(feature = "enable")]
-#[derive(Debug)]
-struct CollectorInner {
-    process_id: ProcessId,
-
-    exporter: &'static (dyn Export + Sync),
-}
-
-#[cfg(feature = "enable")]
-#[derive(Debug)]
-struct NopExporter;
-
-#[cfg(feature = "enable")]
-impl Export for NopExporter {
-    fn export(&self, _: InstanceMessage) {}
-}
-
-// The GLOBAL_COLLECTOR static holds a pointer to the global exporter. It is protected by
-// the GLOBAL_INIT static which determines whether GLOBAL_EXPORTER has been initialized.
-#[cfg(feature = "enable")]
-static mut GLOBAL_COLLECTOR: Collector = Collector {
-    inner: CollectorInner {
-        process_id: ProcessId::from_raw(0),
-        exporter: &NO_EXPORTER,
-    },
-};
-static NO_COLLECTOR: Collector = Collector {
-    #[cfg(feature = "enable")]
-    inner: CollectorInner {
-        process_id: ProcessId::from_raw(0),
-        exporter: &NO_EXPORTER,
-    },
-};
-#[cfg(feature = "enable")]
-static NO_EXPORTER: NopExporter = NopExporter;
-
-#[cfg(feature = "enable")]
-static GLOBAL_INIT: AtomicUsize = AtomicUsize::new(0);
-
-// There are three different states that we care about:
-// - the collector is uninitialized
-// - the collector is initializing (set_exporter has been called but GLOBAL_COLLECTOR hasn't been set yet)
-// - the collector is active
-#[cfg(feature = "enable")]
-const UNINITIALIZED: usize = 0;
-#[cfg(feature = "enable")]
-const INITIALIZING: usize = 1;
-#[cfg(feature = "enable")]
-const INITIALIZED: usize = 2;
-
-/// Initializes the collector with the given Exporter and [`ProcessId`].
-///
-/// A [`ProcessId`] should never be re-used as it's used to collect metadata about the execution and to generate
-/// [`SpanContext`]s which need to be globally unique.
-///
-/// [`SpanContext`]: crate::SpanContext
-#[cfg(feature = "enable")]
-pub fn set_exporter(
-    process_id: ProcessId,
-    exporter: &'static (dyn Export + Sync),
-) -> Result<(), SetExporterError> {
-    if GLOBAL_INIT
-        .compare_exchange(
-            UNINITIALIZED,
-            INITIALIZING,
-            Ordering::Acquire,
-            Ordering::Relaxed,
-        )
-        .is_ok()
-    {
-        // SAFETY: this is guarded by the atomic
-        unsafe { GLOBAL_COLLECTOR = Collector::new(process_id, exporter) }
-        GLOBAL_INIT.store(INITIALIZED, Ordering::Release);
-
-        Ok(())
-    } else {
-        Err(SetExporterError(()))
-    }
-}
-
-/// Returns a reference to the collector.
-///
-/// If an exporter has not been set, a no-op implementation is returned.
-pub fn get_collector() -> &'static Collector {
-    #[cfg(not(feature = "enable"))]
-    {
-        &NO_COLLECTOR
-    }
-
-    // Acquire memory ordering guarantees that current thread would see any
-    // memory writes that happened before store of the value
-    // into `GLOBAL_INIT` with memory ordering `Release` or stronger.
-    //
-    // Since the value `INITIALIZED` is written only after `GLOBAL_COLLECTOR` was
-    // initialized, observing it after `Acquire` load here makes both
-    // write to the `GLOBAL_COLLECTOR` static and initialization of the exporter
-    // internal state synchronized with current thread.
-    #[cfg(feature = "enable")]
-    if GLOBAL_INIT.load(Ordering::Acquire) != INITIALIZED {
-        &NO_COLLECTOR
-    } else {
-        // SAFETY: this is guarded by the atomic
-        unsafe {
-            #[expect(clippy::deref_addrof, reason = "false positive")]
-            &*&raw const GLOBAL_COLLECTOR
-        }
-    }
-}
-
-/// The type returned by [`set_exporter`] if [`set_exporter`] has already been called.
-///
-/// [`set_exporter`]: fn.set_exporter.html
-#[derive(Debug)]
-pub struct SetExporterError(());
-
-impl SetExporterError {
-    const MESSAGE: &'static str = "a global exporter has already been set";
-}
-
-impl fmt::Display for SetExporterError {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.write_str(Self::MESSAGE)
-    }
-}
-
-impl error::Error for SetExporterError {}
-
-#[cfg(feature = "enable")]
-impl Collector {
-    fn new(process_id: ProcessId, exporter: &'static (dyn Export + Sync)) -> Self {
-        Self {
-            inner: CollectorInner {
-                process_id,
-                exporter,
-            },
-        }
-    }
-
-    #[inline]
-    pub(crate) fn process_id(&self) -> ProcessId {
-        self.inner.process_id
-    }
-
-    /// Collects and exports an external telemetry message.
-    ///
-    /// This method allows external systems to inject telemetry messages into the
-    /// collector pipeline.
-    /// The message will be exported using the configured exporter.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use core::num::NonZeroU64;
-    /// use veecle_telemetry::collector::get_collector;
-    /// use veecle_telemetry::protocol::transient::{
-    ///     ThreadId,
-    ///     ProcessId,
-    ///     InstanceMessage,
-    ///     TelemetryMessage,
-    ///     TimeSyncMessage,
-    /// };
-    ///
-    /// let collector = get_collector();
-    /// let message = InstanceMessage {
-    ///     thread_id: ThreadId::from_raw(ProcessId::from_raw(1), NonZeroU64::new(1).unwrap()),
-    ///     message: TelemetryMessage::TimeSync(TimeSyncMessage {
-    ///         local_timestamp: 0,
-    ///         since_epoch: 0,
-    ///     }),
-    /// };
-    /// collector.collect_external(message);
-    /// ```
-    #[inline]
-    pub fn collect_external(&self, message: InstanceMessage<'_>) {
-        self.inner.exporter.export(message);
-    }
-
-    #[inline]
-    pub(crate) fn new_span(&self, span: SpanCreateMessage<'_>) {
-        self.tracing_message(TracingMessage::CreateSpan(span));
-    }
-
-    #[inline]
-    pub(crate) fn enter_span(&self, enter: SpanEnterMessage) {
-        self.tracing_message(TracingMessage::EnterSpan(enter));
-    }
-
-    #[inline]
-    pub(crate) fn exit_span(&self, exit: SpanExitMessage) {
-        self.tracing_message(TracingMessage::ExitSpan(exit));
-    }
-
-    #[inline]
-    pub(crate) fn close_span(&self, span: SpanCloseMessage) {
-        self.tracing_message(TracingMessage::CloseSpan(span));
-    }
-
-    #[inline]
-    pub(crate) fn span_event(&self, event: SpanAddEventMessage<'_>) {
-        self.tracing_message(TracingMessage::AddEvent(event));
-    }
-
-    #[inline]
-    pub(crate) fn span_link(&self, link: SpanAddLinkMessage) {
-        self.tracing_message(TracingMessage::AddLink(link));
-    }
-
-    #[inline]
-    pub(crate) fn span_attribute(&self, attribute: SpanSetAttributeMessage<'_>) {
-        self.tracing_message(TracingMessage::SetAttribute(attribute));
-    }
-
-    #[inline]
-    pub(crate) fn log_message(&self, log: LogMessage<'_>) {
-        self.inner.exporter.export(InstanceMessage {
-            thread_id: ThreadId::current(self.inner.process_id),
-            message: TelemetryMessage::Log(log),
-        });
-    }
-
-    #[inline]
-    fn tracing_message(&self, message: TracingMessage<'_>) {
-        self.inner.exporter.export(InstanceMessage {
-            thread_id: ThreadId::current(self.inner.process_id),
-            message: TelemetryMessage::Tracing(message),
-        });
-    }
 }
