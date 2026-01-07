@@ -48,6 +48,8 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           BRANCH: ${{ github.head_ref }}
         run: |
+          set -euo pipefail
+
           # Check if there are changes to commit.
           if ! git diff --quiet -- '**/Cargo.lock' 'Cargo.lock'; then
             # Get current commit SHA.
@@ -62,10 +64,18 @@ jobs:
 
             while IFS= read -r file; do
               if [ -n "$file" ]; then
-                content=$(base64 -w 0 "$file")
-                jq --arg path "$file" --arg content "$content" \
+                # Create temp file with base64 content to avoid passing large content
+                # via command-line arguments (which would cause "Argument list too long").
+                content_file=$(mktemp)
+                base64 -w 0 "$file" > "$content_file"
+
+                # Use --rawfile to read content directly from file instead of command-line arg.
+                jq --arg path "$file" --rawfile content "$content_file" \
                   '. += [{path: $path, contents: $content}]' \
-                  "$additions_file" > "$additions_file.tmp" && mv "$additions_file.tmp" "$additions_file"
+                  "$additions_file" > "$additions_file.tmp"
+                mv "$additions_file.tmp" "$additions_file"
+
+                rm "$content_file"
               fi
             done < <(git diff --name-only -- '**/Cargo.lock' 'Cargo.lock')
 
