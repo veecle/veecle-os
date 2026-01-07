@@ -125,7 +125,7 @@ someip-test-service-tests = { path = "someip-test-service-tests", version = "0.1
 stable_deref_trait = { version = "1.2.1", default-features = false }
 static_cell = { version = "2.1.1", default-features = false }
 strum = { version = "0.27.2", default-features = false }
-syn = { version = "2.0.113", default-features = false }
+syn = { version = "2.0.114", default-features = false }
 tempfile = { version = "3.22.0", default-features = false }
 test-case = { version = "3.3.1", default-features = false }
 thiserror = { version = "2.0.16", default-features = false }
