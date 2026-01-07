@@ -49,7 +49,7 @@ jobs:
           BRANCH: ${{ github.head_ref }}
         run: |
           # Check if there are changes to commit.
-          if ! git diff --quiet -- '**/Cargo.lock'; then
+          if ! git diff --quiet -- '**/Cargo.lock' 'Cargo.lock'; then
             # Get current commit SHA.
             expected_head_oid=$(git rev-parse HEAD)
 
@@ -67,7 +67,7 @@ jobs:
                   '. += [{path: $path, contents: $content}]' \
                   "$additions_file" > "$additions_file.tmp" && mv "$additions_file.tmp" "$additions_file"
               fi
-            done < <(git diff --name-only -- '**/Cargo.lock')
+            done < <(git diff --name-only -- '**/Cargo.lock' 'Cargo.lock')
 
             # Create commit via GitHub GraphQL API.
             # Using the API (instead of git push) ensures commits are signed by GitHub

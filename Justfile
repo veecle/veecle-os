@@ -70,7 +70,7 @@ update-lockfiles:
     ./cargo-in-all-workspaces metadata --format-version=1 >/dev/null
 
 validate-lockfiles: update-lockfiles
-    git diff --exit-code --color=always -- $(git ls-files -- '**/Cargo.lock')
+    git diff --exit-code --color=always -- $(git ls-files -- '**/Cargo.lock' 'Cargo.lock')
 
 # Update generated test outputs
 bless:
