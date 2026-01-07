@@ -48,6 +48,8 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           BRANCH: ${{ github.head_ref }}
         run: |
+          set -euo pipefail
+
           # Check if there are changes to commit.
           if ! git diff --quiet -- '**/Cargo.lock' 'Cargo.lock'; then
             # Get current commit SHA.
@@ -65,7 +67,8 @@ jobs:
                 content=$(base64 -w 0 "$file")
                 jq --arg path "$file" --arg content "$content" \
                   '. += [{path: $path, contents: $content}]' \
-                  "$additions_file" > "$additions_file.tmp" && mv "$additions_file.tmp" "$additions_file"
+                  "$additions_file" > "$additions_file.tmp"
+                mv "$additions_file.tmp" "$additions_file"
               fi
             done < <(git diff --name-only -- '**/Cargo.lock' 'Cargo.lock')
 
