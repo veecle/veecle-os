@@ -14,10 +14,17 @@ use std::string::String;
 /// # Examples
 ///
 /// ```rust
-/// use veecle_telemetry::collector::{ConsolePrettyExporter, set_exporter, ProcessId};
+/// use veecle_osal_std::{time::Time, thread::Thread};
+/// use veecle_telemetry::collector::{ConsolePrettyExporter, ProcessId};
 ///
 /// let process_id = ProcessId::random(&mut rand::rng());
-/// set_exporter(process_id, &ConsolePrettyExporter::DEFAULT).unwrap();
+/// veecle_telemetry::collector::build()
+///     .process_id(process_id)
+///     .exporter(&ConsolePrettyExporter::DEFAULT)
+///     .time::<Time>()
+///     .thread::<Thread>()
+///     .set_global()
+///     .unwrap();
 /// ```
 #[derive(Debug, Default)]
 pub struct ConsolePrettyExporter(());

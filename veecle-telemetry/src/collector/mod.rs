@@ -10,7 +10,7 @@
 //! The collector uses a global singleton pattern to ensure telemetry data is collected
 //! consistently across the entire application.
 //! The collector must be initialized once
-//! using [`set_exporter`] before any telemetry data can be collected.
+//! using [`build`] before any telemetry data can be collected.
 //!
 //! # Export Trait
 //!
@@ -25,6 +25,7 @@
 mod collector;
 mod global;
 
+mod builder;
 #[cfg(feature = "std")]
 mod json_exporter;
 #[cfg(feature = "std")]
@@ -34,6 +35,7 @@ mod test_exporter;
 
 use core::fmt::Debug;
 
+pub use builder::{Builder, build};
 #[cfg(feature = "std")]
 pub use json_exporter::ConsoleJsonExporter;
 #[cfg(feature = "std")]
@@ -44,15 +46,13 @@ pub use test_exporter::TestExporter;
 
 pub use self::collector::Collector;
 pub use self::global::get_collector;
-#[cfg(feature = "enable")]
-pub use self::global::{SetExporterError, set_exporter};
 
 pub use crate::protocol::base::ProcessId;
 use crate::protocol::transient::InstanceMessage;
 
 /// Trait for exporting telemetry data to external systems.
 ///
-/// Implementors of this trait define how telemetry data should be exported,
+/// Implementers of this trait define how telemetry data should be exported,
 /// whether to files, network endpoints, or other destinations.
 ///
 /// # Examples

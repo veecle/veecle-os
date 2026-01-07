@@ -19,6 +19,8 @@ embassy-time = { version = "0.5.0", features = ["generic-queue-32", "std"] }
 rand = { version = "0.9.2", default-features = false }
 veecle-os = { path = "../../veecle-os", default-features = false, features = [
   "osal-embassy",
+  # TODO: used for thread ids.
+  "osal-std",
   "telemetry-enable",
 ] }
 veecle-os-examples-common = { path = "../common", default-features = false, features = [

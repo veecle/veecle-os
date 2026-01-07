@@ -43,11 +43,15 @@ async fn useless_machine_actor(
 async fn main() {
     let connector = veecle_ipc::Connector::connect().await;
 
-    veecle_os::telemetry::collector::set_exporter(
-        veecle_os::telemetry::collector::ProcessId::random(&mut rand::rng()),
-        Box::leak(Box::new(connector.exporter())),
-    )
-    .unwrap();
+    veecle_os::telemetry::collector::build()
+        .process_id(veecle_os::telemetry::collector::ProcessId::random(
+            &mut rand::rng(),
+        ))
+        .exporter(Box::leak(Box::new(connector.exporter())))
+        .system_time::<veecle_os::osal::std::time::Time>()
+        .thread::<veecle_os::osal::std::thread::Thread>()
+        .set_global()
+        .unwrap();
 
     veecle_os::runtime::execute! {
         store: [ControlRequest, ControlResponse],

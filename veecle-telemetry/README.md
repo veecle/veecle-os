@@ -15,7 +15,5 @@ For examples and more detailed usage information, please refer to the [repositor
 ## Features
 
 - `enable` - Enable collecting and exporting telemetry data, should only be set in binary crates.
-- `std` - Enable standard library support.
+- `std` - Enable standard library support (implies `alloc`).
 - `alloc` - Enable allocator support for dynamic data structures.
-- `freertos` - Enable FreeRTOS support.
-- `system_time` - Enable system time synchronization.

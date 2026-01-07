@@ -19,11 +19,15 @@ async fn alloc_stat_actor() -> Infallible {
 }
 
 pub fn main() -> ! {
-    veecle_os::telemetry::collector::set_exporter(
-        veecle_os::telemetry::collector::ProcessId::random(&mut rand::rng()),
-        &veecle_os::telemetry::collector::ConsoleJsonExporter::DEFAULT,
-    )
-    .unwrap();
+    veecle_os::telemetry::collector::build()
+        .process_id(veecle_os::telemetry::collector::ProcessId::random(
+            &mut rand::rng(),
+        ))
+        .exporter(&veecle_os::telemetry::collector::ConsoleJsonExporter::DEFAULT)
+        .time::<Time>()
+        .thread::<veecle_os::osal::std::thread::Thread>()
+        .set_global()
+        .unwrap();
 
     Task::new()
         .name(c"alloc example")
