@@ -70,10 +70,8 @@ fn impl_main(
         quote!(
             // Initialize `veecle-telemetry` with a random execution ID and console JSON exporter.
             #veecle_telemetry_path::collector::build()
-                .process_id(#veecle_telemetry_path::collector::ProcessId::random(
-                    &mut #veecle_osal_std_path::reexports::rand::rng(),
-                ))
-                .exporter(&#veecle_telemetry_path::collector::ConsoleJsonExporter::DEFAULT)
+                .random_process_id()
+                .console_json_exporter()
                 .time::<#veecle_osal_std_path::time::Time>()
                 .thread::<#veecle_osal_std_path::thread::Thread>()
                 .set_global()

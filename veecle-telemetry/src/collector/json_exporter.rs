@@ -6,12 +6,10 @@ use super::Export;
 ///
 /// ```rust
 /// use veecle_osal_std::{time::Time, thread::Thread};
-/// use veecle_telemetry::collector::{ConsoleJsonExporter, ProcessId};
 ///
-/// let process_id = ProcessId::random(&mut rand::rng());
 /// veecle_telemetry::collector::build()
-///     .process_id(process_id)
-///     .exporter(&ConsoleJsonExporter::DEFAULT)
+///     .random_process_id()
+///     .console_json_exporter()
 ///     .time::<Time>()
 ///     .thread::<Thread>()
 ///     .set_global()

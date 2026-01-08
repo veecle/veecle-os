@@ -15,8 +15,6 @@ embassy-executor = { version = "0.9.1", features = [
 ] }
 embassy-sync = { version = "0.7.2", features = ["log"] }
 embassy-time = { version = "0.5.0", features = ["generic-queue-32", "std"] }
-# TODO: Necessary for thread-local right now.
-rand = { version = "0.9.2", default-features = false }
 veecle-os = { path = "../../veecle-os", default-features = false, features = [
   "osal-embassy",
   # TODO: used for thread ids.

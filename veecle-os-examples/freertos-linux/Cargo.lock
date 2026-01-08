@@ -920,7 +920,6 @@ version = "0.0.0"
 dependencies = [
  "assert_cmd",
  "predicates",
- "rand",
  "veecle-freertos-integration",
  "veecle-os",
  "veecle-os-examples-common",

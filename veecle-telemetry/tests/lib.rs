@@ -21,7 +21,7 @@ use veecle_telemetry::{CurrentSpan, Span, SpanContext, instrument, span};
 mod exporter {
     use std::sync::{Arc, LazyLock, Mutex};
 
-    use veecle_telemetry::collector::{ProcessId, TestExporter};
+    use veecle_telemetry::collector::TestExporter;
     use veecle_telemetry::protocol::owned::InstanceMessage;
 
     /// Initializes the lazy lock which sets the exporter.
@@ -32,8 +32,8 @@ mod exporter {
             let (reporter, collected_spans) = TestExporter::new();
 
             veecle_telemetry::collector::build()
-                .process_id(ProcessId::random(&mut rand::rng()))
-                .exporter(Box::leak(Box::new(reporter)))
+                .random_process_id()
+                .leaked_exporter(reporter)
                 .time::<Time>()
                 .thread::<Thread>()
                 .set_global()
