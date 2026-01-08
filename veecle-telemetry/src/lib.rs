@@ -25,12 +25,11 @@
 //!
 //! ```rust
 //! use veecle_osal_std::{time::Time, thread::Thread};
-//! use veecle_telemetry::collector::{ConsoleJsonExporter, ProcessId};
+//! use veecle_telemetry::collector::ConsoleJsonExporter;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let process_id = ProcessId::random(&mut rand::rng());
 //! veecle_telemetry::collector::build()
-//!     .process_id(process_id)
+//!     .random_process_id()
 //!     .exporter(&ConsoleJsonExporter::DEFAULT)
 //!     .time::<Time>()
 //!     .thread::<Thread>()

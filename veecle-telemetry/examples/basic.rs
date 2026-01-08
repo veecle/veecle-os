@@ -2,13 +2,11 @@
 
 use veecle_osal_std::{thread::Thread, time::Time};
 use veecle_telemetry::Span;
-use veecle_telemetry::collector::{ConsoleJsonExporter, ProcessId};
 
 fn main() {
-    let process_id = ProcessId::random(&mut rand::rng());
     veecle_telemetry::collector::build()
-        .process_id(process_id)
-        .exporter(&ConsoleJsonExporter::DEFAULT)
+        .random_process_id()
+        .console_json_exporter()
         .time::<Time>()
         .thread::<Thread>()
         .set_global()

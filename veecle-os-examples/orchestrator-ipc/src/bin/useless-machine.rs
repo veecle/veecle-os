@@ -44,10 +44,8 @@ async fn main() {
     let connector = veecle_ipc::Connector::connect().await;
 
     veecle_os::telemetry::collector::build()
-        .process_id(veecle_os::telemetry::collector::ProcessId::random(
-            &mut rand::rng(),
-        ))
-        .exporter(Box::leak(Box::new(connector.exporter())))
+        .random_process_id()
+        .leaked_exporter(connector.exporter())
         .system_time::<veecle_os::osal::std::time::Time>()
         .thread::<veecle_os::osal::std::thread::Thread>()
         .set_global()

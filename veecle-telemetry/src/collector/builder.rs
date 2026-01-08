@@ -82,13 +82,10 @@ pub struct Builder<PID, EXP, TIME, THREAD> {
 /// ```rust,no_run
 /// use veecle_osal_std::{time::Time, thread::Thread};
 /// use veecle_telemetry::collector;
-/// use veecle_telemetry::protocol::base::ProcessId;
 ///
-/// # let process_id = ProcessId::from_raw(1);
-/// # let exporter = &veecle_telemetry::collector::ConsoleJsonExporter::DEFAULT;
 /// collector::build()
-///     .process_id(process_id)
-///     .exporter(exporter)
+///     .random_process_id()
+///     .console_json_exporter()
 ///     .time::<Time>()
 ///     .thread::<Thread>()
 ///     .set_global().unwrap();
@@ -190,6 +187,82 @@ impl<PID, EXP, TIME, THREAD> Builder<PID, EXP, TIME, THREAD> {
             _time: core::marker::PhantomData,
             _thread: core::marker::PhantomData,
         }
+    }
+}
+
+impl<EXP, TIME, THREAD> Builder<state::NoProcessId, EXP, TIME, THREAD> {
+    /// Set a randomly generated process ID.
+    ///
+    /// Equivalent to `.process_id(ProcessId::random(&mut rand::rng()))`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use veecle_osal_std::{time::Time, thread::Thread};
+    /// use veecle_telemetry::collector;
+    ///
+    /// # let exporter = &veecle_telemetry::collector::ConsoleJsonExporter::DEFAULT;
+    /// collector::build()
+    ///     .random_process_id()
+    ///     .exporter(exporter)
+    ///     .time::<Time>()
+    ///     .thread::<Thread>()
+    ///     .set_global().unwrap();
+    /// ```
+    #[cfg(feature = "std")]
+    pub fn random_process_id(self) -> Builder<state::WithProcessId, EXP, TIME, THREAD> {
+        self.process_id(ProcessId::random(&mut rand::rng()))
+    }
+}
+
+impl<PID, TIME, THREAD> Builder<PID, state::NoExporter, TIME, THREAD> {
+    /// Set an exporter by leaking it to obtain a static reference.
+    ///
+    /// This is a convenience method for dynamic exporters that need to be boxed
+    /// and leaked. Equivalent to `.exporter(Box::leak(Box::new(exporter)))`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use veecle_osal_std::{time::Time, thread::Thread};
+    /// use veecle_telemetry::collector::TestExporter;
+    ///
+    /// let (exporter, _collected) = TestExporter::new();
+    /// veecle_telemetry::collector::build()
+    ///     .random_process_id()
+    ///     .leaked_exporter(exporter)
+    ///     .time::<Time>()
+    ///     .thread::<Thread>()
+    ///     .set_global().unwrap();
+    /// ```
+    #[cfg(feature = "alloc")]
+    pub fn leaked_exporter(
+        self,
+        exporter: impl Export + Sync + 'static,
+    ) -> Builder<PID, state::WithExporter, TIME, THREAD> {
+        self.exporter(alloc::boxed::Box::leak(alloc::boxed::Box::new(exporter)))
+    }
+
+    /// Set the console JSON exporter.
+    ///
+    /// Equivalent to `.exporter(&ConsoleJsonExporter::DEFAULT)`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use veecle_osal_std::{time::Time, thread::Thread};
+    /// use veecle_telemetry::collector;
+    ///
+    /// collector::build()
+    ///     .random_process_id()
+    ///     .console_json_exporter()
+    ///     .time::<Time>()
+    ///     .thread::<Thread>()
+    ///     .set_global().unwrap();
+    /// ```
+    #[cfg(feature = "std")]
+    pub fn console_json_exporter(self) -> Builder<PID, state::WithExporter, TIME, THREAD> {
+        self.exporter(&super::ConsoleJsonExporter::DEFAULT)
     }
 }
 

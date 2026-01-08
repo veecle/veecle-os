@@ -15,11 +15,10 @@ use std::string::String;
 ///
 /// ```rust
 /// use veecle_osal_std::{time::Time, thread::Thread};
-/// use veecle_telemetry::collector::{ConsolePrettyExporter, ProcessId};
+/// use veecle_telemetry::collector::ConsolePrettyExporter;
 ///
-/// let process_id = ProcessId::random(&mut rand::rng());
 /// veecle_telemetry::collector::build()
-///     .process_id(process_id)
+///     .random_process_id()
 ///     .exporter(&ConsolePrettyExporter::DEFAULT)
 ///     .time::<Time>()
 ///     .thread::<Thread>()
