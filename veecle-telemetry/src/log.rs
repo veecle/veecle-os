@@ -1,8 +1,6 @@
 #[cfg(feature = "enable")]
 use crate::collector::get_collector;
 use crate::protocol::transient;
-#[cfg(feature = "enable")]
-use crate::time::now;
 
 /// Logs a message with the specified severity level and attributes.
 ///
@@ -57,13 +55,6 @@ pub fn log<'a>(
 
     #[cfg(feature = "enable")]
     {
-        let log_message = transient::LogMessage {
-            time_unix_nano: now().as_nanos(),
-            severity,
-            body,
-            attributes,
-        };
-
-        get_collector().log_message(log_message);
+        get_collector().log_message(severity, body, attributes);
     }
 }

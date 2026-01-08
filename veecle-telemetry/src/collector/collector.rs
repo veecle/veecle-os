@@ -8,10 +8,12 @@ use crate::protocol::base::ProcessId;
 use crate::protocol::transient::InstanceMessage;
 #[cfg(feature = "enable")]
 use crate::protocol::transient::{
-    LogMessage, SpanAddEventMessage, SpanAddLinkMessage, SpanCloseMessage, SpanCreateMessage,
-    SpanEnterMessage, SpanExitMessage, SpanSetAttributeMessage, TelemetryMessage, ThreadId,
-    TracingMessage,
+    KeyValue, LogMessage, Severity, SpanAddEventMessage, SpanAddLinkMessage, SpanCloseMessage,
+    SpanContext, SpanCreateMessage, SpanEnterMessage, SpanExitMessage, SpanId,
+    SpanSetAttributeMessage, TelemetryMessage, ThreadId, TracingMessage,
 };
+#[cfg(feature = "enable")]
+use crate::time::now;
 
 /// The global telemetry collector.
 ///
@@ -96,52 +98,97 @@ impl Collector {
 
     #[inline]
     #[cfg(feature = "enable")]
-    pub(crate) fn new_span(&self, span: SpanCreateMessage<'_>) {
-        self.tracing_message(TracingMessage::CreateSpan(span));
+    pub(crate) fn new_span<'a>(
+        &self,
+        span_id: SpanId,
+        name: &'a str,
+        attributes: &'a [KeyValue<'a>],
+    ) {
+        self.tracing_message(TracingMessage::CreateSpan(SpanCreateMessage {
+            span_id,
+            name,
+            start_time_unix_nano: now().as_nanos(),
+            attributes,
+        }));
     }
 
     #[inline]
     #[cfg(feature = "enable")]
-    pub(crate) fn enter_span(&self, enter: SpanEnterMessage) {
-        self.tracing_message(TracingMessage::EnterSpan(enter));
+    pub(crate) fn enter_span(&self, span_id: SpanId) {
+        self.tracing_message(TracingMessage::EnterSpan(SpanEnterMessage {
+            span_id,
+            time_unix_nano: now().as_nanos(),
+        }));
     }
 
     #[inline]
     #[cfg(feature = "enable")]
-    pub(crate) fn exit_span(&self, exit: SpanExitMessage) {
-        self.tracing_message(TracingMessage::ExitSpan(exit));
+    pub(crate) fn exit_span(&self, span_id: SpanId) {
+        self.tracing_message(TracingMessage::ExitSpan(SpanExitMessage {
+            span_id,
+            time_unix_nano: now().as_nanos(),
+        }));
     }
 
     #[inline]
     #[cfg(feature = "enable")]
-    pub(crate) fn close_span(&self, span: SpanCloseMessage) {
-        self.tracing_message(TracingMessage::CloseSpan(span));
+    pub(crate) fn close_span(&self, span_id: SpanId) {
+        self.tracing_message(TracingMessage::CloseSpan(SpanCloseMessage {
+            span_id,
+            end_time_unix_nano: now().as_nanos(),
+        }));
     }
 
     #[inline]
     #[cfg(feature = "enable")]
-    pub(crate) fn span_event(&self, event: SpanAddEventMessage<'_>) {
-        self.tracing_message(TracingMessage::AddEvent(event));
+    pub(crate) fn span_event<'a>(
+        &self,
+        span_id: Option<SpanId>,
+        name: &'a str,
+        attributes: &'a [KeyValue<'a>],
+    ) {
+        self.tracing_message(TracingMessage::AddEvent(SpanAddEventMessage {
+            span_id,
+            name,
+            time_unix_nano: now().as_nanos(),
+            attributes,
+        }));
     }
 
     #[inline]
     #[cfg(feature = "enable")]
-    pub(crate) fn span_link(&self, link: SpanAddLinkMessage) {
-        self.tracing_message(TracingMessage::AddLink(link));
+    pub(crate) fn span_link(&self, span_id: Option<SpanId>, link: SpanContext) {
+        self.tracing_message(TracingMessage::AddLink(SpanAddLinkMessage {
+            span_id,
+            link,
+        }));
     }
 
     #[inline]
     #[cfg(feature = "enable")]
-    pub(crate) fn span_attribute(&self, attribute: SpanSetAttributeMessage<'_>) {
-        self.tracing_message(TracingMessage::SetAttribute(attribute));
+    pub(crate) fn span_attribute<'a>(&self, span_id: Option<SpanId>, attribute: KeyValue<'a>) {
+        self.tracing_message(TracingMessage::SetAttribute(SpanSetAttributeMessage {
+            span_id,
+            attribute,
+        }));
     }
 
     #[inline]
     #[cfg(feature = "enable")]
-    pub(crate) fn log_message(&self, log: LogMessage<'_>) {
+    pub(crate) fn log_message<'a>(
+        &self,
+        severity: Severity,
+        body: &'a str,
+        attributes: &'a [KeyValue<'a>],
+    ) {
         self.inner.exporter.export(InstanceMessage {
             thread_id: ThreadId::current(self.inner.process_id),
-            message: TelemetryMessage::Log(log),
+            message: TelemetryMessage::Log(LogMessage {
+                time_unix_nano: now().as_nanos(),
+                severity,
+                body,
+                attributes,
+            }),
         });
     }
 
