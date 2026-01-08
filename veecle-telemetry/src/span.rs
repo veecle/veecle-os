@@ -56,13 +56,6 @@ use crate::collector::get_collector;
 #[cfg(feature = "enable")]
 use crate::id::SpanId;
 use crate::protocol::transient::KeyValue;
-#[cfg(feature = "enable")]
-use crate::protocol::transient::{
-    SpanAddEventMessage, SpanAddLinkMessage, SpanCloseMessage, SpanCreateMessage, SpanEnterMessage,
-    SpanExitMessage, SpanSetAttributeMessage,
-};
-#[cfg(feature = "enable")]
-use crate::time::now;
 
 /// A distributed tracing span representing a unit of work.
 ///
@@ -271,12 +264,7 @@ impl Span {
         #[cfg(feature = "enable")]
         {
             if let Some(span_id) = self.span_id {
-                get_collector().span_event(SpanAddEventMessage {
-                    span_id: Some(span_id),
-                    name,
-                    time_unix_nano: now().as_nanos(),
-                    attributes,
-                });
+                get_collector().span_event(Some(span_id), name, attributes);
             }
         }
     }
@@ -304,10 +292,7 @@ impl Span {
         #[cfg(feature = "enable")]
         {
             if let Some(span_id) = self.span_id {
-                get_collector().span_link(SpanAddLinkMessage {
-                    span_id: Some(span_id),
-                    link,
-                });
+                get_collector().span_link(Some(span_id), link);
             }
         }
     }
@@ -340,10 +325,7 @@ impl Span {
         #[cfg(feature = "enable")]
         {
             if let Some(span_id) = self.span_id {
-                get_collector().span_attribute(SpanSetAttributeMessage {
-                    span_id: Some(span_id),
-                    attribute,
-                });
+                get_collector().span_attribute(Some(span_id), attribute);
             }
         }
     }
@@ -377,12 +359,7 @@ impl CurrentSpan {
 
         #[cfg(feature = "enable")]
         {
-            get_collector().span_event(SpanAddEventMessage {
-                span_id: None,
-                name,
-                time_unix_nano: now().as_nanos(),
-                attributes,
-            });
+            get_collector().span_event(None, name, attributes);
         }
     }
 
@@ -409,10 +386,7 @@ impl CurrentSpan {
 
         #[cfg(feature = "enable")]
         {
-            get_collector().span_link(SpanAddLinkMessage {
-                span_id: None,
-                link,
-            });
+            get_collector().span_link(None, link);
         }
     }
 
@@ -443,10 +417,7 @@ impl CurrentSpan {
 
         #[cfg(feature = "enable")]
         {
-            get_collector().span_attribute(SpanSetAttributeMessage {
-                span_id: None,
-                attribute,
-            });
+            get_collector().span_attribute(None, attribute);
         }
     }
 }
@@ -456,12 +427,7 @@ impl Span {
     fn new_inner<'a>(name: &'a str, attributes: &'a [KeyValue<'a>]) -> Self {
         let span_id = SpanId::next_id();
 
-        get_collector().new_span(SpanCreateMessage {
-            span_id,
-            name,
-            start_time_unix_nano: now().as_nanos(),
-            attributes,
-        });
+        get_collector().new_span(span_id, name, attributes);
 
         Self {
             span_id: Some(span_id),
@@ -471,22 +437,14 @@ impl Span {
     fn do_enter(&self) {
         #[cfg(feature = "enable")]
         if let Some(span_id) = self.span_id {
-            let timestamp = now();
-            get_collector().enter_span(SpanEnterMessage {
-                span_id,
-                time_unix_nano: timestamp.0,
-            });
+            get_collector().enter_span(span_id);
         }
     }
 
     fn do_exit(&self) {
         #[cfg(feature = "enable")]
         if let Some(span_id) = self.span_id {
-            let timestamp = now();
-            get_collector().exit_span(SpanExitMessage {
-                span_id,
-                time_unix_nano: timestamp.0,
-            });
+            get_collector().exit_span(span_id);
         }
     }
 }
@@ -495,11 +453,7 @@ impl Drop for Span {
     fn drop(&mut self) {
         #[cfg(feature = "enable")]
         if let Some(span_id) = self.span_id.take() {
-            let timestamp = now();
-            get_collector().close_span(SpanCloseMessage {
-                span_id,
-                end_time_unix_nano: timestamp.0,
-            });
+            get_collector().close_span(span_id);
         }
     }
 }
