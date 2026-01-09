@@ -8,11 +8,13 @@ static GLOBAL: FreeRtosAllocator = unsafe { FreeRtosAllocator::new() };
 
 /// An example of using the time abstraction within a FreeRTOS task.
 pub fn main() -> ! {
-    veecle_os::telemetry::collector::set_exporter(
-        veecle_os::telemetry::collector::ProcessId::random(&mut rand::rng()),
-        &veecle_os::telemetry::collector::ConsoleJsonExporter::DEFAULT,
-    )
-    .unwrap();
+    veecle_os::telemetry::collector::build()
+        .random_process_id()
+        .console_json_exporter()
+        .time::<Time>()
+        .thread::<veecle_os::osal::std::thread::Thread>()
+        .set_global()
+        .unwrap();
 
     Task::new()
         .name(c"time example")

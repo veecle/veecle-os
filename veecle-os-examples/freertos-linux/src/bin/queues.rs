@@ -31,11 +31,13 @@ async fn queue_actor(
 }
 
 fn main() {
-    veecle_os::telemetry::collector::set_exporter(
-        veecle_os::telemetry::collector::ProcessId::random(&mut rand::rng()),
-        &veecle_os::telemetry::collector::ConsoleJsonExporter::DEFAULT,
-    )
-    .unwrap();
+    veecle_os::telemetry::collector::build()
+        .random_process_id()
+        .console_json_exporter()
+        .time::<veecle_os::osal::freertos::time::Time>()
+        .thread::<veecle_os::osal::std::thread::Thread>()
+        .set_global()
+        .unwrap();
 
     let incoming_legacy_queue = Queue::<u32>::new(10).unwrap();
     let outgoing_legacy_queue = Queue::<i32>::new(10).unwrap();

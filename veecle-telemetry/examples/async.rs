@@ -2,13 +2,17 @@
 
 use std::time::Duration;
 
-use veecle_telemetry::collector::{ConsoleJsonExporter, ProcessId};
+use veecle_osal_std::{thread::Thread, time::Time};
 use veecle_telemetry::{CurrentSpan, Span};
 
 #[tokio::main]
 async fn main() {
-    let process_id = ProcessId::random(&mut rand::rng());
-    veecle_telemetry::collector::set_exporter(process_id, &ConsoleJsonExporter::DEFAULT)
+    veecle_telemetry::collector::build()
+        .random_process_id()
+        .console_json_exporter()
+        .time::<Time>()
+        .thread::<Thread>()
+        .set_global()
         .expect("exporter was not set yet");
 
     let _span = Span::new("main", &[]).entered();

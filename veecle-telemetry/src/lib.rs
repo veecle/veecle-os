@@ -16,22 +16,24 @@
 //! ## Feature Flags
 //!
 //! - `enable` - Enable collecting and exporting telemetry data, should only be set in binary crates
-//! - `std` - Enable standard library support
+//! - `std` - Enable standard library support (implies `alloc`)
 //! - `alloc` - Enable allocator support for dynamic data structures
-//! - `freertos` - Enable FreeRTOS support
-//! - `system_time` - Enable system time synchronization
 //!
 //! ## Basic Usage
 //!
 //! First, set up an exporter in your application:
 //!
 //! ```rust
-//! use veecle_telemetry::collector::{ConsoleJsonExporter, set_exporter};
-//! use veecle_telemetry::ProcessId;
+//! use veecle_osal_std::{time::Time, thread::Thread};
+//! use veecle_telemetry::collector::ConsoleJsonExporter;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let process_id = ProcessId::random(&mut rand::rng());
-//! set_exporter(process_id, &ConsoleJsonExporter::DEFAULT)?;
+//! veecle_telemetry::collector::build()
+//!     .random_process_id()
+//!     .exporter(&ConsoleJsonExporter::DEFAULT)
+//!     .time::<Time>()
+//!     .thread::<Thread>()
+//!     .set_global()?;
 //! # Ok(())
 //! # }
 //! ```
@@ -88,11 +90,6 @@ extern crate std;
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-#[cfg(all(feature = "enable", not(any(feature = "std", feature = "freertos"))))]
-compile_error! {
-    "veecle_telemetry requires that either the `std` (default) or the `freertos` feature is enabled to work"
-}
-
 pub mod collector;
 pub mod future;
 pub mod id;
@@ -106,8 +103,6 @@ mod span;
 #[cfg(feature = "alloc")]
 #[doc(hidden)]
 pub mod test_helpers;
-#[cfg(feature = "enable")]
-mod time;
 
 pub use id::{ProcessId, SpanContext, SpanId};
 pub use span::{CurrentSpan, Span, SpanGuard, SpanGuardRef};
