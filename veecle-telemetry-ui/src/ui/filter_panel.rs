@@ -174,33 +174,18 @@ fn filter_content_ui(ui: &mut egui::Ui, app_state: &AppState, store: &Store) {
                                     for thread_id in store.thread_ids() {
                                         let thread_str = format!("{}", thread_id);
 
-                                        // extract just the thread part (after the ':')
-                                        let thread_part =
-                                            thread_str.split(':').nth(1).unwrap_or(&thread_str);
-
                                         // skip populating list if it didn't match the search
                                         if !search_text.is_empty()
-                                            && !thread_part
+                                            && !thread_str
                                                 .to_lowercase()
                                                 .contains(&search_text.to_lowercase())
                                         {
                                             continue;
                                         }
 
-                                        // use last 35 characters of the thread id for display
-                                        let display_str = if thread_str.len() > 40 {
-                                            format!("...{}", &thread_str[thread_str.len() - 35..])
-                                        } else {
-                                            thread_str.clone()
-                                        };
-
                                         let mut checked =
                                             app_state.filter().thread.contains(&thread_id);
-                                        if ui
-                                            .checkbox(&mut checked, display_str)
-                                            .on_hover_text(&thread_str)
-                                            .clicked()
-                                        {
+                                        if ui.checkbox(&mut checked, &thread_str).clicked() {
                                             let mut thread_filter =
                                                 app_state.filter().thread.clone();
                                             if checked {

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::hash::Hash;
 use std::ops::Deref;
 
-use veecle_telemetry::protocol::ThreadId;
+use veecle_telemetry::protocol::transient::ThreadId;
 
 use crate::store::{Level, LogRef, SpanRef, Store};
 
