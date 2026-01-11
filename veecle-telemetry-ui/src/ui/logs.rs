@@ -84,14 +84,8 @@ pub fn log_ui(ui: &mut egui::Ui, app_state: &AppState, store: &Store) {
                     });
                     row.col(|ui| {
                         ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
-                        // show only last 20 chars of thread id
                         let thread_str = format!("{}", log.thread_id);
-                        let display = if thread_str.len() > 25 {
-                            format!("...{}", &thread_str[thread_str.len() - 20..])
-                        } else {
-                            thread_str.clone()
-                        };
-                        monospace_table_label_ui(ui, display).on_hover_text(thread_str);
+                        monospace_table_label_ui(ui, thread_str);
                     });
                     row.col(|ui| {
                         monospace_table_label_ui(ui, log.body.as_str());

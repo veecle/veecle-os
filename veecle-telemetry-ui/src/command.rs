@@ -31,7 +31,7 @@
 use std::collections::HashSet;
 use std::sync::mpsc;
 
-use veecle_telemetry::protocol::ThreadId;
+use veecle_telemetry::protocol::transient::ThreadId;
 
 use crate::connection::Connection;
 use crate::store::Level;
