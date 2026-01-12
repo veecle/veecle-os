@@ -670,7 +670,7 @@ dependencies = [
  "rand",
  "serde",
  "serde_json",
- "veecle-osal-std",
+ "veecle-osal-api",
  "veecle-telemetry-macros",
 ]
 

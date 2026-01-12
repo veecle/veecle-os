@@ -20,8 +20,7 @@ pin-project = { workspace = true }
 rand = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, optional = true }
-veecle-osal-freertos = { workspace = true, optional = true }
-veecle-osal-std = { workspace = true, optional = true }
+veecle-osal-api = { workspace = true }
 veecle-telemetry-macros = { workspace = true }
 
 [dev-dependencies]
@@ -29,7 +28,13 @@ indoc = { workspace = true }
 pretty_assertions = { workspace = true, features = ["std"] }
 serial_test = { workspace = true }
 test-case = { workspace = true }
-tokio = { workspace = true }
+tokio = { workspace = true, features = [
+  "macros",
+  "rt",
+  "rt-multi-thread",
+  "time",
+] }
+veecle-osal-std = { workspace = true }
 veecle-telemetry = { path = ".", features = ["enable", "std"] }
 
 [features]
@@ -37,9 +42,7 @@ default = []
 alloc = ["serde_json/alloc", "serde/alloc"]
 # Enable collecting and exporting telemetry data, should only be set in the final binary crate.
 enable = ["veecle-telemetry-macros/enable"]
-freertos = ["veecle-osal-freertos"]
-std = ["alloc", "rand/thread_rng", "veecle-osal-std"]
-system_time = []
+std = ["alloc", "rand/thread_rng"]
 
 [lints]
 workspace = true

@@ -16,11 +16,13 @@ async fn run() {
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
-    veecle_os::telemetry::collector::set_exporter(
-        veecle_os::telemetry::collector::ProcessId::random(&mut rand::rng()),
-        &veecle_os::telemetry::collector::ConsoleJsonExporter::DEFAULT,
-    )
-    .unwrap();
+    veecle_os::telemetry::collector::build()
+        .random_process_id()
+        .console_json_exporter()
+        .time::<Time>()
+        .thread::<veecle_os::osal::std::thread::Thread>()
+        .set_global()
+        .unwrap();
 
     spawner.spawn(run()).unwrap();
 }

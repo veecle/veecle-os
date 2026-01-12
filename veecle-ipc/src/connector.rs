@@ -168,10 +168,12 @@ impl Connector {
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let connector = veecle_ipc::Connector::connect().await;
     ///
-    /// veecle_os::telemetry::collector::set_exporter(
-    ///     veecle_os::telemetry::collector::ProcessId::random(&mut rand::rng()),
-    ///     Box::leak(Box::new(connector.exporter())),
-    /// )?;
+    /// veecle_os::telemetry::collector::build()
+    ///     .random_process_id()
+    ///     .leaked_exporter(connector.exporter())
+    ///     .system_time::<veecle_os::osal::std::time::Time>()
+    ///     .thread::<veecle_os::osal::std::thread::Thread>()
+    ///     .set_global()?;
     /// # Ok(())
     /// # }
     /// ```

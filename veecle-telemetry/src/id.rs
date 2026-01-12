@@ -109,24 +109,6 @@ impl ThreadId {
         Self { process, raw }
     }
 
-    /// Creates a [`ThreadId`] for the current thread, using OS specific means to acquire it.
-    #[cfg(feature = "enable")]
-    pub(crate) fn current(process: ProcessId) -> Self {
-        #[cfg_attr(not(feature = "std"), expect(unreachable_code))]
-        Self::from_raw(process, {
-            #[cfg(feature = "std")]
-            {
-                use veecle_osal_std::thread::{Thread, ThreadAbstraction};
-                Thread::current_thread_id()
-            }
-
-            #[cfg(not(feature = "std"))]
-            {
-                panic!("not yet supported")
-            }
-        })
-    }
-
     /// Returns the raw value of this id.
     pub fn raw(&self) -> NonZeroU64 {
         self.raw

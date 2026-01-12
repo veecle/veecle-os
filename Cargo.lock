@@ -5079,7 +5079,7 @@ dependencies = [
  "serial_test",
  "test-case",
  "tokio",
- "veecle-osal-freertos",
+ "veecle-osal-api 0.1.0",
  "veecle-osal-std 0.1.0",
  "veecle-telemetry 0.1.0",
  "veecle-telemetry-macros 0.1.0",
