@@ -105,7 +105,7 @@ proc-macro2 = { version = "1.0.105", default-features = false }
 quote = { version = "1.0.43", default-features = false }
 rand = { version = "0.9.2", default-features = false }
 re_log = { version = "0.28.1", default-features = false }
-rfd = { version = "0.16.0", default-features = false }
+rfd = { version = "0.17.1", default-features = false }
 rtt-target = { version = "0.6.2", default-features = false }
 runtime-macros = { version = "1.1.1", default-features = false }
 rustix = { version = "1.1.2", default-features = false }
