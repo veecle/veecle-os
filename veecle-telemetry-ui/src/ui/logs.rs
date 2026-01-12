@@ -24,6 +24,7 @@ pub fn log_ui(ui: &mut egui::Ui, app_state: &AppState, store: &Store) {
             .column(Column::auto().at_least(70.0).resizable(true))
             .column(Column::auto().at_least(40.0).resizable(true))
             .column(Column::auto().resizable(true).clip(true))
+            .column(Column::auto().at_least(100.0).resizable(true).clip(true))
             .column(Column::remainder().clip(true).resizable(true))
             .min_scrolled_height(0.0)
             .max_scroll_height(available_height)
@@ -39,6 +40,9 @@ pub fn log_ui(ui: &mut egui::Ui, app_state: &AppState, store: &Store) {
                 });
                 header.col(|ui| {
                     ui.strong("Actor");
+                });
+                header.col(|ui| {
+                    ui.strong("Thread ID");
                 });
                 header.col(|ui| {
                     ui.strong("Message");
@@ -77,6 +81,11 @@ pub fn log_ui(ui: &mut egui::Ui, app_state: &AppState, store: &Store) {
                     row.col(|ui| {
                         ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
                         monospace_table_label_ui(ui, log.actor.as_str());
+                    });
+                    row.col(|ui| {
+                        ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
+                        let thread_str = format!("{}", log.thread_id);
+                        monospace_table_label_ui(ui, thread_str);
                     });
                     row.col(|ui| {
                         monospace_table_label_ui(ui, log.body.as_str());

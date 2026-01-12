@@ -539,7 +539,21 @@ impl TraceTimelinePanel {
                 );
             }
 
-            ui.painter().galley(text_pos, galley, visuals.text_color());
+            let has_matching_spans = actor.iter().any(|actor_row| {
+                actor_row
+                    .spans
+                    .iter()
+                    .any(|span| app_state.filter().span_matches(span))
+            });
+
+            // Gray out the actor name if no spans match the active filters.
+            let text_color = if app_state.filter().has_active_filters() && !has_matching_spans {
+                Color32::from_gray(80)
+            } else {
+                visuals.text_color()
+            };
+
+            ui.painter().galley(text_pos, galley, text_color);
         }
 
         let mut top = rect.top();

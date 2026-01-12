@@ -31,6 +31,8 @@
 use std::collections::HashSet;
 use std::sync::mpsc;
 
+use veecle_telemetry::protocol::transient::ThreadId;
+
 use crate::connection::Connection;
 use crate::store::Level;
 
@@ -57,6 +59,7 @@ pub enum SystemCommand {
     SetFileFilter(String),
     SetActorFilter(HashSet<String>),
     SetMessageFilter(String),
+    SetThreadFilter(HashSet<ThreadId>),
 }
 
 #[derive(Debug, Clone)]

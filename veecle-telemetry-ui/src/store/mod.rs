@@ -43,6 +43,7 @@ pub struct Store {
     root_spans: IndexSet<SpanContext>,
     logs: Vec<Log>,
     actors: HashSet<String>,
+    thread_ids: HashSet<ThreadId>,
 
     /// Tracks the currently entered spans for a specific thread of execution to mark the parent of
     /// newly created spans.
@@ -74,6 +75,7 @@ impl Default for Store {
             root_spans: IndexSet::default(),
             logs: Vec::default(),
             actors: HashSet::default(),
+            thread_ids: HashSet::default(),
             execution_contexts: HashMap::default(),
             start: Timestamp::MAX,
             end: Timestamp::MIN,
@@ -117,6 +119,11 @@ impl Store {
         self.actors.iter().map(String::as_str)
     }
 
+    /// Returns an iterator over all thread IDs that have been seen by the store.
+    pub fn thread_ids(&self) -> impl ExactSizeIterator<Item = ThreadId> + '_ {
+        self.thread_ids.iter().copied()
+    }
+
     /// Process a single line from a trace file or piped input.
     pub fn process_line(&mut self, line: &str) -> anyhow::Result<()> {
         if line.is_empty() {
@@ -136,6 +143,7 @@ impl Store {
         self.root_spans.clear();
         self.logs.clear();
         self.actors.clear();
+        self.thread_ids.clear();
 
         self.start = Timestamp::MAX;
         self.end = Timestamp::MIN;
@@ -163,6 +171,10 @@ impl Store {
                     start: Timestamp::from_ns(0),
                     end: Timestamp::from_ns(0),
                     actor: unknown_actor,
+                    thread_id: ThreadId::from_raw(
+                        ProcessId::from_raw(0),
+                        core::num::NonZeroU64::new(1).unwrap(),
+                    ),
                     activity: vec![],
                     metadata: Metadata {
                         name: "program".to_string(),
@@ -250,6 +262,7 @@ impl Store {
                     .to_string();
 
                 self.actors.insert(actor.clone());
+                self.thread_ids.insert(thread_id);
 
                 let metadata = Metadata {
                     name: span_msg.name.as_str().to_string(),
@@ -259,7 +272,8 @@ impl Store {
                     file: None,
                 };
 
-                let mut span = Span::new(context, parent_context, actor, metadata, fields);
+                let mut span =
+                    Span::new(context, parent_context, actor, thread_id, metadata, fields);
                 span.start = timestamp;
                 span.end = Timestamp::MAX;
                 self.spans.insert(context, span);
@@ -374,12 +388,15 @@ impl Store {
                     file: None,
                 };
 
+                self.thread_ids.insert(thread_id);
+
                 self.logs.push(Log {
                     id,
                     span_context,
                     fields,
                     body: message,
                     actor: span.actor.clone(),
+                    thread_id,
                     metadata,
                     timestamp,
                 });
@@ -465,12 +482,15 @@ impl Store {
             file: None,
         };
 
+        self.thread_ids.insert(thread_id);
+
         self.logs.push(Log {
             id,
             span_context,
             fields,
             body: message,
             actor: span.actor.clone(),
+            thread_id,
             metadata,
             timestamp,
         });
@@ -569,6 +589,9 @@ pub struct Span {
     /// The actor this span is in.
     pub actor: String,
 
+    /// The thread this span was created on.
+    pub thread_id: ThreadId,
+
     /// List of activity periods for this span.
     ///
     /// If this span was part of an async operation, it may have multiple periods separated by suspensions.
@@ -583,6 +606,7 @@ impl Span {
         context: SpanContext,
         parent: Option<SpanContext>,
         actor: String,
+        thread_id: ThreadId,
         metadata: impl Into<Metadata>,
         fields: IndexMap<String, Value>,
     ) -> Self {
@@ -598,6 +622,7 @@ impl Span {
             start: Timestamp::MAX,
             end: Timestamp::MIN,
             actor,
+            thread_id,
             activity: vec![],
             metadata,
         }
@@ -706,6 +731,9 @@ pub struct Log {
     pub body: String,
     /// Actor this was logged in.
     pub actor: String,
+
+    /// The thread this log was created on.
+    pub thread_id: ThreadId,
 
     /// Span metadata.
     pub metadata: Metadata,
