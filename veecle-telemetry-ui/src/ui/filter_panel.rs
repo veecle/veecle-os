@@ -86,7 +86,7 @@ fn filter_content_ui(ui: &mut egui::Ui, app_state: &AppState, store: &Store) {
             ui.horizontal(|ui| {
                 ui.label("Thread");
 
-                // Clear button to reset filter
+                // Clear button to reset filter.
                 if selected_count > 0
                     && ui
                         .small_button("Clear")
@@ -127,7 +127,7 @@ fn filter_content_ui(ui: &mut egui::Ui, app_state: &AppState, store: &Store) {
                         egui::Frame::popup(ui.style()).show(ui, |ui| {
                             ui.set_min_width(350.0);
 
-                            // create search box
+                            // Create search box.
                             let mut search_text = ui.data_mut(|d| {
                                 d.get_temp::<String>(egui::Id::new("thread_search_combo"))
                                     .unwrap_or_default()
@@ -149,7 +149,7 @@ fn filter_content_ui(ui: &mut egui::Ui, app_state: &AppState, store: &Store) {
                                     });
                                 }
 
-                                // add an x button to clear if there is some search text
+                                // Add an x button to clear if there is some search text.
                                 if !search_text.is_empty()
                                     && ui.small_button("✖").on_hover_text("Clear search").clicked()
                                 {
@@ -165,7 +165,7 @@ fn filter_content_ui(ui: &mut egui::Ui, app_state: &AppState, store: &Store) {
 
                             ui.separator();
 
-                            // create thread list in scrollable area
+                            // Create thread list in scroll area.
                             egui::ScrollArea::vertical()
                                 .max_height(300.0)
                                 .max_width(350.0)
@@ -174,7 +174,7 @@ fn filter_content_ui(ui: &mut egui::Ui, app_state: &AppState, store: &Store) {
                                     for thread_id in store.thread_ids() {
                                         let thread_str = format!("{}", thread_id);
 
-                                        // skip populating list if it didn't match the search
+                                        // Skip populating list if it didn't match the search.
                                         if !search_text.is_empty()
                                             && !thread_str
                                                 .to_lowercase()
@@ -202,7 +202,7 @@ fn filter_content_ui(ui: &mut egui::Ui, app_state: &AppState, store: &Store) {
                         });
                     });
 
-                // close the popup if clicked outside
+                // Close the popup if clicked outside.
                 if ui.input(|i| i.pointer.any_click())
                     && !area_response.response.contains_pointer()
                     && !button_response.contains_pointer()
