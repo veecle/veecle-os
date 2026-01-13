@@ -155,6 +155,14 @@ pub fn impl_actor(
         .args
         .insert(0, syn::GenericArgument::Lifetime(actor_lifetime.clone()));
 
+    let mut next_argument_name = {
+        let mut counter = 0;
+        move || {
+            counter += 1;
+            syn::Ident::new(&format!("arg{counter}"), Span::call_site())
+        }
+    };
+
     for argument in parsed_item.sig.inputs.iter_mut() {
         match argument {
             FnArg::Receiver(receiver) => {
@@ -164,16 +172,7 @@ pub fn impl_actor(
                 ));
             }
             FnArg::Typed(typed_argument) => {
-                let syn::Pat::Ident(syn::PatIdent {
-                    ident: argument_name,
-                    ..
-                }) = typed_argument.pat.as_ref()
-                else {
-                    return Err(Error::new(
-                        typed_argument.pat.span(),
-                        "arguments must have a simple identifier pattern (e.g. `reader: Reader<..>`)",
-                    ));
-                };
+                let argument_name = next_argument_name();
                 argument_names.push(argument_name.clone());
 
                 unused_generics.visit_type(&typed_argument.ty);
