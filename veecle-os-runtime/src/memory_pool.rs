@@ -21,9 +21,12 @@
 //! use core::convert::Infallible;
 //! use veecle_os_runtime::Storable;
 //!
-//! #[derive(Debug, Storable)]
-//! #[storable(data_type = Chunk<'static, u8>)]
+//! #[derive(Debug)]
 //! pub struct Data;
+//!
+//! impl Storable for Data {
+//!     type DataType = Chunk<'static, u8>;
+//! }
 //!
 //! #[veecle_os_runtime::actor]
 //! async fn exclusive_read_actor(mut reader: ExclusiveReader<'_, Data>) -> Infallible {

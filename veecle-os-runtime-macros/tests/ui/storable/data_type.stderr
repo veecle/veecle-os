@@ -1,0 +1,5 @@
+error: unknown attribute argument
+ --> tests/ui/storable/data_type.rs:2:12
+  |
+2 | #[storable(data_type = u8)]
+  |            ^^^^^^^^^

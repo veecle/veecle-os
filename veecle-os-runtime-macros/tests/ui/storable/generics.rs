@@ -7,11 +7,9 @@ where
 }
 
 #[derive(Debug, veecle_os_runtime_macros::Storable)]
-#[storable(data_type = u8)]
-pub struct Sensor1<T>(std::marker::PhantomData<T>);
+pub struct Sensor1<T>(std::marker::PhantomData<T>) where T: std::fmt::Debug;
 
 #[derive(Debug, veecle_os_runtime_macros::Storable)]
-#[storable(data_type = u8)]
 pub struct Sensor2<const N: usize>([u8; N]);
 
 #[veecle_os_runtime_macros::actor]
