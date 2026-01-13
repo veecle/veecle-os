@@ -36,7 +36,7 @@ async fn yield_once() {
 async fn sensor_reader_writer(
     _sensor_reader: veecle_os_runtime::Reader<'_, Sensor>,
     _sensor_writer: veecle_os_runtime::Writer<'_, Sensor>,
-) -> core::convert::Infallible {
+) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
 }
@@ -44,7 +44,7 @@ async fn sensor_reader_writer(
 #[veecle_os_runtime::actor]
 async fn sensor_reader(
     _sensor_reader: veecle_os_runtime::Reader<'_, Sensor>,
-) -> core::convert::Infallible {
+) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
 }
@@ -52,7 +52,7 @@ async fn sensor_reader(
 #[veecle_os_runtime::actor]
 async fn other_reader(
     _other_reader: veecle_os_runtime::Reader<'_, Other>,
-) -> core::convert::Infallible {
+) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
 }
@@ -60,7 +60,7 @@ async fn other_reader(
 #[veecle_os_runtime::actor]
 async fn other_exclusive_reader(
     _other_reader: veecle_os_runtime::ExclusiveReader<'_, Other>,
-) -> core::convert::Infallible {
+) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
 }
@@ -68,7 +68,7 @@ async fn other_exclusive_reader(
 #[veecle_os_runtime::actor]
 async fn other_writer(
     _other_writer: veecle_os_runtime::Writer<'_, Other>,
-) -> core::convert::Infallible {
+) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
 }
@@ -76,7 +76,7 @@ async fn other_writer(
 #[veecle_os_runtime::actor]
 async fn data_writer(
     _data_writer: veecle_os_runtime::Writer<'_, Data>,
-) -> core::convert::Infallible {
+) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
 }
@@ -84,7 +84,7 @@ async fn data_writer(
 #[veecle_os_runtime::actor]
 async fn exclusive_data_reader(
     _reader: veecle_os_runtime::ExclusiveReader<'_, Data>,
-) -> core::convert::Infallible {
+) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
 }
@@ -92,7 +92,7 @@ async fn exclusive_data_reader(
 #[veecle_os_runtime::actor]
 async fn generic_reader<T: veecle_os_runtime::Storable + 'static>(
     _reader: veecle_os_runtime::Reader<'_, T>,
-) -> core::convert::Infallible {
+) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
 }
@@ -100,7 +100,7 @@ async fn generic_reader<T: veecle_os_runtime::Storable + 'static>(
 #[veecle_os_runtime::actor]
 async fn generic_writer<T: veecle_os_runtime::Storable + 'static>(
     _writer: veecle_os_runtime::Writer<'_, T>,
-) -> core::convert::Infallible {
+) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
 }
@@ -108,13 +108,13 @@ async fn generic_writer<T: veecle_os_runtime::Storable + 'static>(
 #[veecle_os_runtime::actor]
 async fn contextual_actor<T: core::fmt::Debug>(
     #[init_context] context: T,
-) -> core::convert::Infallible {
+) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done {context:?}")
 }
 
 #[veecle_os_runtime::actor]
-async fn referencing_actor(#[init_context] context: &i32) -> core::convert::Infallible {
+async fn referencing_actor(#[init_context] context: &i32) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done {context}")
 }

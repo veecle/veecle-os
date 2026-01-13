@@ -1,7 +1,5 @@
-use core::convert::Infallible;
-
 use futures::future::join;
-use veecle_os_runtime::{Reader, Writer};
+use veecle_os_runtime::{Never, Reader, Writer};
 
 use crate::{Connector, ControlRequest, ControlResponse};
 
@@ -12,10 +10,10 @@ pub async fn control_handler(
     #[init_context] connector: &Connector,
     requests: Reader<'_, ControlRequest>,
     mut responses: Writer<'_, ControlResponse>,
-) -> Infallible {
+) -> Never {
     let (output, mut input) = connector.control_channels();
 
-    let result: (Infallible, Infallible) = join(
+    let result: (Never, Never) = join(
         async move {
             let mut requests = requests.wait_init().await;
             loop {

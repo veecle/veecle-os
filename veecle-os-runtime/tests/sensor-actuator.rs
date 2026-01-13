@@ -1,11 +1,11 @@
 #![expect(missing_docs)]
 
-use core::convert::Infallible;
 use core::fmt::Debug;
 use core::sync::atomic::{AtomicUsize, Ordering};
 use std::future::poll_fn;
 use std::sync::Mutex;
 use std::task::Poll;
+use veecle_os_runtime::Never;
 
 use veecle_os_runtime::{CombineReaders, InitializedReader, Storable, Writer};
 
@@ -27,7 +27,7 @@ impl Storable for ActuatorData {
 }
 
 #[veecle_os_runtime::actor]
-async fn sensor_actor(mut sensor_writer: Writer<'_, Sensor>) -> Infallible {
+async fn sensor_actor(mut sensor_writer: Writer<'_, Sensor>) -> Never {
     for sensor in (0..).cycle() {
         sensor_writer.write(sensor).await;
     }
@@ -38,7 +38,7 @@ async fn sensor_actor(mut sensor_writer: Writer<'_, Sensor>) -> Infallible {
 async fn sensor_validation(
     mut sensor_reader: InitializedReader<'_, Sensor>,
     mut actuator_data_reader: InitializedReader<'_, ActuatorData>,
-) -> Infallible {
+) -> Never {
     for expected_sensor in (0..).cycle() {
         let combined_reader = (&mut sensor_reader, &mut actuator_data_reader);
         combined_reader.read(|(a, b)| {
@@ -56,7 +56,7 @@ async fn sensor_validation(
 async fn actuator(
     mut sensor_reader: InitializedReader<'_, Sensor>,
     mut actuator_data_writer: Writer<'_, ActuatorData>,
-) -> Infallible {
+) -> Never {
     loop {
         let value = sensor_reader
             .wait_for_update()
@@ -69,7 +69,7 @@ async fn actuator(
 #[veecle_os_runtime::actor]
 async fn actuator_validation(
     mut actuator_data_reader: InitializedReader<'_, ActuatorData>,
-) -> Infallible {
+) -> Never {
     for expected_actuator in (10..).cycle() {
         actuator_data_reader
             .wait_for_update()
@@ -82,7 +82,7 @@ async fn actuator_validation(
 }
 
 #[veecle_os_runtime::actor]
-async fn printer(mut actuator_data_reader: InitializedReader<'_, ActuatorData>) -> Infallible {
+async fn printer(mut actuator_data_reader: InitializedReader<'_, ActuatorData>) -> Never {
     use std::fmt::Write;
 
     loop {

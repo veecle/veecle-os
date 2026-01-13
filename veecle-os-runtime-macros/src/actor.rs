@@ -271,7 +271,7 @@ pub fn impl_actor(
         syn::ReturnType::Default => {
             return Err(Error::new(
                 parsed_item.sig.span(),
-                "#[actor] functions must return a `Result` or `Infallible`",
+                "#[actor] functions must return a `Result` or `Never`",
             ));
         }
         syn::ReturnType::Type(_, ty) => ty,
@@ -316,7 +316,7 @@ pub fn impl_actor(
                 }
             }
 
-            async fn run(self) -> core::result::Result<core::convert::Infallible, Self::Error> {
+            async fn run(self) -> core::result::Result<#veecle_os_runtime::Never, Self::Error> {
                 let Self {
                     request: #request_argument_names,
                     #context_name,

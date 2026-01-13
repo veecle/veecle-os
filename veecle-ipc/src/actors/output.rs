@@ -1,8 +1,6 @@
-use core::convert::Infallible;
-
 use serde::Serialize;
 use veecle_ipc_protocol::EncodedStorable;
-use veecle_os_runtime::{InitializedReader, Storable};
+use veecle_os_runtime::{InitializedReader, Never, Storable};
 
 use crate::{Connector, SendPolicy};
 
@@ -48,7 +46,7 @@ use crate::{Connector, SendPolicy};
 pub async fn output<T>(
     #[init_context] config: OutputConfig<'_>,
     mut reader: InitializedReader<'_, T>,
-) -> Infallible
+) -> Never
 where
     T: Storable<DataType: Serialize> + 'static,
 {

@@ -1,6 +1,4 @@
 //! FreeRTOS-Linux example.
-use core::convert::Infallible;
-
 use veecle_freertos_integration::*;
 
 // SAFETY: We don't use any non-FreeRTOS threads.
@@ -10,7 +8,7 @@ static GLOBAL: FreeRtosAllocator = unsafe { FreeRtosAllocator::new() };
 #[veecle_os::runtime::actor]
 async fn queue_actor(
     #[init_context] init_context: (AsyncQueueReceiver<u32>, AsyncQueueSender<i32>),
-) -> Infallible {
+) -> veecle_os::runtime::Never {
     const DATA: i32 = 77;
 
     let (mut queue_receiver, mut queue_sender) = init_context;

@@ -8,15 +8,13 @@
 //! The following example shows how to implement a test:
 //!
 //! ```
-//! use core::convert::Infallible;
-//!
 //! #[derive(Debug, Default, veecle_os_runtime::Storable)]
 //! pub struct Number(usize);
 //!
 //! #[derive(Debug, Default, veecle_os_runtime::Storable)]
 //! pub struct Total(usize);
 //! #
-//! # use veecle_os_runtime::{InitializedReader, Reader, Writer};
+//! # use veecle_os_runtime::{InitializedReader, Never, Reader, Writer};
 //!
 //! // `total_actor` reads numbers from a `Number` reader, keeps a running
 //! // total, and writes running totals to a `Total` writer.
@@ -24,7 +22,7 @@
 //! async fn total_actor(
 //!     mut total: Writer<'_, Total>,
 //!     mut numbers: InitializedReader<'_, Number>,
-//! ) -> Infallible {
+//! ) -> Never {
 //!     let mut sum: usize = 0;
 //!     loop {
 //!         numbers.wait_for_update().await.read(|value| {
@@ -75,4 +73,5 @@ pub use futures::executor::block_on as block_on_future;
 pub mod __exports {
     pub use ::veecle_os_runtime;
     pub use futures;
+    pub use veecle_os_runtime::Never;
 }

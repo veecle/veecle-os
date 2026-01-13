@@ -5,7 +5,7 @@ pub struct Sensor(pub u8);
 async fn const_generic<const N: usize>(
     _reader: veecle_os_runtime::Reader<'_, Sensor>,
     _writer: veecle_os_runtime::Writer<'_, Sensor>,
-) -> core::convert::Infallible {
+) -> veecle_os_runtime::Never {
     core::future::pending().await
 }
 

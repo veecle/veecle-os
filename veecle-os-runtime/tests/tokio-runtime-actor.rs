@@ -1,6 +1,5 @@
 #![expect(missing_docs)]
 
-use std::convert::Infallible;
 use std::future::poll_fn;
 use std::os::fd::{FromRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -28,7 +27,7 @@ const BUFFER_SIZE: usize = 16;
 pub struct PipeMessage(pub [u8; BUFFER_SIZE]);
 
 #[veecle_os_runtime::actor]
-async fn write_pipe_runtime_actor(#[init_context] pipe_tx_fd: RawFd) -> Infallible {
+async fn write_pipe_runtime_actor(#[init_context] pipe_tx_fd: RawFd) -> veecle_os_runtime::Never {
     let (pipe_message_channel_tx, mut pipe_message_channel_rx) = mpsc::channel::<PipeMessage>(100);
     thread::spawn(move || {
         let tokio_runtime = Builder::new_current_thread().enable_io().build().unwrap();
@@ -67,7 +66,7 @@ async fn write_pipe_runtime_actor(#[init_context] pipe_tx_fd: RawFd) -> Infallib
 async fn read_pipe_runtime_actor(
     mut pipe_message_writer: Writer<'_, PipeMessage>,
     #[init_context] pipe_rx_fd: RawFd,
-) -> Infallible {
+) -> veecle_os_runtime::Never {
     let (tx, mut rx) = mpsc::channel(100);
     thread::spawn(move || {
         let tokio_runtime = Builder::new_current_thread().enable_io().build().unwrap();
@@ -108,7 +107,7 @@ async fn read_pipe_runtime_actor(
 async fn read_printer(
     mut pipe_message_reader: InitializedReader<'_, PipeMessage>,
     #[init_context] read_counter: &'static AtomicUsize,
-) -> Infallible {
+) -> veecle_os_runtime::Never {
     loop {
         pipe_message_reader
             .wait_for_update()

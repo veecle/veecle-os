@@ -7,7 +7,7 @@ async fn macro_test_actor(
     _sensor_writer: veecle_os_runtime::Writer<'_, Sensor>,
     #[init_context] _init_context1: u8,
     #[init_context] _init_context2: String,
-) -> std::convert::Infallible {
+) -> veecle_os_runtime::Never {
     unreachable!("We only care about the code compiling.");
 }
 

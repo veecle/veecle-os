@@ -7,9 +7,7 @@
 //! cargo run --package veecle-telemetry-ui -- ./spans.jsonl
 //! ```
 
-use std::convert::Infallible;
-
-use veecle_os_runtime::{Reader, Writer};
+use veecle_os_runtime::{Never, Reader, Writer};
 
 use crate::common::{ConcreteTraceActor, Ping, Pong, PongActor, ping_loop};
 
@@ -18,7 +16,7 @@ mod common;
 /// An actor that writes `Ping { i }` and waits for `Pong`.
 /// Additionally, it validates that `Pong { value == i + 1 }` for `i = 0..`.
 #[veecle_os_runtime::actor]
-pub async fn ping_actor(mut ping: Writer<'_, Ping>, mut pong: Reader<'_, Pong>) -> Infallible {
+pub async fn ping_actor(mut ping: Writer<'_, Ping>, mut pong: Reader<'_, Pong>) -> Never {
     let mut value = 0;
     loop {
         ping_loop(&mut ping, &mut pong, &mut value).await;

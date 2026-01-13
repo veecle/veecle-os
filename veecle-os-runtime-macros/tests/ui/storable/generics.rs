@@ -7,7 +7,9 @@ where
 }
 
 #[derive(Debug, veecle_os_runtime_macros::Storable)]
-pub struct Sensor1<T>(std::marker::PhantomData<T>) where T: std::fmt::Debug;
+pub struct Sensor1<T>(std::marker::PhantomData<T>)
+where
+    T: std::fmt::Debug;
 
 #[derive(Debug, veecle_os_runtime_macros::Storable)]
 pub struct Sensor2<const N: usize>([u8; N]);
@@ -20,7 +22,7 @@ async fn macro_test_actor<T, const N: usize>(
     _sensor1_writer: veecle_os_runtime::Writer<'_, Sensor1<T>>,
     _sensor2_reader: veecle_os_runtime::Reader<'_, Sensor2<N>>,
     _sensor2_writer: veecle_os_runtime::Writer<'_, Sensor2<N>>,
-) -> std::convert::Infallible
+) -> veecle_os_runtime::Never
 where
     T: std::fmt::Debug + 'static,
 {

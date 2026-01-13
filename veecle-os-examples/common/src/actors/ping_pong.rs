@@ -1,10 +1,9 @@
 //! Ping-pong example actors.
 
-use core::convert::Infallible;
 use core::fmt::Debug;
 use futures::future::FutureExt;
 use serde::{Deserialize, Serialize};
-use veecle_os::runtime::{InitializedReader, Reader, Storable, Writer};
+use veecle_os::runtime::{InitializedReader, Never, Reader, Storable, Writer};
 use veecle_os::telemetry::{error, info};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Storable, Deserialize, Serialize)]
@@ -20,7 +19,7 @@ pub struct Pong {
 /// An actor that writes `Ping { i }` and waits for `Pong`.
 /// Additionally, it validates that `Pong { value == i + 1 }` for `i = 0..`.
 #[veecle_os::runtime::actor]
-pub async fn ping_actor(mut ping: Writer<'_, Ping>, pong: Reader<'_, Pong>) -> Infallible {
+pub async fn ping_actor(mut ping: Writer<'_, Ping>, pong: Reader<'_, Pong>) -> Never {
     let mut value = 0;
     info!("[PING TASK] Sending initial", ping = i64::from(value));
     ping.write(Ping { value }).await;
@@ -45,7 +44,7 @@ pub async fn ping_actor(mut ping: Writer<'_, Ping>, pong: Reader<'_, Pong>) -> I
 pub async fn pong_actor(
     mut pong: Writer<'_, Pong>,
     mut ping: InitializedReader<'_, Ping>,
-) -> Infallible {
+) -> Never {
     loop {
         info!("[PONG TASK] Waiting for ping");
 
@@ -65,7 +64,7 @@ pub async fn pong_actor(
 pub async fn trace_actor(
     mut ping_reader: Reader<'_, Ping>,
     mut pong_reader: Reader<'_, Pong>,
-) -> Infallible {
+) -> Never {
     loop {
         futures::select_biased! {
             _ = ping_reader.wait_for_update().fuse() => {

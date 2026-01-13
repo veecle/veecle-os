@@ -13,10 +13,9 @@
 //! other.
 //!
 //! ```rust
-//! use std::convert::Infallible;
 //! use std::fmt::Debug;
 //!
-//! use veecle_os_runtime::{Reader, Storable, Writer};
+//! use veecle_os_runtime::{Never, Reader, Storable, Writer};
 //!
 //! #[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
 //! pub struct Ping {
@@ -29,7 +28,7 @@
 //! }
 //!
 //! #[veecle_os_runtime::actor]
-//! async fn ping_actor(mut ping: Writer<'_, Ping>, pong: Reader<'_, Pong>) -> Infallible {
+//! async fn ping_actor(mut ping: Writer<'_, Ping>, pong: Reader<'_, Pong>) -> Never {
 //!     let mut value = 0;
 //!     ping.write(Ping { value }).await;
 //!
@@ -47,7 +46,7 @@
 //! }
 //!
 //! #[veecle_os_runtime::actor]
-//! async fn pong_actor(mut pong: Writer<'_, Pong>, ping: Reader<'_, Ping>) -> Infallible {
+//! async fn pong_actor(mut pong: Writer<'_, Pong>, ping: Reader<'_, Ping>) -> Never {
 //!     let mut ping = ping.wait_init().await;
 //!     loop {
 //!         let ping = ping.wait_for_update().await.read_cloned();
@@ -123,3 +122,22 @@ pub mod __exports {
     pub use crate::execute::{execute_actor, make_store, validate_actors};
     pub use crate::heapfree_executor::{Executor, ExecutorShared};
 }
+
+/// A type that can never be constructed.
+///
+/// Used as the success type in `Result<Never, E>` to indicate that an operation
+/// never returns successfully, only by error. This is semantically clearer than
+/// using `Infallible` which suggests "cannot fail."
+///
+// TODO(https://github.com/rust-lang/rust/issues/35121)
+/// This type will be replaced with the never type [`!`] once it is stabilized.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Never {}
+
+impl core::fmt::Display for Never {
+    fn fmt(&self, _: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match *self {}
+    }
+}
+
+impl core::error::Error for Never {}

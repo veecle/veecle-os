@@ -2,11 +2,11 @@
 
 use alloc::boxed::Box;
 use alloc::format;
-use core::convert::Infallible;
 use veecle_os::osal::api::time::{Duration, TimeAbstraction};
+use veecle_os::runtime::Never;
 
 #[veecle_os::runtime::actor]
-pub async fn box_actor<T: TimeAbstraction>() -> Infallible {
+pub async fn box_actor<T: TimeAbstraction>() -> Never {
     const BOX_COUNT: usize = 5;
     let mut box_counter = 0;
     let mut boxes: [Option<Box<u64>>; BOX_COUNT] = [const { None }; BOX_COUNT];

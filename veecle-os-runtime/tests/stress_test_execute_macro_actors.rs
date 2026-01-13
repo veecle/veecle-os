@@ -19,7 +19,7 @@ macro_rules! make_test {
             #[veecle_os_runtime::actor]
             async fn $ident(
                 reader: veecle_os_runtime::Reader<'_, Data>,
-            ) -> core::convert::Infallible {
+            ) -> veecle_os_runtime::Never {
                 panic!("test completed");
             }
         )*
@@ -27,7 +27,7 @@ macro_rules! make_test {
         #[veecle_os_runtime::actor]
         async fn writer(
             writer: veecle_os_runtime::Writer<'_, Data>,
-        ) -> core::convert::Infallible {
+        ) -> veecle_os_runtime::Never {
             panic!("test completed");
         }
 

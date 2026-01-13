@@ -1,10 +1,10 @@
-use core::convert::Infallible;
 use core::net::SocketAddr;
 use embedded_io_async::{Read, Write};
 use veecle_os::osal::api::net::tcp::TcpConnection;
+use veecle_os::runtime::Never;
 
 #[veecle_os::runtime::actor]
-pub async fn tcp_server_actor<S, L>(#[init_context] input: (S, SocketAddr)) -> Infallible
+pub async fn tcp_server_actor<S, L>(#[init_context] input: (S, SocketAddr)) -> Never
 where
     S: veecle_os::osal::api::net::tcp::TcpSocket,
     L: veecle_os::osal::api::log::LogTarget,
@@ -77,7 +77,7 @@ where
 }
 
 #[veecle_os::runtime::actor]
-pub async fn tcp_client_actor<S, L>(#[init_context] input: (S, SocketAddr)) -> Infallible
+pub async fn tcp_client_actor<S, L>(#[init_context] input: (S, SocketAddr)) -> Never
 where
     S: veecle_os::osal::api::net::tcp::TcpSocket,
     L: veecle_os::osal::api::log::LogTarget,

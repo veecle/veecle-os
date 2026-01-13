@@ -7,6 +7,7 @@
     "
 )]
 
+use crate::Never;
 use crate::actor::{Actor, Datastore, StoreRequest};
 use crate::cons::{Cons, Nil, TupleConsToCons};
 use crate::datastore::{
@@ -352,7 +353,7 @@ where
 pub async fn execute_actor<'a, A>(
     store: Pin<&'a impl Datastore>,
     init_context: A::InitContext,
-) -> core::convert::Infallible
+) -> Never
 where
     A: Actor<'a>,
 {
@@ -373,10 +374,9 @@ where
 /// Execute a given set of actors without heap allocation.
 ///
 /// ```rust
-/// use core::convert::Infallible;
 /// use core::fmt::Debug;
 ///
-/// use veecle_os_runtime::{Reader, Storable, Writer};
+/// use veecle_os_runtime::{Never, Reader, Storable, Writer};
 ///
 /// #[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
 /// pub struct Ping {
@@ -389,7 +389,7 @@ where
 /// }
 ///
 /// #[veecle_os_runtime::actor]
-/// async fn ping_actor(mut ping: Writer<'_, Ping>, pong: Reader<'_, Pong>) -> Infallible {
+/// async fn ping_actor(mut ping: Writer<'_, Ping>, pong: Reader<'_, Pong>) -> Never {
 ///     let mut value = 0;
 ///     ping.write(Ping { value }).await;
 ///
@@ -407,7 +407,7 @@ where
 /// }
 ///
 /// #[veecle_os_runtime::actor]
-/// async fn pong_actor(mut pong: Writer<'_, Pong>, ping: Reader<'_, Ping>) -> Infallible {
+/// async fn pong_actor(mut pong: Writer<'_, Pong>, ping: Reader<'_, Ping>) -> Never {
 ///     let mut ping = ping.wait_init().await;
 ///     loop {
 ///         let ping = ping.wait_for_update().await.read_cloned();
@@ -452,7 +452,7 @@ macro_rules! execute {
             // To count how many actors there are, we create an array of `()` with the appropriate length.
             const LEN: usize = [$($crate::discard_to_unit!($actor_type),)*].len();
 
-            let futures: [core::pin::Pin<&mut dyn core::future::Future<Output = core::convert::Infallible>>; LEN] =
+            let futures: [core::pin::Pin<&mut dyn core::future::Future<Output = $crate::Never>>; LEN] =
                 $crate::make_futures! {
                     init_contexts: init_contexts,
                     store: store,
@@ -475,7 +475,7 @@ macro_rules! execute {
 
 /// Internal helper to construct an array of pinned futures for given actors + init-contexts + store.
 ///
-/// Returns essentially `[Pin<&mut dyn Future<Output = Infallible>; actors.len()]`, but likely needs annotation at the
+/// Returns essentially `[Pin<&mut dyn Future<Output = Never>; actors.len()]`, but likely needs annotation at the
 /// use site to force the unsize coercion.
 #[doc(hidden)]
 #[macro_export]

@@ -12,7 +12,7 @@
 //! to be specified.
 //!
 //! ```rust
-//! use core::convert::Infallible;
+//! use veecle_os_runtime::Never;
 //!
 //! use veecle_osal_api::time::{Duration, TimeAbstraction};
 //! use veecle_osal_std::time::Time;
@@ -24,7 +24,7 @@
 //! }
 //!
 //! #[veecle_os_runtime::actor]
-//! async fn tick_writer<T>(mut writer: Writer<'_, Tick>) -> Infallible
+//! async fn tick_writer<T>(mut writer: Writer<'_, Tick>) -> Never
 //! where
 //!     T: TimeAbstraction,
 //! {
@@ -43,7 +43,7 @@
 //! }
 //!
 //! #[veecle_os_runtime::actor]
-//! async fn tick_reader(mut reader: Reader<'_, Tick>) -> Infallible {
+//! async fn tick_reader(mut reader: Reader<'_, Tick>) -> Never {
 //!     loop {
 //!         reader.wait_for_update().await.read(|tick| {
 //!             println!("[READER TASK] Tick received: {tick:?}");

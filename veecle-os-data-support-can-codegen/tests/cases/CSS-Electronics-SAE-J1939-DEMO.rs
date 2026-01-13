@@ -307,7 +307,7 @@ pub async fn deserialize_frames(
     mut reader: ::my_veecle_os_runtime::InitializedReader<'_, Frame>,
     mut eec1_writer: ::my_veecle_os_runtime::Writer<'_, Eec1>,
     mut ccvs1_writer: ::my_veecle_os_runtime::Writer<'_, Ccvs1>,
-) -> core::convert::Infallible {
+) -> ::my_veecle_os_runtime::Never {
     loop {
         let frame = reader.wait_for_update().await.read_cloned();
         match frame.id() {

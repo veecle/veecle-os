@@ -49,7 +49,7 @@ use crate::datastore::slot::{self, Slot};
 /// # pub struct Foo;
 /// #
 /// #[veecle_os_runtime::actor]
-/// async fn foo_reader(mut reader: Reader<'_, Foo>) -> std::convert::Infallible {
+/// async fn foo_reader(mut reader: Reader<'_, Foo>) -> veecle_os_runtime::Never {
 ///     loop {
 ///         let processed_value = reader.wait_for_update().await.read(|value: Option<&Foo>| {
 ///             // do something with the value.

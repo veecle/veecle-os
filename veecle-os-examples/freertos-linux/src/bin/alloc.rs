@@ -1,5 +1,3 @@
-use std::convert::Infallible;
-
 use veecle_freertos_integration::{FreeRtosAllocator, Task, TaskPriority, vPortGetHeapStats};
 use veecle_os::osal::api::time::{Duration, TimeAbstraction};
 use veecle_os::osal::freertos::time::Time;
@@ -10,7 +8,7 @@ use veecle_os_examples_common::actors::alloc::BoxActor;
 static GLOBAL: FreeRtosAllocator = unsafe { FreeRtosAllocator::new() };
 
 #[veecle_os::runtime::actor]
-async fn alloc_stat_actor() -> Infallible {
+async fn alloc_stat_actor() -> veecle_os::runtime::Never {
     loop {
         Time::sleep(Duration::from_secs(4)).await.unwrap();
 

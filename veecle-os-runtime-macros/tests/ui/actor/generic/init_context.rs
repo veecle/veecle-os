@@ -6,7 +6,7 @@ async fn discard<T>(
     _reader: veecle_os_runtime::Reader<'_, Sensor>,
     _writer: veecle_os_runtime::Writer<'_, Sensor>,
     #[init_context] _context: T,
-) -> core::convert::Infallible
+) -> veecle_os_runtime::Never
 where
     T: core::fmt::Debug + 'static,
 {

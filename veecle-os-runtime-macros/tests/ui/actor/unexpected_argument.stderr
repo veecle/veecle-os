@@ -7,17 +7,17 @@ error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" argume
 error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
   --> tests/ui/actor/unexpected_argument.rs:13:40
    |
-13 | async fn macro_test_actor(_unexpected: u32) -> std::convert::Infallible {
+13 | async fn macro_test_actor(_unexpected: u32) -> veecle_os_runtime::Never {
    |                                        ^^^
 
 error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
   --> tests/ui/actor/unexpected_argument.rs:18:40
    |
-18 | async fn macro_test_actor(_unexpected: <Foo as Bar>::Ty) -> std::convert::Infallible {
+18 | async fn macro_test_actor(_unexpected: <Foo as Bar>::Ty) -> veecle_os_runtime::Never {
    |                                        ^
 
 error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
   --> tests/ui/actor/unexpected_argument.rs:23:40
    |
-23 | async fn macro_test_actor(_unexpected: [u32; 0]) -> std::convert::Infallible {
+23 | async fn macro_test_actor(_unexpected: [u32; 0]) -> veecle_os_runtime::Never {
    |                                        ^^^^^^^^

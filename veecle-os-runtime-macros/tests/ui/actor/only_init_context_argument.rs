@@ -1,5 +1,5 @@
 #[veecle_os_runtime_macros::actor]
-async fn macro_test_actor(#[init_context] foo: u32) -> std::convert::Infallible {
+async fn macro_test_actor(#[init_context] foo: u32) -> veecle_os_runtime::Never {
     let _ = foo;
     unreachable!("We only care about the code compiling.");
 }

@@ -1,17 +1,17 @@
 error: method signature may not contain self
  --> tests/ui/actor/self.rs:2:27
   |
-2 | async fn macro_test_actor(&self) -> std::convert::Infallible {
+2 | async fn macro_test_actor(&self) -> veecle_os_runtime::Never {
   |                           ^
 
 error: method signature may not contain self
  --> tests/ui/actor/self.rs:7:27
   |
-7 | async fn macro_test_actor(self) -> std::convert::Infallible {
+7 | async fn macro_test_actor(self) -> veecle_os_runtime::Never {
   |                           ^^^^
 
 error: method signature may not contain self
   --> tests/ui/actor/self.rs:12:27
    |
-12 | async fn macro_test_actor(self: Self) -> std::convert::Infallible {
+12 | async fn macro_test_actor(self: Self) -> veecle_os_runtime::Never {
    |                           ^^^^

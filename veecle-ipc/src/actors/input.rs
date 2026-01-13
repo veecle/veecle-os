@@ -1,16 +1,11 @@
-use core::convert::Infallible;
-
 use serde::de::DeserializeOwned;
-use veecle_os_runtime::{Storable, Writer};
+use veecle_os_runtime::{Never, Storable, Writer};
 
 use crate::Connector;
 
 /// An actor that will receive values of type `T` from the provided [`Connector`] and send them to other actors.
 #[veecle_os_runtime::actor]
-pub async fn input<T>(
-    #[init_context] connector: &Connector,
-    mut writer: Writer<'_, T>,
-) -> Infallible
+pub async fn input<T>(#[init_context] connector: &Connector, mut writer: Writer<'_, T>) -> Never
 where
     T: Storable<DataType: DeserializeOwned> + 'static,
 {

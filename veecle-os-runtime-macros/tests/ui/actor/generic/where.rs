@@ -5,7 +5,7 @@ pub struct Sensor(pub u8);
 async fn discard<T>(
     _reader: veecle_os_runtime::Reader<'_, T>,
     _writer: veecle_os_runtime::Writer<'_, T>,
-) -> core::convert::Infallible
+) -> veecle_os_runtime::Never
 where
     T: veecle_os_runtime::Storable + 'static,
 {

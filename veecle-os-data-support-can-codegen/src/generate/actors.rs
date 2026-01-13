@@ -39,7 +39,7 @@ pub(super) fn generate(options: &crate::Options, dbc: &Dbc) -> Result<TokenStrea
             #(
                 mut #writer_names: #veecle_os_runtime::Writer<'_, #message_names>,
             )*
-        ) -> core::convert::Infallible {
+        ) -> #veecle_os_runtime::Never {
             loop {
                 let frame = reader.wait_for_update().await.read_cloned();
                 match frame.id() {

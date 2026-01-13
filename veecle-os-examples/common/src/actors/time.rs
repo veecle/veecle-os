@@ -1,10 +1,9 @@
 //! A minimal example using the time abstraction.
 
-use core::convert::Infallible;
 use core::fmt::Debug;
 
 use veecle_os::osal::api::time::{Duration, Instant, Interval, TimeAbstraction};
-use veecle_os::runtime::{InitializedReader, Storable, Writer};
+use veecle_os::runtime::{InitializedReader, Never, Storable, Writer};
 use veecle_os::telemetry::{error, info};
 
 const INTERVAL_PERIOD: Duration = Duration::from_secs(1);
@@ -20,7 +19,7 @@ pub struct Tick {
 #[veecle_os::runtime::actor]
 pub async fn ticker_actor<T>(
     mut tick_writer: Writer<'_, Tick>,
-) -> Result<Infallible, veecle_os::osal::api::Error>
+) -> Result<Never, veecle_os::osal::api::Error>
 where
     T: TimeAbstraction,
 {
@@ -36,7 +35,7 @@ where
 /// Additionally, prints to stderr if the time between
 /// the previous and current tick differs by more than 10 millis.
 #[veecle_os::runtime::actor]
-pub async fn ticker_reader(mut reader: InitializedReader<'_, Tick>) -> Infallible {
+pub async fn ticker_reader(mut reader: InitializedReader<'_, Tick>) -> Never {
     let mut previous: Option<Instant> = None;
 
     loop {

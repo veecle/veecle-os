@@ -10,9 +10,7 @@
 //!
 //! ```no_run
 //! # fn main() {
-//! use core::convert::Infallible;
-//!
-//! use veecle_os_runtime::{InitializedReader, Storable, Writer};
+//! use veecle_os_runtime::{InitializedReader, Storable, Writer, Never};
 //!
 //! #[derive(Copy, Clone, Debug, Storable, serde::Deserialize)]
 //! pub struct Ping(u8);
@@ -24,7 +22,7 @@
 //! async fn local_actor(
 //!     mut ping: InitializedReader<'_, Ping>,
 //!     mut pong: Writer<'_, Pong>,
-//! ) -> Infallible {
+//! ) -> Never {
 //!     loop {
 //!         let Ping(value) = ping.wait_for_update().await.read_cloned();
 //!         pong.write(Pong(value)).await;

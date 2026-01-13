@@ -1,8 +1,8 @@
-use core::convert::Infallible;
 use core::net::SocketAddr;
+use veecle_os::runtime::Never;
 
 #[veecle_os::runtime::actor]
-pub async fn udp_server_actor<S, L>(#[init_context] input: (S, SocketAddr)) -> Infallible
+pub async fn udp_server_actor<S, L>(#[init_context] input: (S, SocketAddr)) -> Never
 where
     S: veecle_os::osal::api::net::udp::UdpSocket,
     L: veecle_os::osal::api::log::LogTarget,
@@ -64,9 +64,7 @@ where
 }
 
 #[veecle_os::runtime::actor]
-pub async fn udp_client_actor<S, L>(
-    #[init_context] input: (S, SocketAddr, SocketAddr),
-) -> Infallible
+pub async fn udp_client_actor<S, L>(#[init_context] input: (S, SocketAddr, SocketAddr)) -> Never
 where
     S: veecle_os::osal::api::net::udp::UdpSocket,
     L: veecle_os::osal::api::log::LogTarget,

@@ -34,7 +34,7 @@ async fn macro_test_actor(
     _sensor2_writer: veecle_os_runtime::Writer<'_, Sensor2>,
     _sensor3_writer: veecle_os_runtime::Writer<'_, Sensor3>,
     _sensor4_writer: veecle_os_runtime::Writer<'_, Sensor4>,
-) -> std::convert::Infallible {
+) -> veecle_os_runtime::Never {
     unreachable!("We only care about the code compiling.");
 }
 
