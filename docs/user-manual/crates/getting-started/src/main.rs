@@ -6,9 +6,12 @@ use core::fmt::Debug;
 
 use veecle_os::runtime::{InitializedReader, Storable, Writer};
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
-#[storable(data_type = u32)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Value;
+
+impl Storable for Value {
+    type DataType = u32;
+}
 // ANCHOR_END: init
 
 // ANCHOR: sender

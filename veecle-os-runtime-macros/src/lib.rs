@@ -78,21 +78,20 @@ fn actor2(
     actor::impl_actor(meta, item).unwrap_or_else(|error| error.into_compile_error())
 }
 
-/// Implements [`Storable`] for a struct or enum.
+/// Implements [`Storable`] for a struct or enum with `DataType = Self`.
+///
+/// For non-`Self` data types you should manually implement the trait.
 ///
 /// # Attributes
 ///
-/// * `data_type = Type`: Sets the [`Storable::DataType`]. Defaults to `Self`.
 /// * `crate = ::veecle_os_runtime`: Overrides the path to the `veecle-os-runtime` crate in case the import was renamed.
 ///
 /// [`Storable`]: https://docs.rs/veecle-os/latest/veecle_os/runtime/trait.Storable.html
-/// [`Storable::DataType`]: https://docs.rs/veecle-os/latest/veecle_os/runtime/trait.Storable.html#associatedtype.DataType
 ///
 /// ```
 /// use core::fmt::Debug;
 /// use veecle_os_runtime::Storable;
 ///
-/// // `DataType = Self`
 /// #[derive(Debug, Storable)]
 /// pub struct Sensor<T>
 /// where
@@ -103,24 +102,17 @@ fn actor2(
 ///     test1: T,
 /// }
 ///
-/// // `DataType = Self`
 /// #[derive(Debug, Storable)]
 /// pub struct Motor {
 ///     test: u8,
 /// }
 ///
-/// // `DataType = Self`
 /// #[derive(Debug, Storable)]
 /// pub enum Actuator {
 ///     Variant1,
 ///     Variant2(u8),
 ///     Variant3 { test: u8 },
 /// }
-///
-/// // `DataType = u8`
-/// #[derive(Storable)]
-/// #[storable(data_type = u8)]
-/// pub struct EventId;
 /// ```
 #[proc_macro_derive(Storable, attributes(storable))]
 pub fn derive_storable(input: proc_macro::TokenStream) -> proc_macro::TokenStream {

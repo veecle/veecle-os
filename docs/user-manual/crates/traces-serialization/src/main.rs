@@ -4,13 +4,19 @@ use core::fmt::Debug;
 
 use veecle_os::runtime::{InitializedReader, Reader, Storable, Writer};
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
-#[storable(data_type = u32)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Ping;
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
-#[storable(data_type = u32)]
+impl Storable for Ping {
+    type DataType = u32;
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Pong;
+
+impl Storable for Pong {
+    type DataType = u32;
+}
 
 #[veecle_os::runtime::actor]
 async fn ping_actor(mut ping: Writer<'_, Ping>, pong: Reader<'_, Pong>) -> Infallible {

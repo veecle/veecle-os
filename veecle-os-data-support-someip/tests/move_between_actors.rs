@@ -23,13 +23,19 @@ fn yoke() {
 
     static POOL: MemoryPool<[u8; 84], 5> = MemoryPool::new();
 
-    #[derive(Debug, Storable)]
-    #[storable(data_type = Chunk<'static, [u8; 84]>)]
+    #[derive(Debug)]
     pub struct Input;
 
-    #[derive(Debug, Storable)]
-    #[storable(data_type = Yoke<YokeWrapper<'static>, Chunk<'static, [u8; 84]>>)]
+    impl Storable for Input {
+        type DataType = Chunk<'static, [u8; 84]>;
+    }
+
+    #[derive(Debug)]
     pub struct Output;
+
+    impl Storable for Output {
+        type DataType = Yoke<YokeWrapper<'static>, Chunk<'static, [u8; 84]>>;
+    }
 
     #[derive(Debug, Yokeable)]
     pub struct YokeWrapper<'a>(service_discovery::Header<'a>);

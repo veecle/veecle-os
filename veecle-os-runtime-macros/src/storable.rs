@@ -8,8 +8,6 @@ pub struct StorableDerive {
     ident: Ident,
     /// The type's generics.
     generics: Generics,
-    /// The `Storable` data type.
-    data_type: Option<syn::Type>,
     /// The name of the Veecle OS crate for renaming.
     veecle_os_runtime: Option<Path>,
 }
@@ -20,7 +18,6 @@ impl StorableDerive {
         let ident = input.ident;
         let generics = input.generics;
 
-        let mut data_type = None;
         let mut veecle_os_runtime = None;
 
         // Iterate through attributes to find #[storable(...)]
@@ -36,38 +33,6 @@ impl StorableDerive {
                     .map(|ident| ident.to_string())
                     .as_deref()
                 {
-                    Some("data_type") => {
-                        if data_type.is_some() {
-                            return Err(meta.error("setting `data_type` argument multiple times"));
-                        }
-
-                        let value = meta.value()?;
-
-                        // Check if user provided a string literal (was previously supported).
-                        if value.peek(syn::LitStr) {
-                            let literal = value.parse::<syn::LitStr>()?;
-                            let string = literal.value();
-                            return Err(syn::Error::new(
-                                literal.span(),
-                                format!("string literal syntax is not supported, use `data_type = {string}` instead"),
-                            ));
-                        }
-
-                        let parsed = value.parse::<syn::Type>().map_err(|error| {
-                            syn::Error::new(
-                                error.span(),
-                                format!("expected a type for `data_type` argument: {}", error),
-                            )
-                        })?;
-
-                        // Check if there are remaining tokens after the type (but not if it's a
-                        // comma, which separates attribute arguments).
-                        if !value.is_empty() && !value.peek(syn::Token![,]) {
-                            return Err(value.error("expected a type for `data_type` argument: found extra tokens after type"));
-                        }
-
-                        data_type = Some(parsed);
-                    }
                     Some("crate") => {
                         if veecle_os_runtime.is_some() {
                             return Err(meta.error("setting `crate` argument multiple times"));
@@ -110,7 +75,6 @@ impl StorableDerive {
         Ok(Self {
             ident,
             generics,
-            data_type,
             veecle_os_runtime,
         })
     }
@@ -129,7 +93,6 @@ impl StorableDerive {
                     gt_token,
                     where_clause,
                 },
-            data_type,
             veecle_os_runtime,
         } = self;
 
@@ -137,7 +100,6 @@ impl StorableDerive {
             .clone()
             .map(Ok)
             .unwrap_or_else(crate::veecle_os_runtime_path)?;
-        let data_type = data_type.clone().unwrap_or_else(|| syn::parse_quote!(Self));
 
         Ok(quote!(
             #[automatically_derived]
@@ -147,7 +109,7 @@ impl StorableDerive {
             #lt_token #(#lifetimes_without_constraints,)* #(#generic_types_without_constraints),* #gt_token
             #where_clause
             {
-                type DataType = #data_type;
+                type DataType = Self;
             }
         ))
     }
