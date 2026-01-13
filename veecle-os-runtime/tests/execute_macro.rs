@@ -66,6 +66,24 @@ async fn other_exclusive_reader(
 }
 
 #[veecle_os_runtime::actor]
+async fn other_double_exclusive_reader(
+    _other_reader: veecle_os_runtime::ExclusiveReader<'_, Other>,
+    _other_reader_2: veecle_os_runtime::ExclusiveReader<'_, Other>,
+) -> veecle_os_runtime::Never {
+    yield_once().await;
+    panic!("done")
+}
+
+#[veecle_os_runtime::actor]
+async fn other_dual_reader(
+    _other_reader: veecle_os_runtime::ExclusiveReader<'_, Other>,
+    _other_reader_2: veecle_os_runtime::Reader<'_, Other>,
+) -> veecle_os_runtime::Never {
+    yield_once().await;
+    panic!("done")
+}
+
+#[veecle_os_runtime::actor]
 async fn other_writer(
     _other_writer: veecle_os_runtime::Writer<'_, Other>,
 ) -> veecle_os_runtime::Never {
@@ -140,7 +158,9 @@ fn make_executor_smoke_test2() {
 }
 
 #[test]
-#[should_panic(expected = "missing reader for `execute_macro::Data`")]
+#[should_panic(
+    expected = "missing reader for `execute_macro::Data`, written by: `execute_macro::DataWriter<'_>`"
+)]
 fn make_executor_smoke_test3() {
     futures::executor::block_on(veecle_os_runtime::execute! {
         actors: [
@@ -150,7 +170,9 @@ fn make_executor_smoke_test3() {
 }
 
 #[test]
-#[should_panic(expected = "multiple writers for `execute_macro::Other`")]
+#[should_panic(
+    expected = "multiple writers for `execute_macro::Other`: `execute_macro::OtherWriter<'_>`, `execute_macro::OtherWriter<'_>`"
+)]
 fn make_executor_smoke_test4() {
     futures::executor::block_on(veecle_os_runtime::execute! {
         actors: [
@@ -239,7 +261,9 @@ fn make_executor_smoke_test11() {
 }
 
 #[test]
-#[should_panic(expected = "conflict with exclusive reader for `execute_macro::Other`")]
+#[should_panic(expected = "conflict with exclusive reader for `execute_macro::Other`:
+exclusive readers: `execute_macro::OtherExclusiveReader<'_>`
+    other readers: `execute_macro::OtherReader<'_>`")]
 fn make_executor_smoke_test12() {
     futures::executor::block_on(veecle_os_runtime::execute! {
         actors: [
@@ -249,11 +273,37 @@ fn make_executor_smoke_test12() {
 }
 
 #[test]
-#[should_panic(expected = "conflict with exclusive reader for `execute_macro::Other`")]
+#[should_panic(expected = "conflict with exclusive reader for `execute_macro::Other`:
+exclusive readers: `execute_macro::OtherExclusiveReader<'_>`, `execute_macro::OtherExclusiveReader<'_>`
+    other readers: nothing")]
 fn make_executor_smoke_test13() {
     futures::executor::block_on(veecle_os_runtime::execute! {
         actors: [
             OtherExclusiveReader, OtherWriter, OtherExclusiveReader,
+        ],
+    });
+}
+
+#[test]
+#[should_panic(expected = "conflict with exclusive reader for `execute_macro::Other`:
+exclusive readers: `execute_macro::OtherDoubleExclusiveReader<'_>`, `execute_macro::OtherDoubleExclusiveReader<'_>`
+    other readers: nothing")]
+fn make_executor_smoke_test14() {
+    futures::executor::block_on(veecle_os_runtime::execute! {
+        actors: [
+            OtherDoubleExclusiveReader, OtherWriter,
+        ],
+    });
+}
+
+#[test]
+#[should_panic(expected = "conflict with exclusive reader for `execute_macro::Other`:
+exclusive readers: `execute_macro::OtherDualReader<'_>`
+    other readers: `execute_macro::OtherDualReader<'_>`")]
+fn make_executor_smoke_test15() {
+    futures::executor::block_on(veecle_os_runtime::execute! {
+        actors: [
+            OtherDualReader, OtherWriter,
         ],
     });
 }
