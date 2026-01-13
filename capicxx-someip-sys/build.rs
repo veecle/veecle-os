@@ -26,6 +26,7 @@ fn build_cmake_projects(paths: Vec<PathBuf>) -> anyhow::Result<()> {
         let prefix_path = format!("-DCMAKE_PREFIX_PATH={}", env_var("OUT_DIR")?);
         let install_path = cmake::Config::new(project_path)
             .configure_arg(prefix_path)
+            .configure_arg("-DCMAKE_POLICY_VERSION_MINIMUM=3.5")
             .build();
 
         let install_lib_path = format!("{}/lib", install_path.display());
