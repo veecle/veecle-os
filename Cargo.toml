@@ -88,6 +88,7 @@ heapless = { version = "0.8.0", default-features = false }
 heck = { version = "0.5.0", default-features = false }
 hex = { version = "0.4.3", default-features = false }
 indexmap = { version = "2.13.0", default-features = false }
+indicatif = { version = "0.17.11", default-features = false }
 indoc = { version = "2.0.6", default-features = false }
 itertools = { version = "0.14.0", default-features = false }
 libc = { version = "0.2.180", default-features = false }

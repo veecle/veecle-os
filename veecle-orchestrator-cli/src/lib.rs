@@ -7,6 +7,7 @@ use std::io::{BufRead, BufReader, Write};
 use anyhow::Context;
 use camino::Utf8PathBuf;
 use comfy_table::{Cell, Color, Table};
+use indicatif::{ProgressBar, ProgressStyle};
 use itertools::Itertools;
 use serde::de::DeserializeOwned;
 use veecle_net_utils::{BlockingSocketStream, UnresolvedMultiSocketAddress};
@@ -135,7 +136,7 @@ where
     receive(stream)
 }
 
-/// Sends a [`Request::AddWithBinary`] followed by the binary data.
+/// Sends a [`Request::AddWithBinary`] followed by the binary data with progress reporting.
 fn send_add_with_binary(
     stream: &mut BufReader<BlockingSocketStream>,
     id: InstanceId,
@@ -145,10 +146,29 @@ fn send_add_with_binary(
     let () = send(stream, Request::add_with_binary(id, data, privileged))
         .context("sending AddWithBinary request, receiving initial response")?;
 
-    stream
-        .get_mut()
-        .write_all(data)
-        .context("sending binary data")?;
+    // get progress bar for binary upload
+    let pb = ProgressBar::new(data.len() as u64);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template(
+                "{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({bytes_per_sec}, {eta})",
+            )
+            .expect("valid progress bar template")
+            .progress_chars("█▓░"),
+    );
+
+    // send data in chunks to display progress bar,
+    // 8kb is equal to chunk buffer size
+    const CHUNK_SIZE: usize = 8192;
+    for chunk in data.chunks(CHUNK_SIZE) {
+        stream
+            .get_mut()
+            .write_all(chunk)
+            .context("sending binary data")?;
+        pb.inc(chunk.len() as u64);
+    }
+
+    pb.finish_and_clear();
 
     let () = receive(stream).context("receiving final response")?;
 
