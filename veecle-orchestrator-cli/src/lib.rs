@@ -11,7 +11,9 @@ use indicatif::{ProgressBar, ProgressStyle};
 use itertools::Itertools;
 use serde::de::DeserializeOwned;
 use veecle_net_utils::{BlockingSocketStream, UnresolvedMultiSocketAddress};
-use veecle_orchestrator_protocol::{Info, InstanceId, LinkTarget, Priority, Request, Response};
+use veecle_orchestrator_protocol::{
+    BINARY_TRANSFER_CHUNK_SIZE, Info, InstanceId, LinkTarget, Priority, Request, Response,
+};
 
 /// Veecle OS Orchestrator CLI interface
 ///
@@ -157,10 +159,8 @@ fn send_add_with_binary(
             .progress_chars("█▓░"),
     );
 
-    // send data in chunks to display progress bar,
-    // 8kb is equal to chunk buffer size
-    const CHUNK_SIZE: usize = 8192;
-    for chunk in data.chunks(CHUNK_SIZE) {
+    // send data in chunks to enable progress reporting
+    for chunk in data.chunks(BINARY_TRANSFER_CHUNK_SIZE) {
         stream
             .get_mut()
             .write_all(chunk)
