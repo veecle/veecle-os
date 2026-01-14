@@ -1,18 +1,45 @@
-/// Makes a [cons-lists](https://en.wikipedia.org/wiki/Cons#Lists) of types/identifiers to allow the `validation`
-/// "function" below to support an arbitrary number of input arguments.
+/// Computes the `Slots` type for a list of Reader/Writer types.
 #[doc(hidden)]
 #[macro_export]
-macro_rules! __make_tuple_cons {
+macro_rules! __validator_slots {
+    () => {
+        $crate::__exports::veecle_os_runtime::__exports::Nil
+    };
+    ($first:ty $(,)?) => {
+        <<$first as $crate::__exports::veecle_os_runtime::__exports::DefinesSlot>::Slot as $crate::__exports::veecle_os_runtime::__exports::AppendCons<$crate::__exports::veecle_os_runtime::__exports::Nil>>::Result
+    };
+    ($first:ty, $($rest:ty),+ $(,)?) => {
+        <<$first as $crate::__exports::veecle_os_runtime::__exports::DefinesSlot>::Slot as $crate::__exports::veecle_os_runtime::__exports::AppendCons<$crate::__validator_slots!($($rest),+)>>::Result
+    };
+}
+
+/// Creates a cons-list type from a list of types.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __make_cons_ty {
     () => {
         ()
     };
-
-    (mut $first:ident, $($rest:tt)* ) => {
-        (mut $first, $crate::__make_tuple_cons!($($rest)*))
+    ($first:ty $(,)?) => {
+        ($first, ())
     };
+    ($first:ty, $($rest:ty),+ $(,)?) => {
+        ($first, $crate::__make_cons_ty!($($rest),+))
+    };
+}
 
-    ($first:ty, $($rest:tt)* ) => {
-        ($first, $crate::__make_tuple_cons!($($rest)*))
+/// Creates a cons-list pattern from a list of patterns.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __make_cons_pat {
+    () => {
+        ()
+    };
+    ($first:tt $(,)?) => {
+        ($first, ())
+    };
+    ($first:tt, $($rest:tt),+ $(,)?) => {
+        ($first, $crate::__make_cons_pat!($($rest),+))
     };
 }
 
@@ -21,7 +48,7 @@ macro_rules! __make_tuple_cons {
 /// This macro's syntax mirrors that of `veecle_os::runtime::execute!` with an extra `validation` argument.
 /// The argument should be an async closure that runs any needed validations on the actors behaviors.
 ///
-/// Any store lifetimes in the `validation` argument should be replaced with `'a`.
+/// Any store lifetimes in the `validation` argument should use `'a` as a placeholder.
 ///
 /// ```rust
 /// use veecle_os::runtime::{Never, Reader, Writer, Storable};
@@ -44,8 +71,6 @@ macro_rules! __make_tuple_cons {
 ///
 /// veecle_os_test::block_on_future(
 ///     veecle_os_test::execute! {
-///         store: [Data, Trigger],
-///
 ///         actors: [Incrementor],
 ///
 ///         validation: async |mut reader: Reader<'a, Data>, mut trigger: Writer<'a, Trigger>| {
@@ -62,39 +87,38 @@ macro_rules! __make_tuple_cons {
 #[macro_export]
 macro_rules! execute {
     (
-        store: [
-            $($data_type:ty),* $(,)?
-        ],
-
         actors: [
             $($actor_type:ty $(: $init_context:expr )? ),* $(,)?
         ],
 
         validation: async |$(mut $arg_pat:ident : $arg_ty:ty),* $(,)?| $validation_body:block $(,)?
     ) => {{
-        struct Validator<'a> {
-            store_request: $crate::__make_tuple_cons!($($arg_ty,)*),
+        struct __Validator<'a> {
+            $(
+                $arg_pat: $arg_ty,
+            )*
             complete: $crate::__exports::futures::channel::oneshot::Sender<()>,
             // In case the validation body doesn't use readers/writers, we need to use the lifetime
             // to avoid the compiler complaining about unused lifetimes.
             _phantom: core::marker::PhantomData<&'a ()>,
         }
 
-        impl<'a> $crate::__exports::veecle_os_runtime::Actor<'a> for Validator<'a> {
-            type StoreRequest = $crate::__make_tuple_cons!($($arg_ty,)*);
+        impl<'a> $crate::__exports::veecle_os_runtime::Actor<'a> for __Validator<'a> {
+            type StoreRequest = $crate::__make_cons_ty!($($arg_ty),*);
             type InitContext = $crate::__exports::futures::channel::oneshot::Sender<()>;
             type Error = $crate::__exports::Never;
+            type Slots = $crate::__validator_slots!($($arg_ty),*);
 
-            fn new(store_request: Self::StoreRequest, complete: Self::InitContext) -> Self {
+            fn new($crate::__make_cons_pat!($($arg_pat),*): Self::StoreRequest, complete: Self::InitContext) -> Self {
                 Self {
-                    store_request,
+                    $($arg_pat,)*
                     complete,
-                    _phantom: core::marker::PhantomData
+                    _phantom: core::marker::PhantomData,
                 }
             }
 
             async fn run(self) -> Result<$crate::__exports::Never, Self::Error> {
-                let $crate::__make_tuple_cons!($(mut $arg_pat,)*) = self.store_request;
+                $(let mut $arg_pat = self.$arg_pat;)*
                 $validation_body;
                 self.complete.send(()).unwrap();
                 core::future::pending().await
@@ -107,12 +131,9 @@ macro_rules! execute {
 
             let executor = core::pin::pin!(
                 $crate::__exports::veecle_os_runtime::execute! {
-                    store: [ $($data_type,)* ],
-
                     actors: [
                         $($actor_type $(: $init_context)? ,)*
-
-                        Validator: complete_tx,
+                        __Validator: complete_tx,
                     ],
                 }
             );
@@ -124,10 +145,6 @@ macro_rules! execute {
     // The previous arm doesn't support `validation: async ||` (no space between first `|´ and second ´|´) for some reason.
     // To avoid forcing users to add whitespace between `||`, we add this arm.
     (
-        store: [
-            $($data_type:ty),* $(,)?
-        ],
-
         actors: [
             $($actor_type:ty $(: $init_context:expr )? ),* $(,)?
         ],
@@ -135,15 +152,11 @@ macro_rules! execute {
         validation: async || $validation_body:block $(,)?
     ) => {{
         $crate::execute!(
-            store: [
-            $($data_type),*
-        ],
+            actors: [
+                $($actor_type $(: $init_context)? ),*
+            ],
 
-        actors: [
-            $($actor_type $(: $init_context)? ),*
-        ],
-
-        validation: async | | $validation_body
+            validation: async | | $validation_body
         )
     }};
 }
@@ -162,12 +175,10 @@ mod tests {
     fn local_context() {
         let local = vec![1];
         futures::executor::block_on(crate::execute! {
-            store: [],
-
             actors: [
-                ContextualActor<_>: &local,
+                ContextualActor<&Vec<i32>>: &local,
             ],
-                validation: async || {}
+            validation: async || {}
         });
         dbg!(&local);
     }

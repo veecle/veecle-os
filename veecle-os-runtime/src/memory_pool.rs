@@ -56,7 +56,6 @@
 //! # futures::executor::block_on(
 //! #
 //! veecle_os_runtime::execute! {
-//!    store: [Data],
 //!    actors: [
 //!        ExclusiveReadActor,
 //!        WriteActor: &POOL,

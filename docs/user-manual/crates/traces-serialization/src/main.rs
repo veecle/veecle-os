@@ -52,7 +52,6 @@ async fn pong_actor(mut pong: Writer<'_, Pong>, mut ping: InitializedReader<'_, 
 // ANCHOR_END: setup
 async fn main() {
     veecle_os::runtime::execute! {
-        store: [Ping, Pong],
         actors: [PingActor, PongActor],
     }
     .await;

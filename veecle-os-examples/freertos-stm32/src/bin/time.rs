@@ -10,7 +10,7 @@ use stm32f7xx_hal as _;
 use veecle_freertos_integration::*;
 use veecle_os::osal::freertos::log::{Log, LogTarget};
 use veecle_os::osal::freertos::time::Time;
-use veecle_os_examples_common::actors::time::{Tick, TickerActor, TickerReader};
+use veecle_os_examples_common::actors::time::{TickerActor, TickerReader};
 
 extern crate panic_halt;
 
@@ -34,7 +34,6 @@ fn main() -> ! {
         .priority(TaskPriority(2))
         .start(|_| {
             veecle_os::osal::freertos::task::block_on_future(veecle_os::runtime::execute! {
-                store: [Tick],
                 actors: [
                     TickerReader,
                     TickerActor<Time>,

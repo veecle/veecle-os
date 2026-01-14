@@ -232,8 +232,21 @@ pub fn impl_actor(
         }
     }
 
-    let request_argument_names = make_cons_pattern(extract_argument_names(&request));
     let mut lifetime_replacer = ReplaceAnonymousLifetimeWith::new(actor_lifetime.clone());
+
+    let slots = request
+        .iter()
+        .map(|(_, ty)| {
+            let mut ty = ty.clone();
+            lifetime_replacer.visit_type_path_mut(&mut ty);
+            ty
+        })
+        .fold(quote!(#veecle_os_runtime::__exports::Nil), |acc, item| {
+            quote! {
+                <<#item as #veecle_os_runtime::__exports::DefinesSlot>::Slot as #veecle_os_runtime::__exports::AppendCons<#acc>>::Result
+            }
+        });
+    let request_argument_names = make_cons_pattern(extract_argument_names(&request));
     let request_argument_types_struct = make_cons_type(
         request
             .iter()
@@ -301,6 +314,8 @@ pub fn impl_actor(
             type StoreRequest = #request_argument_types_struct;
             type InitContext = #context_ty;
             type Error = #error_ty;
+
+            type Slots = #slots;
 
             fn new(
                 request: Self::StoreRequest,

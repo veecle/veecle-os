@@ -47,7 +47,6 @@ fn memory_pool() {
     }
 
     veecle_os_test::block_on_future(veecle_os_test::execute! {
-        store: [Data],
         actors: [
             ExclusiveReadActor,
             WriteActor: &POOL,

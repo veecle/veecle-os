@@ -16,7 +16,6 @@ async fn macro_test_actor(
 
 fn main() {
     let _ = veecle_os_runtime::execute! {
-        store: [Actuator, Sensor],
         actors: [MacroTestActor],
     };
 }

@@ -1,11 +1,10 @@
 use embassy_executor::Spawner;
 use veecle_os::osal::embassy::time::Time;
-use veecle_os_examples_common::actors::time::{Tick, TickerActor, TickerReader};
+use veecle_os_examples_common::actors::time::{TickerActor, TickerReader};
 
 #[embassy_executor::task]
 async fn run() {
     veecle_os::runtime::execute! {
-        store: [Tick],
         actors: [
             TickerActor<Time>,
             TickerReader,

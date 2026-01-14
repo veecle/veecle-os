@@ -31,7 +31,6 @@ pub fn main() -> ! {
         .priority(TaskPriority(2))
         .start(|_| {
             veecle_os::osal::freertos::task::block_on_future(veecle_os::runtime::execute! {
-                store: [],
                 actors: [
                     AllocStatActor,
                     BoxActor<veecle_os::osal::freertos::time::Time>,

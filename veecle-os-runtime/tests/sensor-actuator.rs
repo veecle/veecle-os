@@ -95,7 +95,6 @@ async fn printer(mut actuator_data_reader: InitializedReader<'_, ActuatorData>) 
 #[test]
 fn main() {
     veecle_os_test::block_on_future(veecle_os_test::execute! {
-        store: [Sensor, ActuatorData],
         actors: [
             Printer,
             SensorValidation,

@@ -1,12 +1,12 @@
 //! Smallest unit of work within a runtime instance.
 use core::pin::Pin;
 
-#[doc(inline)]
-pub use veecle_os_runtime_macros::actor;
-
 use crate::Never;
+use crate::cons::{Cons, Nil};
 use crate::datastore::{ExclusiveReader, InitializedReader, Reader, Storable, Writer};
 use crate::datastore::{Slot, generational};
+#[doc(inline)]
+pub use veecle_os_runtime_macros::actor;
 
 mod sealed {
     pub trait Sealed {}
@@ -71,6 +71,7 @@ mod sealed {
 /// # use std::fmt::Debug;
 /// #
 /// # use veecle_os_runtime::{Never, Storable, Reader, Writer, Actor};
+/// # use veecle_os_runtime::__exports::{AppendCons, DefinesSlot};
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
@@ -90,6 +91,7 @@ mod sealed {
 ///     type StoreRequest = (Reader<'a, Foo>, Writer<'a, Bar>);
 ///     type InitContext = Ctx;
 ///     type Error = Never;
+///     type Slots = <<Reader<'a, Foo> as DefinesSlot>::Slot as AppendCons<<Writer<'a, Bar> as DefinesSlot>::Slot>>::Result;
 ///
 ///     fn new((reader, writer): Self::StoreRequest, context: Self::InitContext) -> Self {
 ///         Self {
@@ -112,6 +114,9 @@ pub trait Actor<'a> {
 
     /// Context that needs to be passed to the actor at initialisation.
     type InitContext;
+
+    /// Cons list of `Storable` slots required by this actor.
+    type Slots;
 
     /// Error that this actor might return while running.
     ///
@@ -202,7 +207,7 @@ pub(crate) trait DatastoreExt<'a>: Copy {
     /// Returns the [`ExclusiveReader`] for a specific slot.
     ///
     /// Exclusivity of the reader is not guaranteed by this method and must be ensured via other means (e.g.
-    /// [`crate::execute::validate_actors`]).
+    /// [`crate::execute::make_store_and_validate`]).
     ///
     /// # Panics
     ///
@@ -385,6 +390,45 @@ impl IsActorResult for Never {
     fn into_result(self) -> Result<Never, Self::Error> {
         match self {}
     }
+}
+
+/// Determines whether a reader/writer defines a slot.
+///
+/// A slot is defined by one side of a reader/writer combo.
+/// For a [`Writer`] - [`Reader`] combination, the `Writer` defines the slot, as that is the unique side.
+/// As a consequence, every possible combination must have a side that defines the slot.
+#[doc(hidden)]
+pub trait DefinesSlot {
+    /// The slot type as a cons list or [`Nil`].
+    type Slot;
+}
+
+impl<'a, T> DefinesSlot for Writer<'a, T>
+where
+    T: Storable,
+{
+    type Slot = Cons<T, Nil>;
+}
+
+impl<'a, T> DefinesSlot for Reader<'a, T>
+where
+    T: Storable,
+{
+    type Slot = Nil;
+}
+
+impl<'a, T> DefinesSlot for ExclusiveReader<'a, T>
+where
+    T: Storable,
+{
+    type Slot = Nil;
+}
+
+impl<'a, T> DefinesSlot for InitializedReader<'a, T>
+where
+    T: Storable,
+{
+    type Slot = Nil;
 }
 
 #[cfg(test)]

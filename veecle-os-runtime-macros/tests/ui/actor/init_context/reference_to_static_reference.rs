@@ -10,7 +10,6 @@ fn main() {
     static VALUE: u8 = 5;
     let reference = &VALUE;
     let _ = veecle_os_runtime::execute! {
-        store: [],
         actors: [
             MacroTestActor: &reference,
         ],

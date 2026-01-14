@@ -39,7 +39,6 @@ async fn main() {
         .expect("exporter was not set yet");
 
     veecle_os_runtime::execute! {
-        store: [Ping, Pong],
         actors: [PingActor, PongActor, ConcreteTraceActor],
     }
     .await;

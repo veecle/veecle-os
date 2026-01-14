@@ -9,7 +9,6 @@ async fn macro_test_actor(#[init_context] init_context: &'static u8) -> veecle_o
 fn main() {
     static VALUE: u8 = 5;
     let _ = veecle_os_runtime::execute! {
-        store: [],
         actors: [
             MacroTestActor: &VALUE,
         ],

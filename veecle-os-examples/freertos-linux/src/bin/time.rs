@@ -1,6 +1,6 @@
 use veecle_freertos_integration::{FreeRtosAllocator, Task, TaskPriority};
 use veecle_os::osal::freertos::time::Time;
-use veecle_os_examples_common::actors::time::{Tick, TickerActor, TickerReader};
+use veecle_os_examples_common::actors::time::{TickerActor, TickerReader};
 
 // SAFETY: We don't use any non-FreeRTOS threads.
 #[global_allocator]
@@ -22,7 +22,6 @@ pub fn main() -> ! {
         .priority(TaskPriority(2))
         .start(|_| {
             veecle_os::osal::freertos::task::block_on_future(veecle_os::runtime::execute! {
-                store: [Tick],
                 actors: [
                     TickerReader,
                     TickerActor<Time>,

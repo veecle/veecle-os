@@ -124,7 +124,6 @@ fn veecle_os_executor_read(pipe_rx: OwnedFd) {
     let pipe_rx = pipe_rx.into_raw_fd();
 
     veecle_os_test::block_on_future(veecle_os_test::execute! {
-        store: [PipeMessage],
         actors: [
             ReadPipeRuntimeActor: pipe_rx,
             ReadPrinter: &READ_COUNTER,
@@ -146,7 +145,6 @@ fn veecle_os_executor_write(pipe_tx: OwnedFd) {
     let pipe_tx = pipe_tx.into_raw_fd();
 
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [],
         actors: [
             WritePipeRuntimeActor: pipe_tx,
         ]

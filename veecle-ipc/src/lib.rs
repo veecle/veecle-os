@@ -33,7 +33,6 @@
 //!     let connector = veecle_ipc::Connector::connect().await;
 //!
 //!     veecle_os_runtime::execute! {
-//!         store: [Ping, Pong],
 //!         actors: [
 //!             veecle_ipc::Input<Ping>: &connector,
 //!             veecle_ipc::Output<Pong>: (&connector).into(),

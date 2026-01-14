@@ -6,7 +6,6 @@ async fn macro_test_actor(#[init_context] foo: u32) -> veecle_os_runtime::Never 
 
 fn main() {
     let _ = veecle_os_runtime::execute! {
-        store: [],
         actors: [
             MacroTestActor: 1,
         ],

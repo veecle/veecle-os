@@ -5,7 +5,18 @@ error: #[actor] functions must return a `Result` or `Never`
   | ^^^^^
 
 error[E0412]: cannot find type `MacroTestActor` in this scope
-  --> tests/ui/actor/return_nothing.rs:15:18
+  --> tests/ui/actor/return_nothing.rs:14:18
    |
-15 |         actors: [MacroTestActor],
+14 |         actors: [MacroTestActor],
    |                  ^^^^^^^^^^^^^^ not found in this scope
+
+error[E0282]: type annotations needed
+  --> tests/ui/actor/return_nothing.rs:13:13
+   |
+13 |       let _ = veecle_os_runtime::execute! {
+   |  _____________^
+14 | |         actors: [MacroTestActor],
+15 | |     };
+   | |_____^ cannot infer type
+   |
+   = note: this error originates in the macro `veecle_os_runtime::execute` (in Nightly builds, run with -Z macro-backtrace for more info)

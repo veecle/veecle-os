@@ -7,8 +7,11 @@ mod fake_veecle_os_runtime {
         type StoreRequest: StoreRequest<'a>;
         type InitContext: core::any::Any + 'a;
         type Error;
+        type Slots;
         fn new(request: Self::StoreRequest, init_context: Self::InitContext) -> Self;
-        fn run(self) -> impl core::future::Future<Output = Result<Never, Self::Error>>;
+        fn run(
+            self,
+        ) -> impl core::future::Future<Output = Result<Never, Self::Error>>;
     }
 
     impl<'a> StoreRequest<'a> for () {}
@@ -31,6 +34,28 @@ mod fake_veecle_os_runtime {
                 match self {}
             }
         }
+        pub trait AppendCons<Other> {
+            type Result;
+        }
+
+        impl<Other> AppendCons<Other> for Nil {
+            type Result = Other;
+        }
+
+        impl<T, R, Other> AppendCons<Other> for Cons<T, R>
+        where
+            R: AppendCons<Other>,
+        {
+            type Result = Cons<T, R::Result>;
+        }
+
+        pub struct Nil;
+        pub struct Slot;
+        pub trait DefinesSlot {
+            type Slot;
+        }
+
+        pub struct Cons<T, U>(pub T, pub U);
     }
 
     #[derive(Debug)]
@@ -45,6 +70,18 @@ mod fake_veecle_os_runtime {
     impl<'a, T> StoreRequest<'a> for Reader<'a, T> {}
     impl<'a, T> StoreRequest<'a> for ExclusiveReader<'a, T> {}
     impl<'a, T> StoreRequest<'a> for Writer<'a, T> {}
+
+    impl<'a, T> __exports::DefinesSlot for Writer<'a, T> {
+        type Slot = __exports::Cons<T, __exports::Nil>;
+    }
+
+    impl<'a, T> __exports::DefinesSlot for Reader<'a, T> {
+        type Slot = __exports::Nil;
+    }
+
+    impl<'a, T> __exports::DefinesSlot for ExclusiveReader<'a, T> {
+        type Slot = __exports::Nil;
+    }
 
     pub fn assert_right_actor_trait<'a, T>()
     where

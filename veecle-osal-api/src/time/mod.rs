@@ -57,7 +57,6 @@
 //! # rt.block_on(async move {
 //! #
 //! veecle_os_runtime::execute! {
-//!     store: [Tick],
 //!     actors: [
 //!         TickWriter<Time>,
 //!         TickReader,

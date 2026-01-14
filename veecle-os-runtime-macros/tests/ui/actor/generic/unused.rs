@@ -5,7 +5,6 @@ async fn unused<T>() -> veecle_os_runtime::Never {
 
 fn main() {
     let _ = veecle_os_runtime::execute! {
-        store: [],
         actors: [Unused<()>],
     };
 }

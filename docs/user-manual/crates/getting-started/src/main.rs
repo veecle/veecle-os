@@ -49,7 +49,6 @@ async fn receiver_actor(mut reader: InitializedReader<'_, Value>) -> Never {
 #[veecle_os::osal::std::main]
 async fn main() {
     veecle_os::runtime::execute! {
-        store: [Value],
         actors: [ReceiverActor, SenderActor],
     }
     .await;

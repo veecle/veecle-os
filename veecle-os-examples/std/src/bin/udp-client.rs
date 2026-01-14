@@ -1,5 +1,6 @@
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use veecle_os::osal::std::log::Log;
+use veecle_os::osal::std::net::udp::UdpSocket;
 use veecle_os_examples_common::actors::udp::UdpClientActor;
 
 pub const SERVER_ADDRESS: SocketAddr =
@@ -10,10 +11,9 @@ pub const CLIENT_ADDRESS: SocketAddr =
 #[veecle_os::osal::std::main(telemetry = true)]
 async fn main() {
     veecle_os::runtime::execute! {
-        store: [],
         actors: [
-            UdpClientActor<_, Log>: (
-                veecle_os::osal::std::net::udp::UdpSocket::new(),
+            UdpClientActor<UdpSocket, Log>: (
+                UdpSocket::new(),
                 CLIENT_ADDRESS,
                 SERVER_ADDRESS
             ),

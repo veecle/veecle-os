@@ -12,7 +12,6 @@ async fn with_lifetime<'a>(
 
 fn main() {
     let _ = veecle_os_runtime::execute! {
-        store: [Sensor],
         actors: [WithLifetime<'static>: &()],
     };
 }

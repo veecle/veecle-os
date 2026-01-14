@@ -13,7 +13,6 @@ async fn main() {
         .unwrap();
 
     veecle_os::runtime::execute! {
-        store: [Ping, Pong],
         actors: [
             PingActor,
             veecle_ipc::Output::<Ping>: (&connector).into(),

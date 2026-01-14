@@ -22,7 +22,6 @@ async fn alloc_stat_actor() -> Never {
 #[veecle_os::osal::std::main(telemetry = true)]
 async fn main() {
     veecle_os::runtime::execute! {
-        store: [],
         actors: [
             AllocStatActor,
             BoxActor<veecle_os::osal::std::time::Time>,

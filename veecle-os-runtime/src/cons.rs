@@ -32,24 +32,7 @@ macro_rules! __assert_same_type {
 }
 
 /// Converts a tuple-based cons-list into one using our nominal types.
-///
-/// ```rust
-/// use veecle_os_runtime::__assert_same_type;
-/// use veecle_os_runtime::__exports::{Cons, Nil, TupleConsToCons};
-///
-/// __assert_same_type! {
-///     for<>
-///     <() as TupleConsToCons>::Cons,
-///     Nil,
-/// }
-///
-/// __assert_same_type! {
-///     for<A, B, C>
-///     <(A, (B, (C, ()))) as TupleConsToCons>::Cons,
-///     Cons<A, Cons<B, Cons<C, Nil>>>,
-/// }
-/// ```
-pub trait TupleConsToCons {
+pub(crate) trait TupleConsToCons {
     /// The [`Cons`]-based cons-list
     type Cons;
 }
@@ -176,4 +159,22 @@ macro_rules! __read_cons {
             result: [$($result)* . 1],
         }
     };
+}
+
+/// Internal helper to append two cons-lists.
+#[doc(hidden)]
+pub trait AppendCons<Other> {
+    /// The result of appending `Other` to self.
+    type Result;
+}
+
+impl<Other> AppendCons<Other> for Nil {
+    type Result = Other;
+}
+
+impl<T, R, Other> AppendCons<Other> for Cons<T, R>
+where
+    R: AppendCons<Other>,
+{
+    type Result = Cons<T, R::Result>;
 }
