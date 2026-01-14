@@ -1,12 +1,12 @@
 //! Smallest unit of work within a runtime instance.
 use core::pin::Pin;
 
-#[doc(inline)]
-pub use veecle_os_runtime_macros::actor;
-
 use crate::Never;
+use crate::cons::{Cons, Nil};
 use crate::datastore::{ExclusiveReader, InitializedReader, Reader, Storable, Writer};
 use crate::datastore::{Slot, generational};
+#[doc(inline)]
+pub use veecle_os_runtime_macros::actor;
 
 mod sealed {
     pub trait Sealed {}
@@ -71,6 +71,7 @@ mod sealed {
 /// # use std::fmt::Debug;
 /// #
 /// # use veecle_os_runtime::{Never, Storable, Reader, Writer, Actor};
+/// # use veecle_os_runtime::__exports::{AppendCons, DefinesSlot};
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
@@ -90,6 +91,7 @@ mod sealed {
 ///     type StoreRequest = (Reader<'a, Foo>, Writer<'a, Bar>);
 ///     type InitContext = Ctx;
 ///     type Error = Never;
+///     type Slots = <<Reader<'a, Foo> as DefinesSlot>::Slot as AppendCons<<Writer<'a, Bar> as DefinesSlot>::Slot>>::Result;
 ///
 ///     fn new((reader, writer): Self::StoreRequest, context: Self::InitContext) -> Self {
 ///         Self {
@@ -205,7 +207,7 @@ pub(crate) trait DatastoreExt<'a>: Copy {
     /// Returns the [`ExclusiveReader`] for a specific slot.
     ///
     /// Exclusivity of the reader is not guaranteed by this method and must be ensured via other means (e.g.
-    /// [`crate::execute::validate_actors`]).
+    /// [`crate::execute::make_store_and_validate`]).
     ///
     /// # Panics
     ///

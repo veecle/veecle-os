@@ -23,7 +23,6 @@ impl Storable for Humidity {
 #[test]
 fn test_two_storables_with_same_datatype() {
     veecle_os_test::block_on_future(veecle_os_test::execute! {
-        store: [Temperature, Humidity],
         actors: [],
         validation: async |
             mut temp_reader: Reader<'a, Temperature>,

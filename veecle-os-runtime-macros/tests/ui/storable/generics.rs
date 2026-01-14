@@ -31,7 +31,6 @@ where
 
 fn main() {
     let _ = veecle_os_runtime::execute! {
-        store: [Sensor<u8>],
         actors: [MacroTestActor<u8, 2>],
     };
 }

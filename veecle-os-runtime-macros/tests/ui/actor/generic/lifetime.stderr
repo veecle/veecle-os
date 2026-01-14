@@ -5,7 +5,18 @@ error: #[actor] functions cannot be generic over a lifetime
   |                        ^^
 
 error[E0412]: cannot find type `WithLifetime` in this scope
-  --> tests/ui/actor/generic/lifetime.rs:16:18
+  --> tests/ui/actor/generic/lifetime.rs:15:18
    |
-16 |         actors: [WithLifetime<'static>: &()],
+15 |         actors: [WithLifetime<'static>: &()],
    |                  ^^^^^^^^^^^^ not found in this scope
+
+error[E0282]: type annotations needed
+  --> tests/ui/actor/generic/lifetime.rs:14:13
+   |
+14 |       let _ = veecle_os_runtime::execute! {
+   |  _____________^
+15 | |         actors: [WithLifetime<'static>: &()],
+16 | |     };
+   | |_____^ cannot infer type
+   |
+   = note: this error originates in the macro `veecle_os_runtime::execute` (in Nightly builds, run with -Z macro-backtrace for more info)

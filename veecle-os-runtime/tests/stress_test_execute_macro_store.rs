@@ -43,9 +43,6 @@ macro_rules! make_test {
         fn stress_test_execute_macro_store() {
             futures::executor::block_on(
                 veecle_os_runtime::execute! {
-                    store: [$(
-                        data::$ident,
-                    )*],
                     actors: [
                         ReadAndDiscardAll,
                         WriteAllNever,

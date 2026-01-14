@@ -1,5 +1,6 @@
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use veecle_os::osal::std::log::Log;
+use veecle_os::osal::std::net::tcp::TcpSocket;
 use veecle_os_examples_common::actors::tcp::TcpServerActor;
 
 pub const SERVER_ADDRESS: SocketAddr =
@@ -8,9 +9,8 @@ pub const SERVER_ADDRESS: SocketAddr =
 #[veecle_os::osal::std::main(telemetry = true)]
 async fn main() {
     veecle_os::runtime::execute! {
-        store: [],
         actors: [
-            TcpServerActor<_, Log>: (veecle_os::osal::std::net::tcp::TcpSocket,SERVER_ADDRESS),
+            TcpServerActor<TcpSocket, Log>: (TcpSocket,SERVER_ADDRESS),
         ],
     }
     .await;

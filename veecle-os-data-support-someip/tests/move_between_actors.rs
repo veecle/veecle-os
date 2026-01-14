@@ -64,7 +64,6 @@ fn yoke() {
     }
 
     veecle_os_test::block_on_future(veecle_os_test::execute! {
-        store: [Input, Output],
         actors: [
             Deserializer,
         ],

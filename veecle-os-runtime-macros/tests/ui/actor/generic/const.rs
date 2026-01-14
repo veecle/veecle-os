@@ -11,7 +11,6 @@ async fn const_generic<const N: usize>(
 
 fn main() {
     let _ = veecle_os_runtime::execute! {
-        store: [Sensor],
         actors: [ConstGeneric<2>],
     };
 }

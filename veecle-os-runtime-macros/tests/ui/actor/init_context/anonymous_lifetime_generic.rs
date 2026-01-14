@@ -8,7 +8,6 @@ async fn macro_test_actor(#[init_context] _init_context: Foo<'_>) -> veecle_os_r
 fn main() {
     let value = 5;
     let _ = veecle_os_runtime::execute! {
-        store: [],
         actors: [
             MacroTestActor: Foo(&value),
         ],

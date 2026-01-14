@@ -31,7 +31,6 @@ use crate::{Connector, SendPolicy};
 /// use veecle_ipc::SendPolicy;
 ///
 /// veecle_os::runtime::execute! {
-///     store: [CriticalData, TelemetryData],
 ///     actors: [
 ///         // Default: panics on full buffer (for testing/critical paths)
 ///         veecle_ipc::Output::<CriticalData>: connector.into(),

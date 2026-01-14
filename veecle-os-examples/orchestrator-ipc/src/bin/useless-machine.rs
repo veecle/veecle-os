@@ -52,7 +52,6 @@ async fn main() {
         .unwrap();
 
     veecle_os::runtime::execute! {
-        store: [ControlRequest, ControlResponse],
         actors: [
             UselessMachineActor: connector.runtime_id(),
             veecle_ipc::ControlHandler: &connector,

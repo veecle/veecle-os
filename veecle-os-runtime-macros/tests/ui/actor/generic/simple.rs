@@ -14,7 +14,6 @@ where
 
 fn main() {
     let _ = veecle_os_runtime::execute! {
-        store: [Sensor],
         actors: [Discard<Sensor>],
     };
 }

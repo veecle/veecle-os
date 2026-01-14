@@ -10,6 +10,7 @@ use embassy_net::{EthernetAddress, Ipv4Address, Ipv4Cidr};
 use heapless::Vec;
 use panic_halt as _;
 use veecle_os::osal::api::log::LogTarget;
+use veecle_os::osal::embassy::net::udp;
 use veecle_os_examples_common::actors::udp::UdpServerActor;
 
 pub const SERVER_ADDRESS: SocketAddr =
@@ -48,12 +49,11 @@ async fn main(spawner: Spawner) -> ! {
         &mut tx_meta_buffer,
         &mut tx_buffer,
     );
-    let socket = veecle_os::osal::embassy::net::udp::UdpSocket::new(embassy_socket).unwrap();
+    let socket = udp::UdpSocket::new(embassy_socket).unwrap();
 
     veecle_os::runtime::execute! {
-        store: [],
         actors: [
-            UdpServerActor<_, veecle_os::osal::embassy::log::Log>: (
+            UdpServerActor<udp::UdpSocket, veecle_os::osal::embassy::log::Log>: (
                 socket,
                 SERVER_ADDRESS
             ),

@@ -35,7 +35,6 @@ async fn write_actor(mut writer: Writer<'_, Sensor>) -> Never {
 #[test]
 fn main() {
     veecle_os_test::block_on_future(veecle_os_test::execute! {
-        store: [Sensor],
         actors: [
             ExclusiveReadActor,
             WriteActor,
@@ -62,7 +61,6 @@ fn not_exclusive_first() {
     }
 
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [Sensor],
         actors: [
             ExclusiveReadActor,
             WriteActor,
@@ -80,7 +78,6 @@ fn not_exclusive_last() {
     }
 
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [Sensor],
         actors: [
             WriteActor,
             NonExclReadActor,

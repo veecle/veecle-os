@@ -109,7 +109,6 @@ fn main() {
             let init_data = (async_queue_receiver, async_queue_sender);
 
             veecle_os::osal::freertos::task::block_on_future(veecle_os::runtime::execute! {
-                store: [],
                 actors: [
                     QueueActor: init_data,
                 ],

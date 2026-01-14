@@ -123,8 +123,6 @@ async fn referencing_actor(#[init_context] context: &i32) -> veecle_os_runtime::
 #[should_panic(expected = "done")]
 fn make_executor_smoke_test1() {
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [Sensor],
-
         actors: [
             SensorReaderWriter,
         ],
@@ -135,8 +133,6 @@ fn make_executor_smoke_test1() {
 #[should_panic(expected = "done")]
 fn make_executor_smoke_test2() {
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [Sensor, Other],
-
         actors: [
             SensorReaderWriter, SensorReader, OtherReader, OtherWriter,
         ],
@@ -144,23 +140,9 @@ fn make_executor_smoke_test2() {
 }
 
 #[test]
-#[should_panic(expected = "missing writer for `execute_macro::Data`")]
+#[should_panic(expected = "missing reader for `execute_macro::Data`")]
 fn make_executor_smoke_test3() {
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [Sensor, Data],
-
-        actors: [
-            SensorReaderWriter,
-        ],
-    });
-}
-
-#[test]
-#[should_panic(expected = "missing reader for `execute_macro::Data`")]
-fn make_executor_smoke_test4() {
-    futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [Sensor, Data],
-
         actors: [
             SensorReaderWriter, DataWriter,
         ],
@@ -168,23 +150,9 @@ fn make_executor_smoke_test4() {
 }
 
 #[test]
-#[should_panic(expected = "no slot available for `execute_macro::Other`")]
-fn make_executor_smoke_test5() {
-    futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [],
-
-        actors: [
-            OtherReader, OtherWriter,
-        ],
-    });
-}
-
-#[test]
 #[should_panic(expected = "multiple writers for `execute_macro::Other`")]
-fn make_executor_smoke_test6() {
+fn make_executor_smoke_test4() {
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [Other],
-
         actors: [
             OtherReader, OtherWriter, OtherWriter,
         ],
@@ -193,10 +161,8 @@ fn make_executor_smoke_test6() {
 
 #[test]
 #[should_panic(expected = "done")]
-fn make_executor_smoke_test7() {
+fn make_executor_smoke_test5() {
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [Data],
-
         actors: [
             GenericReader<Data>, GenericWriter<Data>,
         ],
@@ -205,10 +171,8 @@ fn make_executor_smoke_test7() {
 
 #[test]
 #[should_panic(expected = "done")]
-fn make_executor_smoke_test8() {
+fn make_executor_smoke_test6() {
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [GenericData<bool>, GenericData<i32>],
-
         actors: [
             GenericReader<GenericData<bool>>,
             GenericWriter<GenericData<bool>>,
@@ -220,10 +184,8 @@ fn make_executor_smoke_test8() {
 
 #[test]
 #[should_panic(expected = "done true")]
-fn make_executor_smoke_test9() {
+fn make_executor_smoke_test7() {
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [],
-
         actors: [
             ContextualActor<bool>: true,
         ],
@@ -232,11 +194,9 @@ fn make_executor_smoke_test9() {
 
 #[test]
 #[should_panic(expected = "done 5")]
-fn make_executor_smoke_test10() {
+fn make_executor_smoke_test8() {
     let local = 5;
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [],
-
         actors: [
             ReferencingActor: &local,
         ],
@@ -245,10 +205,8 @@ fn make_executor_smoke_test10() {
 
 #[test]
 #[should_panic(expected = "done")]
-fn make_executor_smoke_test11() {
+fn make_executor_smoke_test9() {
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [Data],
-
         actors: [
             DataWriter,
             ExclusiveDataReader
@@ -258,11 +216,9 @@ fn make_executor_smoke_test11() {
 
 #[test]
 #[should_panic(expected = "done [5]")]
-fn make_executor_smoke_test12() {
+fn make_executor_smoke_test10() {
     let non_copyable = vec![5];
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [],
-
         actors: [
             ContextualActor<Vec<i32>>: non_copyable,
         ],
@@ -271,25 +227,21 @@ fn make_executor_smoke_test12() {
 
 #[test]
 #[should_panic(expected = "done true")]
-fn make_executor_smoke_test13() {
+fn make_executor_smoke_test11() {
     let local = true;
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [],
-
         actors: [
-            ContextualActor<_>: true,
-            ContextualActor<_>: const { &true },
-            ContextualActor<_>: &local,
+            ContextualActor<bool>: true,
+            ContextualActor<&bool>: const { &true },
+            ContextualActor<&bool>: &local,
         ],
     });
 }
 
 #[test]
 #[should_panic(expected = "conflict with exclusive reader for `execute_macro::Other`")]
-fn make_executor_smoke_test14() {
+fn make_executor_smoke_test12() {
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [Other],
-
         actors: [
             OtherExclusiveReader, OtherWriter, OtherReader,
         ],
@@ -298,10 +250,8 @@ fn make_executor_smoke_test14() {
 
 #[test]
 #[should_panic(expected = "conflict with exclusive reader for `execute_macro::Other`")]
-fn make_executor_smoke_test15() {
+fn make_executor_smoke_test13() {
     futures::executor::block_on(veecle_os_runtime::execute! {
-        store: [Other],
-
         actors: [
             OtherExclusiveReader, OtherWriter, OtherExclusiveReader,
         ],

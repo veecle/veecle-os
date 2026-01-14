@@ -32,8 +32,6 @@ async fn filter_actor(
 #[test]
 fn outdated_signals_should_be_discarded() {
     veecle_os_test::block_on_future(veecle_os_test::execute! {
-        store: [UpToDateSignal, Signal],
-
         actors: [FilterActor],
 
         validation: async |mut reader: Reader<'a, UpToDateSignal>, mut writer: Writer<'a, Signal>| {

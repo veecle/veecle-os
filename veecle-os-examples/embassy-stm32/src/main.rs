@@ -39,8 +39,6 @@ pub async fn increment_actor<T: TimeAbstraction>(mut writer: Writer<'_, Value>) 
 #[embassy_executor::task]
 async fn run() {
     veecle_os::runtime::execute! {
-        store: [Value],
-
         actors: [
             PrintActor<veecle_os::osal::embassy::log::Log>,
             IncrementActor<veecle_os::osal::embassy::time::Time>,

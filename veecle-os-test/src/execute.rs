@@ -71,8 +71,6 @@ macro_rules! __make_cons_pat {
 ///
 /// veecle_os_test::block_on_future(
 ///     veecle_os_test::execute! {
-///         store: [Data, Trigger],
-///
 ///         actors: [Incrementor],
 ///
 ///         validation: async |mut reader: Reader<'a, Data>, mut trigger: Writer<'a, Trigger>| {
@@ -177,12 +175,10 @@ mod tests {
     fn local_context() {
         let local = vec![1];
         futures::executor::block_on(crate::execute! {
-            store: [],
-
             actors: [
-                ContextualActor<_>: &local,
+                ContextualActor<&Vec<i32>>: &local,
             ],
-                validation: async || {}
+            validation: async || {}
         });
         dbg!(&local);
     }

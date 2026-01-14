@@ -9,6 +9,7 @@ use embassy_net::{EthernetAddress, Ipv4Address, Ipv4Cidr};
 use heapless::Vec;
 use panic_halt as _;
 use veecle_os::osal::api::log::LogTarget;
+use veecle_os::osal::embassy::net::tcp;
 use veecle_os_examples_common::actors::tcp::TcpClientActor;
 
 pub const SERVER_ADDRESS: SocketAddr =
@@ -41,12 +42,11 @@ async fn main(spawner: Spawner) -> ! {
     let mut embassy_socket =
         embassy_net::tcp::TcpSocket::new(net_stack, &mut rx_buffer, &mut tx_buffer);
     embassy_socket.set_timeout(Some(embassy_time::Duration::from_secs(10)));
-    let socket = veecle_os::osal::embassy::net::tcp::TcpSocket::new(embassy_socket).unwrap();
+    let socket = tcp::TcpSocket::new(embassy_socket).unwrap();
 
     veecle_os::runtime::execute! {
-        store: [],
         actors: [
-            TcpClientActor<_, veecle_os::osal::embassy::log::Log>: (socket, SERVER_ADDRESS),
+            TcpClientActor<tcp::TcpSocket, veecle_os::osal::embassy::log::Log>: (socket, SERVER_ADDRESS),
         ],
     }
     .await
