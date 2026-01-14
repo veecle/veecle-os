@@ -1,10 +1,9 @@
 // ANCHOR: full
 // ANCHOR: init
 //! Getting started example.
-use core::convert::Infallible;
 use core::fmt::Debug;
 
-use veecle_os::runtime::{InitializedReader, Storable, Writer};
+use veecle_os::runtime::{InitializedReader, Never, Storable, Writer};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Value;
@@ -17,7 +16,7 @@ impl Storable for Value {
 // ANCHOR: sender
 /// An actor that writes `Value { i++ }` continuously.
 #[veecle_os::runtime::actor]
-async fn sender_actor(mut writer: Writer<'_, Value>) -> Infallible {
+async fn sender_actor(mut writer: Writer<'_, Value>) -> Never {
     let mut value = 0;
     loop {
         println!("[sender] Sending {:?}", value);
@@ -30,7 +29,7 @@ async fn sender_actor(mut writer: Writer<'_, Value>) -> Infallible {
 // ANCHOR: receiver
 /// An actor that reads `Value` and terminates when the value is 5.
 #[veecle_os::runtime::actor]
-async fn receiver_actor(mut reader: InitializedReader<'_, Value>) -> Infallible {
+async fn receiver_actor(mut reader: InitializedReader<'_, Value>) -> Never {
     loop {
         println!("[receiver] Waiting for value");
         reader.wait_for_update().await.read(|value| {

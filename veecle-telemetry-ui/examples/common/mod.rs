@@ -1,8 +1,7 @@
-use std::convert::Infallible;
 use std::fmt::Debug;
 
 use serde::Serialize;
-use veecle_os_runtime::{CombineReaders, InitializedReader, Reader, Storable, Writer};
+use veecle_os_runtime::{CombineReaders, InitializedReader, Never, Reader, Storable, Writer};
 
 #[derive(Debug, Default, Storable, Serialize)]
 pub struct Ping {
@@ -39,7 +38,7 @@ pub async fn ping_loop(ping: &mut Writer<'_, Ping>, pong: &mut Reader<'_, Pong>,
 pub async fn pong_actor(
     mut pong: Writer<'_, Pong>,
     mut ping: InitializedReader<'_, Ping>,
-) -> Infallible {
+) -> Never {
     loop {
         pong_loop(&mut pong, &mut ping).await
     }
@@ -60,10 +59,7 @@ async fn pong_loop(pong: &mut Writer<'_, Pong>, ping: &mut InitializedReader<'_,
 
 /// An actor that continuously reads and logs updates from all debuggable types using a pair of concrete readers.
 #[veecle_os_runtime::actor]
-pub async fn concrete_trace_actor(
-    mut ping: Reader<'_, Ping>,
-    mut pong: Reader<'_, Pong>,
-) -> Infallible {
+pub async fn concrete_trace_actor(mut ping: Reader<'_, Ping>, mut pong: Reader<'_, Pong>) -> Never {
     loop {
         concrete_trace_loop(&mut ping, &mut pong).await;
     }

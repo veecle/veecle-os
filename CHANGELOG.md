@@ -2,6 +2,10 @@
 
 ## Veecle OS
 
+* **breaking** Replaced `core::convert::Infallible` with custom `Never` enum for actor return types.
+  * All actors using `Result<Infallible, E>` must change to `Result<Never, E>`.
+  * All actors using bare `Infallible` must change to bare `Never`.
+  * Import `Never` from `veecle_os::runtime::Never` or `veecle_os_runtime::Never`.
 * **breaking** The `Storable` macro no longer takes a `data_type` attribute.
   * `#[storable(data_type = "Type")] struct MyType;` becomes `impl Storable for MyType { type DataType = Type; }`.
 * **breaking** The `Storable` macro now requires a crate path without quotes.

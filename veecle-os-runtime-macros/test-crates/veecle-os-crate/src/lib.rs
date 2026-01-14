@@ -4,6 +4,6 @@
 pub struct Foo;
 
 #[veecle_os::runtime::actor]
-pub async fn bar() -> core::convert::Infallible {
+pub async fn bar() -> veecle_os::runtime::Never {
     unimplemented!("testing compilation")
 }

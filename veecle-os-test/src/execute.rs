@@ -24,8 +24,7 @@ macro_rules! __make_tuple_cons {
 /// Any store lifetimes in the `validation` argument should be replaced with `'a`.
 ///
 /// ```rust
-/// use core::convert::Infallible;
-/// use veecle_os::runtime::{Reader, Writer, Storable};
+/// use veecle_os::runtime::{Never, Reader, Writer, Storable};
 ///
 /// #[derive(Clone, Copy, Debug, Eq, PartialEq, Storable)]
 /// pub struct Data(u32);
@@ -34,7 +33,7 @@ macro_rules! __make_tuple_cons {
 /// pub struct Trigger;
 ///
 /// #[veecle_os::runtime::actor]
-/// async fn incrementor(mut writer: Writer<'_, Data>, mut trigger: Reader<'_, Trigger>) -> Infallible {
+/// async fn incrementor(mut writer: Writer<'_, Data>, mut trigger: Reader<'_, Trigger>) -> Never {
 ///     loop {
 ///         trigger.wait_for_update().await;
 ///         writer.modify(|data| {
@@ -84,7 +83,7 @@ macro_rules! execute {
         impl<'a> $crate::__exports::veecle_os_runtime::Actor<'a> for Validator<'a> {
             type StoreRequest = $crate::__make_tuple_cons!($($arg_ty,)*);
             type InitContext = $crate::__exports::futures::channel::oneshot::Sender<()>;
-            type Error = core::convert::Infallible;
+            type Error = $crate::__exports::Never;
 
             fn new(store_request: Self::StoreRequest, complete: Self::InitContext) -> Self {
                 Self {
@@ -94,7 +93,7 @@ macro_rules! execute {
                 }
             }
 
-            async fn run(self) -> Result<core::convert::Infallible, Self::Error> {
+            async fn run(self) -> Result<$crate::__exports::Never, Self::Error> {
                 let $crate::__make_tuple_cons!($(mut $arg_pat,)*) = self.store_request;
                 $validation_body;
                 self.complete.send(()).unwrap();
@@ -155,7 +154,7 @@ mod tests {
     #[veecle_os_runtime::actor]
     async fn contextual_actor<T: core::fmt::Debug>(
         #[init_context] _context: T,
-    ) -> core::convert::Infallible {
+    ) -> veecle_os_runtime::Never {
         std::future::pending().await
     }
 

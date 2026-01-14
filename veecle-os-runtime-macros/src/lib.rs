@@ -12,8 +12,7 @@ mod storable;
 ///
 /// ```rust
 /// use veecle_os_runtime::{Reader, Writer};
-/// # use std::convert::Infallible;
-/// # use veecle_os_runtime::Storable;
+/// # use veecle_os_runtime::{Never, Storable};
 /// #
 /// # #[derive(Debug, PartialEq, Clone, Default, Storable)]
 /// # pub struct Sensor(pub u8);
@@ -23,7 +22,7 @@ mod storable;
 ///     _sensor_reader: Reader<'_, Sensor>,
 ///     _sensor_writer: Writer<'_, Sensor>,
 ///     #[init_context] _my_init_context: u32,
-/// ) -> Infallible {
+/// ) -> Never {
 ///     loop {
 ///         // Do things.
 ///     }
@@ -42,8 +41,7 @@ mod storable;
 /// extern crate veecle_os_runtime as my_veecle_os_runtime;
 ///
 /// use my_veecle_os_runtime::{Reader, Writer};
-/// # use std::convert::Infallible;
-/// # use my_veecle_os_runtime::Storable;
+/// # use my_veecle_os_runtime::{Never, Storable};
 /// #
 /// # #[derive(Debug, PartialEq, Clone, Default, Storable)]
 /// # pub struct Sensor(pub u8);
@@ -53,7 +51,7 @@ mod storable;
 ///     _sensor_reader: Reader<'_, Sensor>,
 ///     _sensor_writer: Writer<'_, Sensor>,
 ///     #[init_context] _my_init_context: u32,
-/// ) -> Infallible {
+/// ) -> Never {
 ///     loop {
 ///         // Do things.
 ///     }

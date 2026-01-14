@@ -1,10 +1,10 @@
 //! Tests whether a deserialized payload can be moved between actors without copy.
 
-use std::convert::Infallible;
 use veecle_os_data_support_someip::header::*;
 use veecle_os_data_support_someip::parse::ParseExt;
 use veecle_os_data_support_someip::service_discovery;
 use veecle_os_data_support_someip::service_discovery::{Entry, ServiceEntry};
+use veecle_os_runtime::Never;
 use veecle_os_runtime::actor;
 use veecle_os_runtime::memory_pool::{Chunk, MemoryPool};
 use veecle_os_runtime::{ExclusiveReader, Storable, Writer};
@@ -44,7 +44,7 @@ fn yoke() {
     async fn deserializer(
         mut input: ExclusiveReader<'_, Input>,
         mut writer: Writer<'_, Output>,
-    ) -> Infallible {
+    ) -> Never {
         loop {
             input.wait_for_update().await;
             let Some(bytes) = input.take() else { continue };

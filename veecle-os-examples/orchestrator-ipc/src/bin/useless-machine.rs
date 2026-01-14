@@ -2,7 +2,7 @@
 //!
 //! This implements a [useless machine](https://en.wikipedia.org/wiki/Useless_machine) in the form
 //! of a runtime process that just shuts itself down.
-use core::convert::Infallible;
+use veecle_os::runtime::Never;
 
 use veecle_ipc::{ControlRequest, ControlResponse, Uuid};
 use veecle_os::osal::std::time::{Duration, Time, TimeAbstraction};
@@ -13,7 +13,7 @@ async fn useless_machine_actor(
     #[init_context] id: Uuid,
     mut request: Writer<'_, ControlRequest>,
     response: Reader<'_, ControlResponse>,
-) -> Infallible {
+) -> Never {
     veecle_os::telemetry::info!(
         "useless machine starting, will shut down soon",
         id = id.to_string()

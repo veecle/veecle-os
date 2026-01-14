@@ -10,7 +10,7 @@ async fn macro_test_actor(
     _sensor_reader: veecle_os_runtime::Reader<'_, Sensor>,
     _sensor_writer: veecle_os_runtime::Writer<'_, Sensor>,
     _actuator_reader: veecle_os_runtime::ExclusiveReader<'_, Actuator>,
-) -> std::convert::Infallible {
+) -> veecle_os_runtime::Never {
     unreachable!("We only care about the code compiling.");
 }
 

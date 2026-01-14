@@ -16,9 +16,8 @@
 //! # Example
 //!
 //! ```
-//! use veecle_os_runtime::{ExclusiveReader, Writer};
+//! use veecle_os_runtime::{ExclusiveReader, Never, Writer};
 //! use veecle_os_runtime::memory_pool::{Chunk, MemoryPool};
-//! use core::convert::Infallible;
 //! use veecle_os_runtime::Storable;
 //!
 //! #[derive(Debug)]
@@ -29,7 +28,7 @@
 //! }
 //!
 //! #[veecle_os_runtime::actor]
-//! async fn exclusive_read_actor(mut reader: ExclusiveReader<'_, Data>) -> Infallible {
+//! async fn exclusive_read_actor(mut reader: ExclusiveReader<'_, Data>) -> Never {
 //!     loop {
 //!         if let Some(chunk) = reader.take() {
 //!             println!("Chunk received: {:?}", chunk);
@@ -44,7 +43,7 @@
 //! async fn write_actor(
 //!     mut writer: Writer<'_, Data>,
 //!     #[init_context] pool: &'static MemoryPool<u8, 5>,
-//! ) -> Infallible {
+//! ) -> Never {
 //!     for index in 0..10 {
 //!         writer.write(pool.chunk(index).unwrap()).await;
 //!     }

@@ -27,7 +27,7 @@ use crate::datastore::{Storable, slot};
 /// # pub struct Foo;
 /// #
 /// #[veecle_os_runtime::actor]
-/// async fn foo_reader(mut reader: InitializedReader<'_, Foo>) -> std::convert::Infallible {
+/// async fn foo_reader(mut reader: InitializedReader<'_, Foo>) -> veecle_os_runtime::Never {
 ///     loop {
 ///         let processed_value = reader.wait_for_update().await.read(|value: &Foo| {
 ///             // Do something with the value.
@@ -36,7 +36,7 @@ use crate::datastore::{Storable, slot};
 /// }
 ///
 /// #[veecle_os_runtime::actor]
-/// async fn foo_reader_complex(mut reader: Reader<'_, Foo>) -> std::convert::Infallible {
+/// async fn foo_reader_complex(mut reader: Reader<'_, Foo>) -> veecle_os_runtime::Never {
 ///     // Do some initialization that must be completed before waiting for the reader to have an initial value.
 ///     let mut reader = reader.wait_init().await;
 ///     loop {

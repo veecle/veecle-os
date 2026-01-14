@@ -14,7 +14,7 @@ macro_rules! make_actor {
             _sensor1_reader_exlc: $crate::veecle_os_runtime::ExclusiveReader<'_, Sensor1>,
             _sensor_writer: $crate::veecle_os_runtime::Writer<'_, Sensor>,
             _sensor1_writer: $crate::veecle_os_runtime::Writer<'_, Sensor1>,
-        ) -> std::convert::Infallible {
+        ) -> veecle_os_runtime::Never {
             unreachable!("We only care about the code compiling.");
         }
     };

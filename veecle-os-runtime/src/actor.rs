@@ -1,10 +1,10 @@
 //! Smallest unit of work within a runtime instance.
-use core::convert::Infallible;
 use core::pin::Pin;
 
 #[doc(inline)]
 pub use veecle_os_runtime_macros::actor;
 
+use crate::Never;
 use crate::datastore::{ExclusiveReader, InitializedReader, Reader, Storable, Writer};
 use crate::datastore::{Slot, generational};
 
@@ -37,10 +37,9 @@ mod sealed {
 /// ### Example
 ///
 /// ```rust
-/// # use std::convert::Infallible;
 /// # use std::fmt::Debug;
 /// #
-/// # use veecle_os_runtime::{Storable, Reader, Writer};
+/// # use veecle_os_runtime::{Never, Storable, Reader, Writer};
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
@@ -55,7 +54,7 @@ mod sealed {
 ///     reader: Reader<'_, Foo>,
 ///     writer: Writer<'_, Bar>,
 ///     #[init_context] ctx: Ctx,
-/// ) -> Infallible {
+/// ) -> Never {
 ///     loop {
 ///         // Do something here.
 ///     }
@@ -69,10 +68,9 @@ mod sealed {
 /// For cases where the macro is not sufficient, the [`Actor`] trait can also be implemented manually:
 ///
 /// ```rust
-/// # use std::convert::Infallible;
 /// # use std::fmt::Debug;
 /// #
-/// # use veecle_os_runtime::{Storable, Reader, Writer, Actor};
+/// # use veecle_os_runtime::{Never, Storable, Reader, Writer, Actor};
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
@@ -91,7 +89,7 @@ mod sealed {
 /// impl<'a> Actor<'a> for MyActor<'a> {
 ///     type StoreRequest = (Reader<'a, Foo>, Writer<'a, Bar>);
 ///     type InitContext = Ctx;
-///     type Error = Infallible;
+///     type Error = Never;
 ///
 ///     fn new((reader, writer): Self::StoreRequest, context: Self::InitContext) -> Self {
 ///         Self {
@@ -101,7 +99,7 @@ mod sealed {
 ///         }
 ///     }
 ///
-///     async fn run(mut self) -> Result<Infallible, Self::Error> {
+///     async fn run(mut self) -> Result<Never, Self::Error> {
 ///         loop {
 ///             // Do something here.
 ///         }
@@ -128,9 +126,7 @@ pub trait Actor<'a> {
     /// Runs the [`Actor`] event loop.
     ///
     /// See the [crate documentation][crate] for examples.
-    fn run(
-        self,
-    ) -> impl core::future::Future<Output = Result<core::convert::Infallible, Self::Error>>;
+    fn run(self) -> impl core::future::Future<Output = Result<Never, Self::Error>>;
 }
 
 /// Allows requesting a (nearly) arbitrary amount of [`Reader`]s and [`Writer`]s in an [`Actor`].
@@ -358,9 +354,9 @@ macro_rules! impl_request_helper {
 
 impl_request_helper!(Z Y X W V U T);
 
-/// Macro helper to allow actors to return either a [`Result`] type or [`Infallible`] (and eventually [`!`]).
+/// Macro helper to allow actors to return either a [`Result`] type or [`Never`] (and eventually [`!`]).
 #[diagnostic::on_unimplemented(
-    message = "#[veecle_os_runtime::actor] functions should return either a `Result<Infallible, _>` or `Infallible`",
+    message = "#[veecle_os_runtime::actor] functions should return either a `Result<Never, _>` or `Never`",
     label = "not a valid actor return type"
 )]
 pub trait IsActorResult: sealed::Sealed {
@@ -368,25 +364,25 @@ pub trait IsActorResult: sealed::Sealed {
     type Error;
 
     /// Convert the result into an actual [`Result`] value.
-    fn into_result(self) -> Result<Infallible, Self::Error>;
+    fn into_result(self) -> Result<Never, Self::Error>;
 }
 
-impl<E> sealed::Sealed for Result<Infallible, E> {}
+impl<E> sealed::Sealed for Result<Never, E> {}
 
-impl<E> IsActorResult for Result<Infallible, E> {
+impl<E> IsActorResult for Result<Never, E> {
     type Error = E;
 
-    fn into_result(self) -> Result<Infallible, E> {
+    fn into_result(self) -> Result<Never, E> {
         self
     }
 }
 
-impl sealed::Sealed for Infallible {}
+impl sealed::Sealed for Never {}
 
-impl IsActorResult for Infallible {
-    type Error = Infallible;
+impl IsActorResult for Never {
+    type Error = Never;
 
-    fn into_result(self) -> Result<Infallible, Self::Error> {
+    fn into_result(self) -> Result<Never, Self::Error> {
         match self {}
     }
 }

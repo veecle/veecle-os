@@ -6,7 +6,7 @@ async fn with_lifetime<'a>(
     _reader: veecle_os_runtime::Reader<'_, Sensor>,
     _writer: veecle_os_runtime::Writer<'_, Sensor>,
     #[init_context] _context: &'a (),
-) -> core::convert::Infallible {
+) -> veecle_os_runtime::Never {
     core::future::pending().await
 }
 

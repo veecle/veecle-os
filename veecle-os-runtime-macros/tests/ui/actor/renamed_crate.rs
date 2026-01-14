@@ -1,4 +1,6 @@
 mod fake_veecle_os_runtime {
+    pub enum Never {}
+
     pub trait StoreRequest<'a> {}
 
     pub trait Actor<'a> {
@@ -6,7 +8,7 @@ mod fake_veecle_os_runtime {
         type InitContext: core::any::Any + 'a;
         type Error;
         fn new(request: Self::StoreRequest, init_context: Self::InitContext) -> Self;
-        fn run(self) -> impl core::future::Future<Output = Result<core::convert::Infallible, Self::Error>>;
+        fn run(self) -> impl core::future::Future<Output = Result<Never, Self::Error>>;
     }
 
     impl<'a> StoreRequest<'a> for () {}
@@ -14,17 +16,18 @@ mod fake_veecle_os_runtime {
     where
         T: StoreRequest<'a>,
         U: StoreRequest<'a>,
-    {}
+    {
+    }
 
     pub mod __exports {
         pub trait IsActorResult {
             type Error;
-            fn into_result(self) -> Result<core::convert::Infallible, Self::Error>;
+            fn into_result(self) -> Result<super::Never, Self::Error>;
         }
 
-        impl IsActorResult for core::convert::Infallible {
-            type Error = core::convert::Infallible;
-            fn into_result(self) -> Result<core::convert::Infallible, Self::Error> {
+        impl IsActorResult for super::Never {
+            type Error = super::Never;
+            fn into_result(self) -> Result<super::Never, Self::Error> {
                 match self {}
             }
         }
@@ -46,7 +49,8 @@ mod fake_veecle_os_runtime {
     pub fn assert_right_actor_trait<'a, T>()
     where
         T: self::Actor<'a>,
-    {}
+    {
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Default)]
@@ -57,7 +61,7 @@ async fn macro_test_actor(
     _sensor_reader: fake_veecle_os_runtime::Reader<'_, Sensor>,
     _sensor_reader_excl: fake_veecle_os_runtime::ExclusiveReader<'_, Sensor>,
     _sensor_writer: fake_veecle_os_runtime::Writer<'_, Sensor>,
-) -> std::convert::Infallible {
+) -> fake_veecle_os_runtime::Never {
     unreachable!("We only care about the code compiling.");
 }
 

@@ -1,5 +1,5 @@
 #[veecle_os_runtime::actor]
-async fn unused<T>() -> core::convert::Infallible {
+async fn unused<T>() -> veecle_os_runtime::Never {
     core::future::pending().await
 }
 

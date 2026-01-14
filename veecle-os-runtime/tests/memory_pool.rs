@@ -1,6 +1,5 @@
 //! Tests whether the memory pool can be used to pass data through the datastore.
 
-use std::convert::Infallible;
 use std::future::poll_fn;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::task::Poll;
@@ -22,7 +21,9 @@ fn memory_pool() {
     }
 
     #[veecle_os_runtime::actor]
-    async fn exclusive_read_actor(mut reader: ExclusiveReader<'_, Data>) -> Infallible {
+    async fn exclusive_read_actor(
+        mut reader: ExclusiveReader<'_, Data>,
+    ) -> veecle_os_runtime::Never {
         loop {
             if let Some(value) = reader.take() {
                 println!("Value received: {value:?}");
@@ -38,7 +39,7 @@ fn memory_pool() {
     async fn write_actor(
         mut writer: Writer<'_, Data>,
         #[init_context] pool: &'static MemoryPool<u8, 5>,
-    ) -> Infallible {
+    ) -> veecle_os_runtime::Never {
         for index in 0..10 {
             writer.write(pool.chunk(index).unwrap()).await;
         }

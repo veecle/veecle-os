@@ -31,7 +31,7 @@ use super::{Storable, generational};
 /// # pub struct Foo;
 /// #
 /// #[veecle_os_runtime::actor]
-/// async fn foo_writer(mut writer: Writer<'_, Foo>) -> std::convert::Infallible {
+/// async fn foo_writer(mut writer: Writer<'_, Foo>) -> veecle_os_runtime::Never {
 ///     loop {
 ///         // This call will yield to any readers needing to read the last value.
 ///         writer.write(Foo::default()).await;
@@ -51,7 +51,7 @@ use super::{Storable, generational};
 /// #[veecle_os_runtime::actor]
 /// async fn foo_writer(
 ///     mut writer: Writer<'_, Foo>,
-/// ) -> std::convert::Infallible {
+/// ) -> veecle_os_runtime::Never {
 ///     loop {
 ///         // This call will yield to any readers needing to read the last value.
 ///         // The closure will run after yielding and right before continuing to the rest of the function.
@@ -74,7 +74,7 @@ use super::{Storable, generational};
 /// # pub struct Foo;
 /// #
 /// #[veecle_os_runtime::actor]
-/// async fn foo_writer(mut writer: Writer<'_, Foo>) -> std::convert::Infallible {
+/// async fn foo_writer(mut writer: Writer<'_, Foo>) -> veecle_os_runtime::Never {
 ///     loop {
 ///         // This call may yield to any readers needing to read the last value.
 ///         writer.ready().await;

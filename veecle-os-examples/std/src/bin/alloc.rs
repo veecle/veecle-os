@@ -1,15 +1,15 @@
 use std::alloc::System;
-use std::convert::Infallible;
 
 use stats_alloc::{INSTRUMENTED_SYSTEM, Region, StatsAlloc};
 use veecle_os::osal::std::time::{Duration, Time, TimeAbstraction};
+use veecle_os::runtime::Never;
 use veecle_os_examples_common::actors::alloc::BoxActor;
 
 #[global_allocator]
 static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 
 #[veecle_os::runtime::actor]
-async fn alloc_stat_actor() -> Infallible {
+async fn alloc_stat_actor() -> Never {
     let region = Region::new(GLOBAL);
 
     loop {

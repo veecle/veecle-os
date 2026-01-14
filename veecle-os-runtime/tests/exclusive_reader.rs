@@ -1,12 +1,11 @@
 #![expect(missing_docs)]
 
-use core::convert::Infallible;
 use core::fmt::Debug;
 use core::sync::atomic::{AtomicUsize, Ordering};
 use std::future::poll_fn;
 use std::sync::atomic::Ordering::SeqCst;
 use std::task::Poll;
-use veecle_os_runtime::{ExclusiveReader, Reader, Storable, Writer};
+use veecle_os_runtime::{ExclusiveReader, Never, Reader, Storable, Writer};
 
 static READ_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
@@ -14,7 +13,7 @@ static READ_COUNTER: AtomicUsize = AtomicUsize::new(0);
 pub struct Sensor(pub u8);
 
 #[veecle_os_runtime::actor]
-async fn exclusive_read_actor(mut reader: ExclusiveReader<'_, Sensor>) -> Infallible {
+async fn exclusive_read_actor(mut reader: ExclusiveReader<'_, Sensor>) -> Never {
     loop {
         if let Some(value) = reader.take() {
             println!("Value received: {value:?}");
@@ -26,7 +25,7 @@ async fn exclusive_read_actor(mut reader: ExclusiveReader<'_, Sensor>) -> Infall
 }
 
 #[veecle_os_runtime::actor]
-async fn write_actor(mut writer: Writer<'_, Sensor>) -> Infallible {
+async fn write_actor(mut writer: Writer<'_, Sensor>) -> Never {
     for index in 0..10 {
         writer.write(Sensor(index)).await;
     }
@@ -58,7 +57,7 @@ fn main() {
 #[should_panic(expected = "conflict with exclusive reader for `exclusive_reader::Sensor`")]
 fn not_exclusive_first() {
     #[veecle_os_runtime::actor]
-    async fn non_excl_read_actor(_reader: Reader<'_, Sensor>) -> Infallible {
+    async fn non_excl_read_actor(_reader: Reader<'_, Sensor>) -> Never {
         core::future::pending().await
     }
 
@@ -76,7 +75,7 @@ fn not_exclusive_first() {
 #[should_panic(expected = "conflict with exclusive reader for `exclusive_reader::Sensor`")]
 fn not_exclusive_last() {
     #[veecle_os_runtime::actor]
-    async fn non_excl_read_actor(_reader: Reader<'_, Sensor>) -> Infallible {
+    async fn non_excl_read_actor(_reader: Reader<'_, Sensor>) -> Never {
         core::future::pending().await
     }
 

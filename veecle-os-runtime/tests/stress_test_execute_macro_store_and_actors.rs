@@ -25,7 +25,7 @@ macro_rules! make_test {
             async fn $ident(
                 reader: veecle_os_runtime::Reader<'_, data::$ident>,
                 writer: veecle_os_runtime::Writer<'_, data::$ident>,
-            ) -> core::convert::Infallible {
+            ) -> veecle_os_runtime::Never {
                 panic!("test completed");
             }
         )*

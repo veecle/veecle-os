@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
 
-use core::convert::Infallible;
 use core::fmt::Debug;
+use veecle_os_runtime::Never;
 
 use futures_test::future::FutureTestExt;
 use veecle_os_runtime::{InitializedReader, Reader, Storable, Writer};
@@ -16,7 +16,7 @@ pub struct UpToDateSignal(Signal);
 async fn filter_actor(
     mut up_to_date: Writer<'_, UpToDateSignal>,
     mut source: InitializedReader<'_, Signal>,
-) -> Infallible {
+) -> Never {
     let mut latest = Signal(0);
 
     loop {

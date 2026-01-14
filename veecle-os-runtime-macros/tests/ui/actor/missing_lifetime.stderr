@@ -1,101 +1,101 @@
 error: lifetimes on actor arguments must be anonymous or static
-  --> tests/ui/actor/missing_lifetime.rs:20:63
+  --> tests/ui/actor/missing_lifetime.rs:21:40
    |
-20 | async fn macro_test_actor4(_reader: veecle_os_runtime::Reader<'b, Sensor>) -> std::convert::Infallible {
-   |                                                               ^^
+21 |     _reader: veecle_os_runtime::Reader<'b, Sensor>,
+   |                                        ^^
 
 error[E0106]: missing lifetime specifier
  --> tests/ui/actor/missing_lifetime.rs:5:55
   |
-5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader) -> std::convert::Infallible {
+5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
   |                                                       ^^^^^^ expected named lifetime parameter
   |
 help: consider using the `'__dont_use_internal_actor_macro_lifetime` lifetime
   |
-5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader<'__dont_use_internal_actor_macro_lifetime>) -> std::convert::Infallible {
+5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader<'__dont_use_internal_actor_macro_lifetime>) -> veecle_os_runtime::Never {
   |                                                             +++++++++++++++++++++++++++++++++++++++++++
 
 error[E0726]: implicit elided lifetime not allowed here
  --> tests/ui/actor/missing_lifetime.rs:5:36
   |
-5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader) -> std::convert::Infallible {
+5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ expected lifetime parameter
   |
 help: indicate the anonymous lifetime
   |
-5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader<'_>) -> std::convert::Infallible {
+5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader<'_>) -> veecle_os_runtime::Never {
   |                                                             ++++
 
 error[E0106]: missing lifetime specifier
   --> tests/ui/actor/missing_lifetime.rs:10:56
    |
-10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader) -> std::convert::Infallible {
+10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
    |                                                        ^^^^^^ expected named lifetime parameter
    |
 help: consider using the `'__dont_use_internal_actor_macro_lifetime` lifetime
    |
-10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader<'__dont_use_internal_actor_macro_lifetime>) -> std::convert::Infallible {
+10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader<'__dont_use_internal_actor_macro_lifetime>) -> veecle_os_runtime::Never {
    |                                                              +++++++++++++++++++++++++++++++++++++++++++
 
 error[E0726]: implicit elided lifetime not allowed here
   --> tests/ui/actor/missing_lifetime.rs:10:37
    |
-10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader) -> std::convert::Infallible {
+10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ expected lifetime parameter
    |
 help: indicate the anonymous lifetime
    |
-10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader<'_>) -> std::convert::Infallible {
+10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader<'_>) -> veecle_os_runtime::Never {
    |                                                              ++++
 
 error[E0106]: missing lifetime specifier
   --> tests/ui/actor/missing_lifetime.rs:15:62
    |
-15 | async fn macro_test_actor3(_reader: veecle_os_runtime::Reader<Sensor>) -> std::convert::Infallible {
+15 | async fn macro_test_actor3(_reader: veecle_os_runtime::Reader<Sensor>) -> veecle_os_runtime::Never {
    |                                                              ^ expected named lifetime parameter
    |
 help: consider using the `'__dont_use_internal_actor_macro_lifetime` lifetime
    |
-15 | async fn macro_test_actor3(_reader: veecle_os_runtime::Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>) -> std::convert::Infallible {
+15 | async fn macro_test_actor3(_reader: veecle_os_runtime::Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>) -> veecle_os_runtime::Never {
    |                                                               ++++++++++++++++++++++++++++++++++++++++++
 
 error[E0726]: implicit elided lifetime not allowed here
   --> tests/ui/actor/missing_lifetime.rs:15:37
    |
-15 | async fn macro_test_actor3(_reader: veecle_os_runtime::Reader<Sensor>) -> std::convert::Infallible {
+15 | async fn macro_test_actor3(_reader: veecle_os_runtime::Reader<Sensor>) -> veecle_os_runtime::Never {
    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected lifetime parameter
    |
 help: indicate the anonymous lifetime
    |
-15 | async fn macro_test_actor3(_reader: veecle_os_runtime::Reader<'_, Sensor>) -> std::convert::Infallible {
+15 | async fn macro_test_actor3(_reader: veecle_os_runtime::Reader<'_, Sensor>) -> veecle_os_runtime::Never {
    |                                                               +++
 
 error[E0106]: missing lifetime specifier
-  --> tests/ui/actor/missing_lifetime.rs:25:56
+  --> tests/ui/actor/missing_lifetime.rs:27:56
    |
-25 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader) -> std::convert::Infallible {
+27 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
    |                                                        ^^^^^^ expected named lifetime parameter
    |
 help: consider using the `'__dont_use_internal_actor_macro_lifetime` lifetime
    |
-25 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader<'__dont_use_internal_actor_macro_lifetime>) -> std::convert::Infallible {
+27 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader<'__dont_use_internal_actor_macro_lifetime>) -> veecle_os_runtime::Never {
    |                                                              +++++++++++++++++++++++++++++++++++++++++++
 
 error[E0726]: implicit elided lifetime not allowed here
-  --> tests/ui/actor/missing_lifetime.rs:25:37
+  --> tests/ui/actor/missing_lifetime.rs:27:37
    |
-25 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader) -> std::convert::Infallible {
+27 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ expected lifetime parameter
    |
 help: indicate the anonymous lifetime
    |
-25 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader<'_>) -> std::convert::Infallible {
+27 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader<'_>) -> veecle_os_runtime::Never {
    |                                                              ++++
 
 error[E0107]: missing generics for struct `Reader`
  --> tests/ui/actor/missing_lifetime.rs:5:55
   |
-5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader) -> std::convert::Infallible {
+5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
   |                                                       ^^^^^^ expected 1 generic argument
   |
 note: struct defined here, with 1 generic parameter: `T`
@@ -105,13 +105,13 @@ note: struct defined here, with 1 generic parameter: `T`
   |            ^^^^^^     -
 help: add missing generic argument
   |
-5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader<T>) -> std::convert::Infallible {
+5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader<T>) -> veecle_os_runtime::Never {
   |                                                             +++
 
 error[E0107]: missing generics for struct `Reader`
   --> tests/ui/actor/missing_lifetime.rs:10:56
    |
-10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader) -> std::convert::Infallible {
+10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
    |                                                        ^^^^^^ expected 1 generic argument
    |
 note: struct defined here, with 1 generic parameter: `T`
@@ -121,13 +121,13 @@ note: struct defined here, with 1 generic parameter: `T`
    |            ^^^^^^     -
 help: add missing generic argument
    |
-10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader<T>) -> std::convert::Infallible {
+10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader<T>) -> veecle_os_runtime::Never {
    |                                                              +++
 
 error[E0107]: missing generics for struct `Reader`
-  --> tests/ui/actor/missing_lifetime.rs:25:56
+  --> tests/ui/actor/missing_lifetime.rs:27:56
    |
-25 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader) -> std::convert::Infallible {
+27 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
    |                                                        ^^^^^^ expected 1 generic argument
    |
 note: struct defined here, with 1 generic parameter: `T`
@@ -137,5 +137,5 @@ note: struct defined here, with 1 generic parameter: `T`
    |            ^^^^^^     -
 help: add missing generic argument
    |
-25 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader<T>) -> std::convert::Infallible {
+27 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader<T>) -> veecle_os_runtime::Never {
    |                                                              +++

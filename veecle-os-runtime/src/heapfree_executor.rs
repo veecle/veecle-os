@@ -1,6 +1,6 @@
 //! A multi-task executor that uses statically allocated state for tracking task status.
 
-use core::convert::Infallible;
+use crate::Never;
 use core::fmt::Debug;
 use core::future::Future;
 use core::ops::{Add, Div};
@@ -300,7 +300,7 @@ where
     /// A generational source provided by the datastore.
     source: Pin<&'a generational::Source>,
     shared: &'static ExecutorShared<LEN>,
-    futures: [Pin<&'a mut (dyn Future<Output = Infallible> + 'a)>; LEN],
+    futures: [Pin<&'a mut (dyn Future<Output = Never> + 'a)>; LEN],
 }
 
 impl<const LEN: usize> core::fmt::Debug for Executor<'_, LEN>
@@ -325,7 +325,7 @@ where
     pub fn new(
         shared: &'static ExecutorShared<LEN>,
         source: Pin<&'a generational::Source>,
-        futures: [Pin<&'a mut (dyn Future<Output = Infallible> + 'a)>; LEN],
+        futures: [Pin<&'a mut (dyn Future<Output = Never> + 'a)>; LEN],
     ) -> Self {
         Self {
             source,

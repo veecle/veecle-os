@@ -1,4 +1,4 @@
-error: #[actor] functions must return a `Result` or `Infallible`
+error: #[actor] functions must return a `Result` or `Never`
  --> tests/ui/actor/return_nothing.rs:5:1
   |
 5 | async fn macro_test_actor(

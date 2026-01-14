@@ -47,7 +47,7 @@ use crate::datastore::slot::{self, Slot};
 /// # pub struct Foo;
 /// #
 /// #[veecle_os_runtime::actor]
-/// async fn foo_reader(mut reader: ExclusiveReader<'_, Foo>) -> std::convert::Infallible {
+/// async fn foo_reader(mut reader: ExclusiveReader<'_, Foo>) -> veecle_os_runtime::Never {
 ///     loop {
 ///         let value = reader.wait_for_update().await.take();
 ///     }
