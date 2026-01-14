@@ -19,7 +19,7 @@ use core::pin::Pin;
 /// Internal helper to implement [`Datastore::slot`] recursively for a cons-list of slots.
 trait Slots {
     /// See [`Datastore::slot`].
-    fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
+    fn slot<T>(self: Pin<&Self>, requestor: &'static str) -> Pin<&Slot<T>>
     where
         T: Storable + 'static;
 
@@ -28,11 +28,14 @@ trait Slots {
 }
 
 impl Slots for Nil {
-    fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
+    fn slot<T>(self: Pin<&Self>, requestor: &'static str) -> Pin<&Slot<T>>
     where
         T: Storable + 'static,
     {
-        panic!("no slot available for `{}`", core::any::type_name::<T>())
+        panic!(
+            "no slot available for `{}`, required by `{requestor}`",
+            core::any::type_name::<T>()
+        )
     }
 
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
@@ -45,7 +48,7 @@ where
     U: Storable + 'static,
     R: Slots,
 {
-    fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
+    fn slot<T>(self: Pin<&Self>, requestor: &'static str) -> Pin<&Slot<T>>
     where
         T: Storable + 'static,
     {
@@ -53,7 +56,7 @@ where
         if TypeId::of::<U>() == TypeId::of::<T>() {
             this.0.assert_is_type()
         } else {
-            this.1.slot::<T>()
+            this.1.slot::<T>(requestor)
         }
     }
 
@@ -114,12 +117,12 @@ where
         this.0
     }
 
-    fn slot<T>(self: Pin<&Self>) -> Pin<&Slot<T>>
+    fn slot<T>(self: Pin<&Self>, requestor: &'static str) -> Pin<&Slot<T>>
     where
         T: Storable + 'static,
     {
         let this = self.project_ref();
-        this.1.slot::<T>()
+        this.1.slot::<T>(requestor)
     }
 }
 
@@ -233,72 +236,63 @@ where
     }
 }
 
-/// Internal helper to query how a cons-list of cons-lists of [`StoreRequest`] types will use a specific type.
-pub trait NestedAccessCount {
-    /// Returns how many writers for the given type exist in this list of lists.
-    fn writers(type_id: TypeId) -> usize;
-
-    /// Returns how many readers for the given type exist in this list of lists (both exclusive and
-    /// non-exclusive).
-    fn readers(type_id: TypeId) -> usize;
-
-    /// Returns how many exclusive readers for the given type exist in this list of lists.
-    fn exclusive_readers(type_id: TypeId) -> usize;
-}
-
-impl NestedAccessCount for Nil {
-    fn writers(_type_id: TypeId) -> usize {
-        0
-    }
-
-    fn readers(_type_id: TypeId) -> usize {
-        0
-    }
-
-    fn exclusive_readers(_type_id: TypeId) -> usize {
-        0
-    }
-}
-
-impl<T, U> NestedAccessCount for Cons<T, U>
-where
-    T: AccessCount,
-    U: NestedAccessCount,
-{
-    fn writers(type_id: TypeId) -> usize {
-        T::writers(type_id) + U::writers(type_id)
-    }
-
-    fn readers(type_id: TypeId) -> usize {
-        T::readers(type_id) + U::readers(type_id)
-    }
-
-    fn exclusive_readers(type_id: TypeId) -> usize {
-        T::exclusive_readers(type_id) + U::exclusive_readers(type_id)
-    }
-}
-
 /// Internal helper to access details about a cons-list of actors so they can be validated against a store.
 pub(crate) trait ActorList<'a>
 where
     Self: 'a,
 {
-    /// A cons-list-of-cons-list-of-store-requests for this cons-list (essentially `self.map(|actor| actor.store_request)`
-    /// where each actor has a cons-list of store-requests).
-    type StoreRequests: NestedAccessCount;
-
     /// A cons-list of init-contexts for this cons-list (essentially `self.map(|actor| actor.init_context)`).
     type InitContexts;
 
     /// Returns an iterator over all slots required by actors in this list as `(TypeId, type_name)` pairs.
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)>;
+
+    /// Returns the type names of the actors in this list that write to the given type.
+    ///
+    /// If an actor has multiple writers for the same type it will be in the list multiple times.
+    fn writers(type_id: TypeId) -> impl Iterator<Item = &'static str>;
+
+    /// Returns the type names of the actors in this list that read from the given type, both
+    /// exclusive and non-exclusive.
+    ///
+    /// If an actor has multiple readers for the same type it will be in the list multiple times.
+    fn readers(type_id: TypeId) -> impl Iterator<Item = &'static str>;
+
+    /// Returns the type names of the actors in this list that read from the given type with an
+    /// exclusive reader.
+    ///
+    /// If an actor has multiple exclusive readers for the same type it will be in the list multiple
+    /// times.
+    fn exclusive_readers(type_id: TypeId) -> impl Iterator<Item = &'static str>;
+
+    /// Returns the type names of the actors in this list that read from the given type with a
+    /// non-exclusive reader.
+    ///
+    /// If an actor has multiple non-exclusive readers for the same type it will be in the list
+    /// multiple times.
+    fn other_readers(type_id: TypeId) -> impl Iterator<Item = &'static str>;
 }
 
 impl ActorList<'_> for Nil {
-    type StoreRequests = Nil;
     type InitContexts = Nil;
 
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
+        core::iter::empty()
+    }
+
+    fn writers(_type_id: TypeId) -> impl Iterator<Item = &'static str> {
+        core::iter::empty()
+    }
+
+    fn readers(_type_id: TypeId) -> impl Iterator<Item = &'static str> {
+        core::iter::empty()
+    }
+
+    fn exclusive_readers(_type_id: TypeId) -> impl Iterator<Item = &'static str> {
+        core::iter::empty()
+    }
+
+    fn other_readers(_type_id: TypeId) -> impl Iterator<Item = &'static str> {
         core::iter::empty()
     }
 }
@@ -311,21 +305,82 @@ where
     U: ActorList<'a> + 'a,
     <<T as Actor<'a>>::StoreRequest as TupleConsToCons>::Cons: AccessCount,
 {
-    /// `Actor::StoreRequest` for the `#[actor]` generated types is a tuple-cons-list, for each actor in this list
-    /// convert its store requests into our nominal cons-list.
-    ///
-    /// This doesn't work with manual `Actor` implementations that have non-tuple-cons-list `StoreRequest`s.
-    type StoreRequests = Cons<
-        <<T as Actor<'a>>::StoreRequest as TupleConsToCons>::Cons,
-        <U as ActorList<'a>>::StoreRequests,
-    >;
-
     /// For `Actor::InitContext` we just need to map directly to the associated type.
     type InitContexts = Cons<<T as Actor<'a>>::InitContext, <U as ActorList<'a>>::InitContexts>;
 
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
         U::all_slots().chain(<<<T as Actor<'a>>::Slots as IntoSlots>::Slots as Slots>::all_slots())
     }
+
+    fn writers(type_id: TypeId) -> impl Iterator<Item = &'static str> {
+        core::iter::repeat_n(
+            core::any::type_name::<T>(),
+            <T::StoreRequest as TupleConsToCons>::Cons::writers(type_id),
+        )
+        .chain(U::writers(type_id))
+    }
+
+    fn readers(type_id: TypeId) -> impl Iterator<Item = &'static str> {
+        core::iter::repeat_n(
+            core::any::type_name::<T>(),
+            <T::StoreRequest as TupleConsToCons>::Cons::readers(type_id),
+        )
+        .chain(U::readers(type_id))
+    }
+
+    fn exclusive_readers(type_id: TypeId) -> impl Iterator<Item = &'static str> {
+        core::iter::repeat_n(
+            core::any::type_name::<T>(),
+            <T::StoreRequest as TupleConsToCons>::Cons::exclusive_readers(type_id),
+        )
+        .chain(U::exclusive_readers(type_id))
+    }
+
+    fn other_readers(type_id: TypeId) -> impl Iterator<Item = &'static str> {
+        core::iter::repeat_n(
+            core::any::type_name::<T>(),
+            <T::StoreRequest as TupleConsToCons>::Cons::readers(type_id)
+                - <T::StoreRequest as TupleConsToCons>::Cons::exclusive_readers(type_id),
+        )
+        .chain(U::other_readers(type_id))
+    }
+}
+
+/// Returns a type that will write the given list of types out comma separated with backtick
+/// quoting, or `nothing` if it is empty.
+///
+/// ```text
+/// [] => "nothing"
+/// ["A"] => "`A`"
+/// ["A", "B"] => "`A`, `B`"
+/// ["A", "B", "C"] => "`A`, `B`, `C`"
+/// ```
+fn format_types(types: impl IntoIterator<Item = &'static str>) -> impl core::fmt::Display {
+    struct Helper<T>(core::cell::RefCell<T>);
+
+    impl<T> core::fmt::Display for Helper<T>
+    where
+        T: Iterator<Item = &'static str>,
+    {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            let mut iter = self.0.borrow_mut();
+            if let Some(first) = iter.next() {
+                f.write_str("`")?;
+                f.write_str(first)?;
+                f.write_str("`")?;
+                for next in &mut *iter {
+                    f.write_str(", `")?;
+                    f.write_str(next)?;
+                    f.write_str("`")?;
+                }
+            } else {
+                f.write_str("nothing")?;
+            }
+            Ok(())
+        }
+    }
+
+    Helper(core::cell::RefCell::new(types.into_iter()))
 }
 
 /// Creates a store and validates actors in a single call to enable type inference.
@@ -342,22 +397,30 @@ where
     let store = make_store::<S>();
 
     for (type_id, type_name) in A::all_slots() {
+        let writers = A::writers(type_id).count();
+        let readers = A::readers(type_id).count();
+        let exclusive_readers = A::exclusive_readers(type_id).count();
         assert!(
-            A::StoreRequests::writers(type_id) > 0,
-            "missing writer for `{type_name}`",
+            writers > 0,
+            "missing writer for `{type_name}`, read by: {}",
+            format_types(A::readers(type_id)),
         );
         assert!(
-            A::StoreRequests::readers(type_id) > 0,
-            "missing reader for `{type_name}`",
+            readers > 0,
+            "missing reader for `{type_name}`, written by: {}",
+            format_types(A::writers(type_id)),
         );
         assert!(
-            A::StoreRequests::writers(type_id) == 1,
-            "multiple writers for `{type_name}`",
+            writers == 1,
+            "multiple writers for `{type_name}`: {}",
+            format_types(A::writers(type_id)),
         );
-        if A::StoreRequests::exclusive_readers(type_id) > 0 {
+        if exclusive_readers > 0 {
             assert!(
-                A::StoreRequests::readers(type_id) == 1,
-                "conflict with exclusive reader for `{type_name}`",
+                readers == 1,
+                "conflict with exclusive reader for `{type_name}`:\nexclusive readers: {}\n    other readers: {}",
+                format_types(A::exclusive_readers(type_id)),
+                format_types(A::other_readers(type_id)),
             );
         }
     }
@@ -373,11 +436,15 @@ pub async fn execute_actor<'a, A>(
 where
     A: Actor<'a>,
 {
+    let requestor = core::any::type_name::<A>();
     veecle_telemetry::future::FutureExt::with_span(
         async move {
-            match A::new(A::StoreRequest::request(store).await, init_context)
-                .run()
-                .await
+            match A::new(
+                A::StoreRequest::request(store, requestor).await,
+                init_context,
+            )
+            .run()
+            .await
             {
                 Err(error) => panic!("{error}"),
             }
