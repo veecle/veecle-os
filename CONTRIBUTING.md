@@ -203,6 +203,22 @@ Some tests for generated code have exemplars committed into the repository.
 These are expected to change if you touch the related code, if the diff looks as you expect then run `just bless` to save the updated output.
 (If you add a new test case then you can also use `just bless` to generate an initial output from it).
 
+## README Example
+
+The `README.md` file contains a code example that is automatically tested to ensure it remains accurate.
+
+### Public Dependency Constraint
+
+The `readme-example` crate depends on the public release of `veecle-os` (currently via a git dependency that points to the `main` branch).
+This dependency configuration has an important implication: **the README example cannot be updated in the same PR that introduces breaking changes to the public API**.
+
+### Workflow for Breaking API Changes
+
+When making breaking changes to the public API:
+
+1. Submit your PR with the breaking changes but **without** updating the README example.
+2. After the PR is merged to `main`, CI will start failing, so submit a follow-up PR that updates the README example to use the new API.
+
 ## YAML
 
 YAML is formatted via [yamllint][yamllint].
