@@ -39,7 +39,7 @@
 //! veecle_os_test::block_on_future(
 //!     veecle_os_test::execute! {
 //!         actors: [TotalActor],
-//!         validation: async |mut total_reader: Reader<'a, Total>, mut numbers_writer: Writer<'a, Number>| {
+//!         validation: async |mut total_reader: Reader<'_, Total>, mut numbers_writer: Writer<'_, Number>| {
 //!             numbers_writer.write(Number(0)).await;
 //!             let mut total_reader = total_reader.wait_init().await;
 //!             total_reader.wait_for_update().await.read(|value| {

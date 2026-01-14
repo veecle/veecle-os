@@ -67,7 +67,7 @@ fn yoke() {
         actors: [
             Deserializer,
         ],
-        validation: async |mut writer: Writer<'a, Input>, mut reader: ExclusiveReader<'a, Output>| {
+        validation: async |mut writer: Writer<'_, Input>, mut reader: ExclusiveReader<'_, Output>| {
             async {
                 let chunk = POOL.chunk(*BYTES).unwrap();
                 writer.write(chunk).await;
