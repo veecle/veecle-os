@@ -11,7 +11,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::sleep;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use anyhow::{Context, anyhow, bail};
 use signal_hook::consts::SIGTERM;
@@ -101,6 +101,10 @@ fn path_from_env_var(name: &str) -> anyhow::Result<PathBuf> {
 /// This works by sending a dummy packet and checking if we receive an ICMP "port unreachable"
 /// error (which manifests as `ECONNREFUSED` on the next `recv()`). If no error is received
 /// within a short timeout, the port is assumed to be listening.
+///
+/// # Panics
+///
+/// Panics if the port is not ready within 5 seconds.
 fn wait_for_port_ready(ip: &str, port: u16) {
     let socket = UdpSocket::bind((ip, 0)).expect("failed to bind probe socket");
     socket
@@ -110,11 +114,20 @@ fn wait_for_port_ready(ip: &str, port: u16) {
         .set_read_timeout(Some(Duration::from_millis(10)))
         .expect("failed to set read timeout");
 
+    const MAX_WAIT: Duration = Duration::from_secs(5);
+    let start = Instant::now();
+
     loop {
+        if start.elapsed() > MAX_WAIT {
+            panic!(
+                "vsomeip UDP endpoint {}:{} not ready after {:?}",
+                ip, port, MAX_WAIT
+            );
+        }
+
         socket.send(&[0]).expect("failed to send probe");
         match socket.recv(&mut [0]) {
             Err(error) if error.kind() == ErrorKind::ConnectionRefused => {
-                eprintln!("vsomeip port not listening yet, retrying");
                 sleep(Duration::from_millis(10));
             }
             _ => {
