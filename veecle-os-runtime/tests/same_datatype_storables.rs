@@ -25,10 +25,10 @@ fn test_two_storables_with_same_datatype() {
     veecle_os_test::block_on_future(veecle_os_test::execute! {
         actors: [],
         validation: async |
-            mut temp_reader: Reader<'a, Temperature>,
-            mut temp_writer: Writer<'a, Temperature>,
-            mut humidity_reader: Reader<'a, Humidity>,
-            mut humidity_writer: Writer<'a, Humidity>,
+            mut temp_reader: Reader<'_, Temperature>,
+            mut temp_writer: Writer<'_, Temperature>,
+            mut humidity_reader: Reader<'_, Humidity>,
+            mut humidity_writer: Writer<'_, Humidity>,
         | {
             temp_writer.write(20.5).await;
             humidity_writer.write(65.0).await;

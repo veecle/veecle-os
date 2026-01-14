@@ -205,9 +205,15 @@ pub fn impl_actor(
                         "only \"Reader\", \"ExclusiveReader\", \"InitializedReader\" and \"Writer\" arguments are allowed",
                     ));
 
-                    let Type::Path(argument_type) = typed_argument.ty.as_ref() else {
-                        return type_error;
+                    let argument_type = match typed_argument.ty.as_ref() {
+                        Type::Path(argument_type) => argument_type,
+                        Type::Group(syn::TypeGroup { elem, .. }) => match elem.as_ref() {
+                            Type::Path(argument_type) => argument_type,
+                            _ => return type_error,
+                        },
+                        _ => return type_error,
                     };
+
                     if argument_type.qself.is_some() {
                         return type_error;
                     }
