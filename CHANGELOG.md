@@ -2,6 +2,8 @@
 
 ## Veecle OS
 
+* **breaking** The `execute!` macro no longer takes the `store` parameter.
+  The `Storable` types used by the actors are now detected automatically.
 * **breaking** Replaced `core::convert::Infallible` with custom `Never` enum for actor return types.
   * All actors using `Result<Infallible, E>` must change to `Result<Never, E>`.
   * All actors using bare `Infallible` must change to bare `Never`.

@@ -113,6 +113,9 @@ pub trait Actor<'a> {
     /// Context that needs to be passed to the actor at initialisation.
     type InitContext;
 
+    /// Cons list of `Storable` slots required by this actor.
+    type Slots;
+
     /// Error that this actor might return while running.
     ///
     /// This error is treated as fatal, if any actor returns an error the whole runtime will shutdown.
@@ -385,6 +388,45 @@ impl IsActorResult for Never {
     fn into_result(self) -> Result<Never, Self::Error> {
         match self {}
     }
+}
+
+/// Determines whether a reader/writer defines a slot.
+///
+/// A slot is defined by one side of a reader/writer combo.
+/// For a [`Writer`] - [`Reader`] combination, the `Writer` defines the slot, as that is the unique side.
+/// As a consequence, every possible combination must have a side that defines the slot.
+#[doc(hidden)]
+pub trait DefinesSlot {
+    /// The slot type as a cons list or [`Nil`].
+    type Slot;
+}
+
+impl<'a, T> DefinesSlot for Writer<'a, T>
+where
+    T: Storable,
+{
+    type Slot = Cons<T, Nil>;
+}
+
+impl<'a, T> DefinesSlot for Reader<'a, T>
+where
+    T: Storable,
+{
+    type Slot = Nil;
+}
+
+impl<'a, T> DefinesSlot for ExclusiveReader<'a, T>
+where
+    T: Storable,
+{
+    type Slot = Nil;
+}
+
+impl<'a, T> DefinesSlot for InitializedReader<'a, T>
+where
+    T: Storable,
+{
+    type Slot = Nil;
 }
 
 #[cfg(test)]

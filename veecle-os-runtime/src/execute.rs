@@ -124,7 +124,7 @@ where
 }
 
 /// Given a cons-list of [`Storable`] types, returns a complete [`Datastore`] that contains a slot for each type.
-pub fn make_store<T>() -> impl Datastore
+pub(crate) fn make_store<T>() -> impl Datastore
 where
     T: IntoSlots,
 {
@@ -279,24 +279,36 @@ where
 }
 
 /// Internal helper to access details about a cons-list of actors so they can be validated against a store.
-pub trait ActorList<'a> {
+pub(crate) trait ActorList<'a>
+where
+    Self: 'a,
+{
     /// A cons-list-of-cons-list-of-store-requests for this cons-list (essentially `self.map(|actor| actor.store_request)`
     /// where each actor has a cons-list of store-requests).
     type StoreRequests: NestedAccessCount;
 
     /// A cons-list of init-contexts for this cons-list (essentially `self.map(|actor| actor.init_context)`).
     type InitContexts;
+
+    /// Returns an iterator over all slots required by actors in this list as `(TypeId, type_name)` pairs.
+    fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)>;
 }
 
 impl ActorList<'_> for Nil {
     type StoreRequests = Nil;
     type InitContexts = Nil;
+
+    fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
+        core::iter::empty()
+    }
 }
 
 impl<'a, T, U> ActorList<'a> for Cons<T, U>
 where
-    T: Actor<'a, StoreRequest: TupleConsToCons>,
-    U: ActorList<'a>,
+    T: Actor<'a, StoreRequest: TupleConsToCons> + 'a,
+    <T as Actor<'a>>::Slots: IntoSlots,
+    <<T as Actor<'a>>::Slots as IntoSlots>::Slots: Slots,
+    U: ActorList<'a> + 'a,
     <<T as Actor<'a>>::StoreRequest as TupleConsToCons>::Cons: AccessCount,
 {
     /// `Actor::StoreRequest` for the `#[actor]` generated types is a tuple-cons-list, for each actor in this list
@@ -310,22 +322,26 @@ where
 
     /// For `Actor::InitContext` we just need to map directly to the associated type.
     type InitContexts = Cons<<T as Actor<'a>>::InitContext, <U as ActorList<'a>>::InitContexts>;
+
+    fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
+        U::all_slots().chain(<<<T as Actor<'a>>::Slots as IntoSlots>::Slots as Slots>::all_slots())
+    }
 }
 
-/// Internal helper that for given sets of actors and slots validates the guarantees around slot access that we want to
-/// always uphold.
+/// Creates a store and validates actors in a single call to enable type inference.
 ///
-/// `init_contexts` is a cons-list of the init-context values for the actors in `A`. It is required to be passed here to
-/// drive type-inference for `A` but then just returned.
+/// This function combines store creation and validation so that the actor list type parameter appears only once,
+/// allowing Rust's type inference to work across both operations.
 ///
-/// `_store` is the reference to the store the actors will use. A copy is passed in here as the lifetime of this
-/// reference may be required for the init-contexts inference.
-pub fn validate_actors<'a, A, S, I>(init_contexts: I, _store: Pin<&'a impl Datastore>) -> I
+/// The slots are computed via macro expansion (not trait resolution) for fast compilation.
+pub fn make_store_and_validate<'a, A, S, I>(init_contexts: I) -> (impl Datastore + 'a, I)
 where
     A: ActorList<'a, InitContexts = I>,
-    S: IntoSlots,
+    S: IntoSlots + 'a,
 {
-    for (type_id, type_name) in S::Slots::all_slots() {
+    let store = make_store::<S>();
+
+    for (type_id, type_name) in A::all_slots() {
         assert!(
             A::StoreRequests::writers(type_id) > 0,
             "missing writer for `{type_name}`",
@@ -346,7 +362,7 @@ where
         }
     }
 
-    init_contexts
+    (store, init_contexts)
 }
 
 /// Internal helper to get a full future that initializes and executes an [`Actor`] given a [`Datastore`]
@@ -369,6 +385,25 @@ where
         veecle_telemetry::span!("actor", actor = core::any::type_name::<A>()),
     )
     .await
+}
+
+/// Computes the combined `Slots` type for a list of actor types.
+///
+/// This is an internal helper macro used by [`execute!`].
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __actor_slots {
+    ($head:ty) => {
+        <
+            <$head as $crate::Actor>::Slots as $crate::__exports::AppendCons<$crate::__exports::Nil>
+        >::Result
+    };
+
+    ($head:ty, $($rest:ty),*) => {
+        <
+            <$head as $crate::Actor>::Slots as $crate::__exports::AppendCons<$crate::__actor_slots!($($rest),*)>
+        >::Result
+    };
 }
 
 /// Execute a given set of actors without heap allocation.
@@ -420,34 +455,30 @@ where
 ///
 /// futures::executor::block_on(
 ///    veecle_os_runtime::execute! {
-///        store: [Ping, Pong],
 ///        actors: [PingActor, PongActor],
 ///    }
 /// )
 #[macro_export]
 macro_rules! execute {
     (
-        store: [
-            $($data_type:ty),* $(,)?
-        ],
         actors: [
             $($actor_type:ty $(: $init_context:expr )? ),* $(,)?
         ] $(,)?
     ) => {{
         async {
-            let store = core::pin::pin!(
-                $crate::__exports::make_store::<$crate::__make_cons!(@type $($data_type,)*)>(),
-            );
-            let store = store.as_ref();
+            let (store, init_contexts) = {
+                let (store, init_contexts) = $crate::__exports::make_store_and_validate::<
+                    $crate::__make_cons!(@type $($actor_type,)*),
+                    $crate::__actor_slots!($($actor_type),*),
+                    _,
+                >($crate::__make_cons!(@value $(
+                    // Wrapper block is used to provide a `()` if no expression is passed.
+                    { $($init_context)? },
+                )*));
+                (core::pin::pin!(store), init_contexts)
+            };
 
-            let init_contexts = $crate::__exports::validate_actors::<
-                $crate::__make_cons!(@type $($actor_type,)*),
-                $crate::__make_cons!(@type $($data_type,)*),
-                _,
-            >($crate::__make_cons!(@value $(
-                // Wrapper block is used to provide a `()` if no expression is passed.
-                { $($init_context)? },
-            )*), store);
+            let store = store.as_ref();
 
             // To count how many actors there are, we create an array of `()` with the appropriate length.
             const LEN: usize = [$($crate::discard_to_unit!($actor_type),)*].len();
