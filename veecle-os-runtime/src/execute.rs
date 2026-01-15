@@ -1,6 +1,5 @@
 #![expect(
     private_bounds,
-    private_interfaces,
     reason = "
         everything defined in here except the macro are internal helpers,
         they often mention private types
@@ -11,7 +10,7 @@ use crate::Never;
 use crate::actor::{Actor, Datastore, StoreRequest};
 use crate::cons::{Cons, Nil, TupleConsToCons};
 use crate::datastore::{
-    ExclusiveReader, InitializedReader, Reader, Slot, Storable, Writer, generational,
+    ExclusiveReader, InitializedReader, Reader, SlotTrait, Storable, Writer, generational,
 };
 use core::any::TypeId;
 use core::pin::Pin;
@@ -19,22 +18,22 @@ use core::pin::Pin;
 /// Internal helper to implement [`Datastore::slot`] recursively for a cons-list of slots.
 trait Slots {
     /// See [`Datastore::slot`].
-    fn slot<T>(self: Pin<&Self>, requestor: &'static str) -> Pin<&Slot<T>>
+    fn slot<S>(self: Pin<&Self>, requestor: &'static str) -> Pin<&S>
     where
-        T: Storable + 'static;
+        S: SlotTrait;
 
     /// Returns the [`TypeId`] and type names for all the slots stored in this type.
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)>;
 }
 
 impl Slots for Nil {
-    fn slot<T>(self: Pin<&Self>, requestor: &'static str) -> Pin<&Slot<T>>
+    fn slot<S>(self: Pin<&Self>, requestor: &'static str) -> Pin<&S>
     where
-        T: Storable + 'static,
+        S: SlotTrait,
     {
         panic!(
             "no slot available for `{}`, required by `{requestor}`",
-            core::any::type_name::<T>()
+            S::data_type_name()
         )
     }
 
@@ -43,34 +42,39 @@ impl Slots for Nil {
     }
 }
 
-impl<U, R> Slots for Cons<Slot<U>, R>
+impl<U, R> Slots for Cons<U, R>
 where
-    U: Storable + 'static,
+    U: SlotTrait + core::any::Any,
     R: Slots,
 {
-    fn slot<T>(self: Pin<&Self>, requestor: &'static str) -> Pin<&Slot<T>>
+    fn slot<S>(self: Pin<&Self>, requestor: &'static str) -> Pin<&S>
     where
-        T: Storable + 'static,
+        S: SlotTrait + core::any::Any,
     {
         let this = self.project_ref();
-        if TypeId::of::<U>() == TypeId::of::<T>() {
-            this.0.assert_is_type()
+
+        if TypeId::of::<S>() == TypeId::of::<U>() {
+            // SAFETY:
+            // `Pin::map_unchecked`: We're only transforming the type, so it retains its pinned-ness.
+            // `cast` + `as_ref`: We verified above that the types of `S` and `U` are the same.
+            unsafe {
+                Pin::map_unchecked(this.0, |this| {
+                    core::ptr::NonNull::from_ref(this).cast::<S>().as_ref()
+                })
+            }
         } else {
-            this.1.slot::<T>(requestor)
+            this.1.slot::<S>(requestor)
         }
     }
 
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
-        R::all_slots().chain(core::iter::once((
-            TypeId::of::<U>(),
-            core::any::type_name::<U>(),
-        )))
+        R::all_slots().chain(core::iter::once((U::data_type_id(), U::data_type_name())))
     }
 }
 
-/// Internal helper to take a cons-list of `Storable` types and return a cons-list of slots for them.
+/// Internal helper to construct runtime slot instances from a type-level cons list of slots.
 trait IntoSlots {
-    /// A cons-list that contains a slot for every type in this cons-list.
+    /// The same cons-list type, used to construct slot instances.
     type Slots: Slots;
 
     /// Creates a new instance of the slot cons-list with all slots empty.
@@ -85,15 +89,15 @@ impl IntoSlots for Nil {
     }
 }
 
-impl<T, R> IntoSlots for Cons<T, R>
+impl<S, R> IntoSlots for Cons<S, R>
 where
-    T: Storable + 'static,
+    S: SlotTrait + 'static,
     R: IntoSlots,
 {
-    type Slots = Cons<Slot<T>, R::Slots>;
+    type Slots = Cons<S, R::Slots>;
 
     fn make_slots() -> Self::Slots {
-        Cons(Slot::<T>::new(), R::make_slots())
+        Cons(S::new(), R::make_slots())
     }
 }
 
@@ -117,16 +121,16 @@ where
         this.0
     }
 
-    fn slot<T>(self: Pin<&Self>, requestor: &'static str) -> Pin<&Slot<T>>
+    fn slot<T>(self: Pin<&Self>, requestor: &'static str) -> Pin<&T>
     where
-        T: Storable + 'static,
+        T: SlotTrait,
     {
         let this = self.project_ref();
         this.1.slot::<T>(requestor)
     }
 }
 
-/// Given a cons-list of [`Storable`] types, returns a complete [`Datastore`] that contains a slot for each type.
+/// Given a cons-list of slot types, returns a complete [`Datastore`] that contains those slots.
 pub(crate) fn make_store<T>() -> impl Datastore
 where
     T: IntoSlots,
@@ -647,4 +651,33 @@ macro_rules! discard_to_unit {
     ($_:tt) => {
         ()
     };
+}
+
+#[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
+mod tests {
+    use core::pin::pin;
+
+    use super::Slots;
+    use crate::cons::Nil;
+    use crate::datastore::Slot;
+
+    #[test]
+    fn nil_all_slots_returns_empty() {
+        let slots = Nil::all_slots();
+        assert_eq!(slots.count(), 0);
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "no slot available for `veecle_os_runtime::execute::tests::nil_slot_panics_with_correct_message::TestType`, required by `test_requestor`"
+    )]
+    fn nil_slot_panics_with_correct_message() {
+        #[derive(Debug, crate::datastore::Storable)]
+        #[storable(crate = crate)]
+        struct TestType;
+
+        let nil = pin!(Nil);
+        let _slot: core::pin::Pin<&Slot<TestType>> = nil.as_ref().slot("test_requestor");
+    }
 }

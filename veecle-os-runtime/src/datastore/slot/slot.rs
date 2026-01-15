@@ -8,8 +8,11 @@ use core::pin::Pin;
 use pin_project::pin_project;
 use veecle_telemetry::SpanContext;
 
+/// Runtime storage for a single storable value.
+///
+/// Slots provide generational synchronization and ownership tracking for datastore communication.
 #[pin_project]
-pub(crate) struct Slot<T>
+pub struct Slot<T>
 where
     T: Storable + 'static,
 {
@@ -130,24 +133,35 @@ where
     pub(crate) fn increment_generation(self: Pin<&Self>) {
         self.project_ref().source.increment_generation();
     }
+}
 
-    pub(crate) fn assert_is_type<U>(self: Pin<&Self>) -> Pin<&Slot<U>>
-    where
-        U: Storable,
-    {
-        if TypeId::of::<T>() == TypeId::of::<U>() {
-            // SAFETY:
-            // `Pin::map_unchecked`: We're only transforming the type, so it retains its pinned-ness.
-            // `cast` + `as_ref`: We verified above that the stored value is of the right type.
-            unsafe {
-                Pin::map_unchecked(self, |this| {
-                    core::ptr::NonNull::from_ref(this)
-                        .cast::<Slot<U>>()
-                        .as_ref()
-                })
-            }
-        } else {
-            panic!("invalid cast")
-        }
+/// Marker trait for all slot types.
+///
+/// This trait must be implemented by any type that can be used as a slot in the datastore.
+pub(crate) trait SlotTrait: Sized + 'static + core::any::Any {
+    /// Creates a new empty slot.
+    fn new() -> Self;
+
+    /// Returns the TypeId of the data type stored in this slot.
+    fn data_type_id() -> TypeId;
+
+    /// Returns the type name of the data type stored in this slot.
+    fn data_type_name() -> &'static str;
+}
+
+impl<T> SlotTrait for Slot<T>
+where
+    T: Storable + 'static,
+{
+    fn new() -> Self {
+        Slot::new()
+    }
+
+    fn data_type_id() -> TypeId {
+        TypeId::of::<T>()
+    }
+
+    fn data_type_name() -> &'static str {
+        core::any::type_name::<T>()
     }
 }
