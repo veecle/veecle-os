@@ -115,7 +115,9 @@ pub trait Actor<'a> {
     /// Context that needs to be passed to the actor at initialisation.
     type InitContext;
 
-    /// Cons list of `Storable` slots required by this actor.
+    /// Cons list of slots required by this actor.
+    ///
+    /// This is a type-level cons list of `Slot<T>` types.
     type Slots;
 
     /// Error that this actor might return while running.
@@ -173,7 +175,6 @@ pub trait Datastore {
     /// * If there is no [`Slot`] for `T` in the [`Datastore`].
     ///
     /// `requestor` will be included in the panic message for context.
-    #[expect(private_interfaces, reason = "the methods are internal")]
     fn slot<T>(self: Pin<&Self>, requestor: &'static str) -> Pin<&Slot<T>>
     where
         T: Storable + 'static;
@@ -398,7 +399,9 @@ impl IsActorResult for Never {
 /// As a consequence, every possible combination must have a side that defines the slot.
 #[doc(hidden)]
 pub trait DefinesSlot {
-    /// The slot type as a cons list or [`Nil`].
+    /// The slot cons list for this store request type.
+    ///
+    /// Returns [`Nil`] for readers or `Cons<Slot<T>, Nil>` for writers.
     type Slot;
 }
 
@@ -406,7 +409,7 @@ impl<'a, T> DefinesSlot for Writer<'a, T>
 where
     T: Storable,
 {
-    type Slot = Cons<T, Nil>;
+    type Slot = Cons<Slot<T>, Nil>;
 }
 
 impl<'a, T> DefinesSlot for Reader<'a, T>
@@ -441,7 +444,7 @@ mod tests {
 
     use crate::actor::{DatastoreExt, StoreRequest};
     use crate::cons::{Cons, Nil};
-    use crate::datastore::{InitializedReader, Storable};
+    use crate::datastore::{InitializedReader, Slot, Storable};
 
     #[test]
     fn multi_request_order_independence() {
@@ -453,7 +456,9 @@ mod tests {
         #[storable(crate = crate)]
         struct B;
 
-        let datastore = pin!(crate::execute::make_store::<Cons<A, Cons<B, Nil>>>());
+        let datastore = pin!(crate::execute::make_store::<
+            Cons<Slot<A>, Cons<Slot<B>, Nil>>,
+        >());
 
         let mut a_writer = datastore.as_ref().writer::<A>("a_writer");
         let mut b_writer = datastore.as_ref().writer::<B>("b_writer");

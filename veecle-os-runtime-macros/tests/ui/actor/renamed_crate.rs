@@ -50,7 +50,7 @@ mod fake_veecle_os_runtime {
         }
 
         pub struct Nil;
-        pub struct Slot;
+        pub struct Slot<T>(core::marker::PhantomData<T>);
         pub trait DefinesSlot {
             type Slot;
         }
@@ -72,7 +72,7 @@ mod fake_veecle_os_runtime {
     impl<'a, T> StoreRequest<'a> for Writer<'a, T> {}
 
     impl<'a, T> __exports::DefinesSlot for Writer<'a, T> {
-        type Slot = __exports::Cons<T, __exports::Nil>;
+        type Slot = __exports::Cons<__exports::Slot<T>, __exports::Nil>;
     }
 
     impl<'a, T> __exports::DefinesSlot for Reader<'a, T> {

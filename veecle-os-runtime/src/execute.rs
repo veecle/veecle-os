@@ -1,6 +1,5 @@
 #![expect(
     private_bounds,
-    private_interfaces,
     reason = "
         everything defined in here except the macro are internal helpers,
         they often mention private types
@@ -68,9 +67,9 @@ where
     }
 }
 
-/// Internal helper to take a cons-list of `Storable` types and return a cons-list of slots for them.
+/// Internal helper to construct runtime slot instances from a type-level cons list of slots.
 trait IntoSlots {
-    /// A cons-list that contains a slot for every type in this cons-list.
+    /// The same cons-list type, used to construct slot instances.
     type Slots: Slots;
 
     /// Creates a new instance of the slot cons-list with all slots empty.
@@ -85,7 +84,7 @@ impl IntoSlots for Nil {
     }
 }
 
-impl<T, R> IntoSlots for Cons<T, R>
+impl<T, R> IntoSlots for Cons<Slot<T>, R>
 where
     T: Storable + 'static,
     R: IntoSlots,

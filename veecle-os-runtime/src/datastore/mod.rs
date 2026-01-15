@@ -9,13 +9,12 @@ mod exclusive_reader;
 pub(crate) mod generational;
 mod initialized_reader;
 mod reader;
-mod slot;
+pub mod slot;
 mod writer;
 
 pub use self::combined_readers::{CombinableReader, CombineReaders};
 pub use self::exclusive_reader::ExclusiveReader;
 pub use self::initialized_reader::InitializedReader;
 pub use self::reader::Reader;
-pub(crate) use self::slot::Slot;
-pub use self::slot::Storable;
+pub use self::slot::{Slot, Storable};
 pub use self::writer::Writer;

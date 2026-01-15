@@ -8,8 +8,12 @@ use core::pin::Pin;
 use pin_project::pin_project;
 use veecle_telemetry::SpanContext;
 
+/// Runtime storage for a single storable value.
+///
+/// Slots provide generational synchronization and ownership tracking for datastore communication.
+#[doc(hidden)]
 #[pin_project]
-pub(crate) struct Slot<T>
+pub struct Slot<T>
 where
     T: Storable + 'static,
 {

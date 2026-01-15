@@ -118,6 +118,7 @@ pub use self::datastore::{
 pub mod __exports {
     pub use crate::actor::{Datastore, DefinesSlot, IsActorResult};
     pub use crate::cons::{AppendCons, Cons, Nil};
+    pub use crate::datastore::Slot;
     pub use crate::execute::{execute_actor, make_store_and_validate};
     pub use crate::heapfree_executor::{Executor, ExecutorShared};
 }
