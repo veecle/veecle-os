@@ -6,5 +6,6 @@ mod waiter;
 pub use veecle_os_runtime_macros::Storable;
 
 pub use self::slot::Slot;
+pub(crate) use self::slot::SlotTrait;
 pub use self::storable::Storable;
 pub(crate) use self::waiter::Waiter;

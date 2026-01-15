@@ -16,5 +16,6 @@ pub use self::combined_readers::{CombinableReader, CombineReaders};
 pub use self::exclusive_reader::ExclusiveReader;
 pub use self::initialized_reader::InitializedReader;
 pub use self::reader::Reader;
+pub(crate) use self::slot::SlotTrait;
 pub use self::slot::{Slot, Storable};
 pub use self::writer::Writer;

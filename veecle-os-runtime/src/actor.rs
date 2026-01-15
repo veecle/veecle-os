@@ -3,7 +3,7 @@ use core::pin::Pin;
 
 use crate::Never;
 use crate::cons::{Cons, Nil};
-use crate::datastore::{ExclusiveReader, InitializedReader, Reader, Storable, Writer};
+use crate::datastore::{ExclusiveReader, InitializedReader, Reader, SlotTrait, Storable, Writer};
 use crate::datastore::{Slot, generational};
 #[doc(inline)]
 pub use veecle_os_runtime_macros::actor;
@@ -156,6 +156,7 @@ pub trait StoreRequest<'a>: sealed::Sealed {
 
 impl sealed::Sealed for () {}
 
+#[doc(hidden)]
 /// Internal trait to abstract out type-erased and concrete data stores.
 pub trait Datastore {
     /// Returns a generational source tracking the global datastore generation.
@@ -164,20 +165,17 @@ pub trait Datastore {
     /// overwrite it.
     fn source(self: Pin<&Self>) -> Pin<&generational::Source>;
 
-    #[expect(
-        rustdoc::private_intra_doc_links,
-        reason = "`rustdoc` is buggy with links from `pub` but unreachable types"
-    )]
-    /// Returns a reference to the slot for a specific type.
+    /// Returns a reference to a slot of a specific type.
     ///
     /// # Panics
     ///
-    /// * If there is no [`Slot`] for `T` in the [`Datastore`].
+    /// If there is no slot of type `S` in the datastore.
     ///
     /// `requestor` will be included in the panic message for context.
-    fn slot<T>(self: Pin<&Self>, requestor: &'static str) -> Pin<&Slot<T>>
+    #[expect(private_bounds, reason = "the methods are internal")]
+    fn slot<S>(self: Pin<&Self>, requestor: &'static str) -> Pin<&S>
     where
-        T: Storable + 'static;
+        S: SlotTrait;
 }
 
 pub(crate) trait DatastoreExt<'a>: Copy {
@@ -240,21 +238,21 @@ where
     where
         T: Storable + 'static,
     {
-        Reader::from_slot(self.slot::<T>(requestor))
+        Reader::from_slot(self.slot::<Slot<T>>(requestor))
     }
 
     fn exclusive_reader<T>(self, requestor: &'static str) -> ExclusiveReader<'a, T>
     where
         T: Storable + 'static,
     {
-        ExclusiveReader::from_slot(self.slot::<T>(requestor))
+        ExclusiveReader::from_slot(self.slot::<Slot<T>>(requestor))
     }
 
     fn writer<T>(self, requestor: &'static str) -> Writer<'a, T>
     where
         T: Storable + 'static,
     {
-        Writer::new(self.source().waiter(), self.slot::<T>(requestor))
+        Writer::new(self.source().waiter(), self.slot::<Slot<T>>(requestor))
     }
 }
 
