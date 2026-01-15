@@ -11,7 +11,6 @@ use veecle_telemetry::SpanContext;
 /// Runtime storage for a single storable value.
 ///
 /// Slots provide generational synchronization and ownership tracking for datastore communication.
-#[doc(hidden)]
 #[pin_project]
 pub struct Slot<T>
 where
