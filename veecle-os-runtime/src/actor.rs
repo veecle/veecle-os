@@ -179,23 +179,6 @@ pub trait Datastore {
         T: Storable + 'static;
 }
 
-impl<S> Datastore for Pin<&S>
-where
-    S: Datastore,
-{
-    fn source(self: Pin<&Self>) -> Pin<&generational::Source> {
-        Pin::into_inner(self).source()
-    }
-
-    #[expect(private_interfaces, reason = "the methods are internal")]
-    fn slot<T>(self: Pin<&Self>, requestor: &'static str) -> Pin<&Slot<T>>
-    where
-        T: Storable + 'static,
-    {
-        Pin::into_inner(self).slot(requestor)
-    }
-}
-
 pub(crate) trait DatastoreExt<'a>: Copy {
     #[cfg(test)]
     /// Increments the global datastore generation.
