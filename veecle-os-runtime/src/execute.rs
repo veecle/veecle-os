@@ -17,8 +17,9 @@ use core::pin::Pin;
 
 /// Internal helper to implement [`Datastore::slot`] recursively for a cons-list of slots.
 trait Slots {
-    /// See [`Datastore::slot`].
-    fn slot<S>(self: Pin<&Self>, requestor: &'static str) -> Pin<&S>
+    /// Attempts to find a slot of the given type.
+    /// Returns None if no such slot exists.
+    fn try_slot<S>(self: Pin<&Self>) -> Option<Pin<&S>>
     where
         S: SlotTrait;
 
@@ -27,14 +28,11 @@ trait Slots {
 }
 
 impl Slots for Nil {
-    fn slot<S>(self: Pin<&Self>, requestor: &'static str) -> Pin<&S>
+    fn try_slot<S>(self: Pin<&Self>) -> Option<Pin<&S>>
     where
         S: SlotTrait,
     {
-        panic!(
-            "no slot available for `{}`, required by `{requestor}`",
-            S::data_type_name()
-        )
+        None
     }
 
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
@@ -42,33 +40,49 @@ impl Slots for Nil {
     }
 }
 
-impl<U, R> Slots for Cons<U, R>
+impl<T> Slots for T
 where
-    U: SlotTrait + core::any::Any,
-    R: Slots,
+    T: SlotTrait + core::any::Any,
 {
-    fn slot<S>(self: Pin<&Self>, requestor: &'static str) -> Pin<&S>
+    fn try_slot<S>(self: Pin<&Self>) -> Option<Pin<&S>>
     where
         S: SlotTrait + core::any::Any,
     {
-        let this = self.project_ref();
-
-        if TypeId::of::<S>() == TypeId::of::<U>() {
+        if TypeId::of::<S>() == TypeId::of::<T>() {
             // SAFETY:
             // `Pin::map_unchecked`: We're only transforming the type, so it retains its pinned-ness.
-            // `cast` + `as_ref`: We verified above that the types of `S` and `U` are the same.
-            unsafe {
-                Pin::map_unchecked(this.0, |this| {
+            // `cast` + `as_ref`: We verified above that the types of `S` and `T` are the same.
+            Some(unsafe {
+                Pin::map_unchecked(self, |this| {
                     core::ptr::NonNull::from_ref(this).cast::<S>().as_ref()
                 })
-            }
+            })
         } else {
-            this.1.slot::<S>(requestor)
+            None
         }
     }
 
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
-        R::all_slots().chain(core::iter::once((U::data_type_id(), U::data_type_name())))
+        core::iter::once((T::data_type_id(), T::data_type_name()))
+    }
+}
+
+impl<U, R> Slots for Cons<U, R>
+where
+    U: Slots,
+    R: Slots,
+{
+    fn try_slot<S>(self: Pin<&Self>) -> Option<Pin<&S>>
+    where
+        S: SlotTrait,
+    {
+        let this = self.project_ref();
+
+        this.0.try_slot::<S>().or_else(|| this.1.try_slot::<S>())
+    }
+
+    fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
+        U::all_slots().chain(R::all_slots())
     }
 }
 
@@ -101,6 +115,30 @@ where
     }
 }
 
+impl<Inner, InnerRest, R> IntoSlots for Cons<Cons<Inner, InnerRest>, R>
+where
+    Inner: SlotTrait + 'static,
+    InnerRest: IntoSlots,
+    R: IntoSlots,
+{
+    type Slots = Cons<Cons<Inner, InnerRest::Slots>, R::Slots>;
+
+    fn make_slots() -> Self::Slots {
+        Cons(Cons(Inner::new(), InnerRest::make_slots()), R::make_slots())
+    }
+}
+
+impl<R> IntoSlots for Cons<Nil, R>
+where
+    R: IntoSlots,
+{
+    type Slots = Cons<Nil, R::Slots>;
+
+    fn make_slots() -> Self::Slots {
+        Cons(Nil, R::make_slots())
+    }
+}
+
 #[allow(
     rustdoc::private_intra_doc_links,
     reason = "
@@ -126,7 +164,12 @@ where
         T: SlotTrait,
     {
         let this = self.project_ref();
-        this.1.slot::<T>(requestor)
+        this.1.try_slot::<T>().unwrap_or_else(|| {
+            panic!(
+                "no slot available for `{}`, required by `{requestor}`",
+                T::data_type_name()
+            )
+        })
     }
 }
 
@@ -248,6 +291,9 @@ where
     /// A cons-list of init-contexts for this cons-list (essentially `self.map(|actor| actor.init_context)`).
     type InitContexts;
 
+    /// A cons-list of slot cons-lists for this actor list (nested structure).
+    type AllSlots;
+
     /// Returns an iterator over all slots required by actors in this list as `(TypeId, type_name)` pairs.
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)>;
 
@@ -279,6 +325,7 @@ where
 
 impl ActorList<'_> for Nil {
     type InitContexts = Nil;
+    type AllSlots = Nil;
 
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
         core::iter::empty()
@@ -311,6 +358,9 @@ where
 {
     /// For `Actor::InitContext` we just need to map directly to the associated type.
     type InitContexts = Cons<<T as Actor<'a>>::InitContext, <U as ActorList<'a>>::InitContexts>;
+
+    /// For `AllSlots` we create a cons list of each actor's slots (nested structure).
+    type AllSlots = Cons<<T as Actor<'a>>::Slots, <U as ActorList<'a>>::AllSlots>;
 
     fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
         U::all_slots().chain(<<<T as Actor<'a>>::Slots as IntoSlots>::Slots as Slots>::all_slots())
@@ -392,13 +442,13 @@ fn format_types(types: impl IntoIterator<Item = &'static str>) -> impl core::fmt
 /// This function combines store creation and validation so that the actor list type parameter appears only once,
 /// allowing Rust's type inference to work across both operations.
 ///
-/// The slots are computed via macro expansion (not trait resolution) for fast compilation.
-pub fn make_store_and_validate<'a, A, S, I>(init_contexts: I) -> (impl Datastore + 'a, I)
+/// The slots are computed from the actor list's associated type.
+pub fn make_store_and_validate<'a, A, I>(init_contexts: I) -> (impl Datastore + 'a, I)
 where
     A: ActorList<'a, InitContexts = I>,
-    S: IntoSlots + 'a,
+    A::AllSlots: IntoSlots,
 {
-    let store = make_store::<S>();
+    let store = make_store::<A::AllSlots>();
 
     for (type_id, type_name) in A::all_slots() {
         let writers = A::writers(type_id).count();
@@ -456,25 +506,6 @@ where
         veecle_telemetry::span!("actor", actor = core::any::type_name::<A>()),
     )
     .await
-}
-
-/// Computes the combined `Slots` type for a list of actor types.
-///
-/// This is an internal helper macro used by [`execute!`].
-#[doc(hidden)]
-#[macro_export]
-macro_rules! __actor_slots {
-    ($head:ty) => {
-        <
-            <$head as $crate::Actor>::Slots as $crate::__exports::AppendCons<$crate::__exports::Nil>
-        >::Result
-    };
-
-    ($head:ty, $($rest:ty),*) => {
-        <
-            <$head as $crate::Actor>::Slots as $crate::__exports::AppendCons<$crate::__actor_slots!($($rest),*)>
-        >::Result
-    };
 }
 
 /// Execute a given set of actors without heap allocation.
@@ -540,7 +571,6 @@ macro_rules! execute {
             let (store, init_contexts) = {
                 let (store, init_contexts) = $crate::__exports::make_store_and_validate::<
                     $crate::__make_cons!(@type $($actor_type,)*),
-                    $crate::__actor_slots!($($actor_type),*),
                     _,
                 >($crate::__make_cons!(@value $(
                     // Wrapper block is used to provide a `()` if no expression is passed.
@@ -656,15 +686,31 @@ macro_rules! discard_to_unit {
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
+    use core::marker::PhantomData;
     use core::pin::pin;
 
     use super::Slots;
+    use crate::actor::Datastore;
+    use crate::cons::Cons;
     use crate::cons::Nil;
     use crate::datastore::Slot;
+    use crate::execute::generational::Source;
 
     #[test]
     fn nil_all_slots_returns_empty() {
         let slots = Nil::all_slots();
+        assert_eq!(slots.count(), 0);
+    }
+
+    #[test]
+    fn cons_nil_all_slots_returns_empty() {
+        let slots = <Cons<Nil, Nil>>::all_slots();
+        assert_eq!(slots.count(), 0);
+    }
+
+    #[test]
+    fn cons_cons_nil_all_slots_returns_empty() {
+        let slots = <Cons<Nil, Cons<Nil, Nil>>>::all_slots();
         assert_eq!(slots.count(), 0);
     }
 
@@ -677,7 +723,44 @@ mod tests {
         #[storable(crate = crate)]
         struct TestType;
 
-        let nil = pin!(Nil);
-        let _slot: core::pin::Pin<&Slot<TestType>> = nil.as_ref().slot("test_requestor");
+        let nil = pin!(Cons(Source::new(), Nil));
+        let _slot: core::pin::Pin<&Slot<TestType>> =
+            Datastore::slot(nil.as_ref(), "test_requestor");
+    }
+
+    #[test]
+    #[should_panic(expected = "type inference works")]
+    fn type_inference_for_generic_actors() {
+        use crate::{Actor, Never};
+
+        struct GenericActor<T> {
+            _phantom: PhantomData<T>,
+        }
+
+        impl<'a, T> Actor<'a> for GenericActor<T>
+        where
+            T: core::fmt::Debug + 'static,
+        {
+            type StoreRequest = ();
+            type InitContext = T;
+            type Slots = Nil;
+            type Error = Never;
+
+            fn new((): Self::StoreRequest, _context: Self::InitContext) -> Self {
+                Self {
+                    _phantom: PhantomData,
+                }
+            }
+
+            async fn run(self) -> Result<Never, Self::Error> {
+                panic!("type inference works");
+            }
+        }
+
+        futures::executor::block_on(crate::execute! {
+            actors: [
+                GenericActor<_>: 42_i32,
+            ],
+        });
     }
 }
