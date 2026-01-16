@@ -162,6 +162,8 @@ macro_rules! __read_cons {
 }
 
 /// Internal helper to append two cons-lists.
+// Using this trait recursively in another trait or as a trait bound will lead to exponential compile times.
+// Macro generated usage with concrete types works well.
 #[doc(hidden)]
 pub trait AppendCons<Other> {
     /// The result of appending `Other` to self.
