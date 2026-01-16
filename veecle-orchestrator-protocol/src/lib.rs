@@ -8,6 +8,12 @@
 #![forbid(unsafe_code)]
 
 use std::collections::BTreeMap;
+
+/// Buffer size for binary data transfer in [`Request::AddWithBinary`].
+///
+/// Used by both client and server to chunk binary uploads for progress reporting
+/// and efficient I/O.
+pub const BINARY_TRANSFER_CHUNK_SIZE: usize = 8192;
 use std::error::Error;
 use std::fmt;
 use std::net::SocketAddr;

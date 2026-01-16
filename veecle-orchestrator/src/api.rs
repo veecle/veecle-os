@@ -15,7 +15,9 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_util::codec::{Framed, LinesCodec};
 use tracing::Instrument;
 use veecle_net_utils::{AsyncSocketStream, UnresolvedMultiSocketAddress};
-use veecle_orchestrator_protocol::{Info, InstanceId, Request, Response};
+use veecle_orchestrator_protocol::{
+    BINARY_TRANSFER_CHUNK_SIZE, Info, InstanceId, Request, Response,
+};
 
 use crate::distributor::Distributor;
 use crate::runtime::Conductor;
@@ -72,7 +74,7 @@ async fn read_binary_to_temp_file(
 
     let mut hasher = Sha256::new();
     let mut remaining = length;
-    let mut buffer = [0u8; 8192];
+    let mut buffer = [0u8; BINARY_TRANSFER_CHUNK_SIZE];
 
     while remaining > 0 {
         let chunk_size = buffer.len().min(remaining);
