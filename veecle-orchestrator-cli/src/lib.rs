@@ -2,7 +2,7 @@
 
 #![forbid(unsafe_code)]
 
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, Cursor, Write};
 
 use anyhow::Context;
 use camino::Utf8PathBuf;
@@ -11,9 +11,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use itertools::Itertools;
 use serde::de::DeserializeOwned;
 use veecle_net_utils::{BlockingSocketStream, UnresolvedMultiSocketAddress};
-use veecle_orchestrator_protocol::{
-    BINARY_TRANSFER_CHUNK_SIZE, Info, InstanceId, LinkTarget, Priority, Request, Response,
-};
+use veecle_orchestrator_protocol::{Info, InstanceId, LinkTarget, Priority, Request, Response};
 
 /// Veecle OS Orchestrator CLI interface
 ///
@@ -159,14 +157,9 @@ fn send_add_with_binary(
             .progress_chars("█▓░"),
     );
 
-    // send data in chunks to enable progress reporting
-    for chunk in data.chunks(BINARY_TRANSFER_CHUNK_SIZE) {
-        stream
-            .get_mut()
-            .write_all(chunk)
-            .context("sending binary data")?;
-        pb.inc(chunk.len() as u64);
-    }
+    // wrap the stream to automatically track progress
+    std::io::copy(&mut Cursor::new(data), &mut pb.wrap_write(stream.get_mut()))
+        .context("sending binary data")?;
 
     pb.finish_and_clear();
 
