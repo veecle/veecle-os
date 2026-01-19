@@ -22,9 +22,6 @@ trait Slots {
     fn try_slot<S>(self: Pin<&Self>) -> Option<Pin<&S>>
     where
         S: SlotTrait;
-
-    /// Returns the [`TypeId`] and type names for all the slots stored in this type.
-    fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)>;
 }
 
 impl Slots for Nil {
@@ -33,10 +30,6 @@ impl Slots for Nil {
         S: SlotTrait,
     {
         None
-    }
-
-    fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
-        core::iter::empty()
     }
 }
 
@@ -61,10 +54,6 @@ where
             None
         }
     }
-
-    fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
-        core::iter::once((T::data_type_id(), T::data_type_name()))
-    }
 }
 
 impl<U, R> Slots for Cons<U, R>
@@ -80,10 +69,6 @@ where
 
         this.0.try_slot::<S>().or_else(|| this.1.try_slot::<S>())
     }
-
-    fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
-        U::all_slots().chain(R::all_slots())
-    }
 }
 
 /// Internal helper to construct runtime slot instances from a type-level cons list of slots.
@@ -93,6 +78,11 @@ trait IntoSlots {
 
     /// Creates a new instance of the slot cons-list with all slots empty.
     fn make_slots() -> Self::Slots;
+
+    /// Validates all slots in this cons-list against the actor access patterns.
+    fn validate_all<'a, A>()
+    where
+        A: ActorList<'a>;
 }
 
 impl IntoSlots for Nil {
@@ -100,6 +90,12 @@ impl IntoSlots for Nil {
 
     fn make_slots() -> Self::Slots {
         Nil
+    }
+
+    fn validate_all<'a, A>()
+    where
+        A: ActorList<'a>,
+    {
     }
 }
 
@@ -112,6 +108,25 @@ where
     fn make_slots() -> Self::Slots {
         S::new()
     }
+
+    fn validate_all<'a, A>()
+    where
+        A: ActorList<'a>,
+    {
+        let type_id = S::data_type_id();
+
+        S::validate_access_pattern(
+            (A::writers_count(type_id), A::writers(type_id)),
+            (
+                A::exclusive_readers_count(type_id),
+                A::exclusive_readers(type_id),
+            ),
+            (
+                A::non_exclusive_readers_count(type_id),
+                A::non_exclusive_readers(type_id),
+            ),
+        );
+    }
 }
 
 impl<S, R> IntoSlots for Cons<S, R>
@@ -123,6 +138,14 @@ where
 
     fn make_slots() -> Self::Slots {
         Cons(S::make_slots(), R::make_slots())
+    }
+
+    fn validate_all<'a, A>()
+    where
+        A: ActorList<'a>,
+    {
+        S::validate_all::<'a, A>();
+        R::validate_all::<'a, A>();
     }
 }
 
@@ -281,19 +304,19 @@ where
     /// A cons-list of slot cons-lists for this actor list (nested structure).
     type AllSlots;
 
-    /// Returns an iterator over all slots required by actors in this list as `(TypeId, type_name)` pairs.
-    fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)>;
+    /// Returns the number of writers for the given type in this actor list.
+    fn writers_count(type_id: TypeId) -> usize;
+
+    /// Returns the number of exclusive readers for the given type in this actor list.
+    fn exclusive_readers_count(type_id: TypeId) -> usize;
+
+    /// Returns the number of non-exclusive readers for the given type in this actor list.
+    fn non_exclusive_readers_count(type_id: TypeId) -> usize;
 
     /// Returns the type names of the actors in this list that write to the given type.
     ///
     /// If an actor has multiple writers for the same type it will be in the list multiple times.
     fn writers(type_id: TypeId) -> impl Iterator<Item = &'static str>;
-
-    /// Returns the type names of the actors in this list that read from the given type, both
-    /// exclusive and non-exclusive.
-    ///
-    /// If an actor has multiple readers for the same type it will be in the list multiple times.
-    fn readers(type_id: TypeId) -> impl Iterator<Item = &'static str>;
 
     /// Returns the type names of the actors in this list that read from the given type with an
     /// exclusive reader.
@@ -307,22 +330,26 @@ where
     ///
     /// If an actor has multiple non-exclusive readers for the same type it will be in the list
     /// multiple times.
-    fn other_readers(type_id: TypeId) -> impl Iterator<Item = &'static str>;
+    fn non_exclusive_readers(type_id: TypeId) -> impl Iterator<Item = &'static str>;
 }
 
 impl ActorList<'_> for Nil {
     type InitContexts = Nil;
     type AllSlots = Nil;
 
-    fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
-        core::iter::empty()
+    fn writers_count(_type_id: TypeId) -> usize {
+        0
+    }
+
+    fn exclusive_readers_count(_type_id: TypeId) -> usize {
+        0
+    }
+
+    fn non_exclusive_readers_count(_type_id: TypeId) -> usize {
+        0
     }
 
     fn writers(_type_id: TypeId) -> impl Iterator<Item = &'static str> {
-        core::iter::empty()
-    }
-
-    fn readers(_type_id: TypeId) -> impl Iterator<Item = &'static str> {
         core::iter::empty()
     }
 
@@ -330,7 +357,7 @@ impl ActorList<'_> for Nil {
         core::iter::empty()
     }
 
-    fn other_readers(_type_id: TypeId) -> impl Iterator<Item = &'static str> {
+    fn non_exclusive_readers(_type_id: TypeId) -> impl Iterator<Item = &'static str> {
         core::iter::empty()
     }
 }
@@ -349,8 +376,19 @@ where
     /// For `AllSlots` we create a cons list of each actor's slots (nested structure).
     type AllSlots = Cons<<T as Actor<'a>>::Slots, <U as ActorList<'a>>::AllSlots>;
 
-    fn all_slots() -> impl Iterator<Item = (TypeId, &'static str)> {
-        U::all_slots().chain(<<<T as Actor<'a>>::Slots as IntoSlots>::Slots as Slots>::all_slots())
+    fn writers_count(type_id: TypeId) -> usize {
+        <T::StoreRequest as TupleConsToCons>::Cons::writers(type_id) + U::writers_count(type_id)
+    }
+
+    fn exclusive_readers_count(type_id: TypeId) -> usize {
+        <T::StoreRequest as TupleConsToCons>::Cons::exclusive_readers(type_id)
+            + U::exclusive_readers_count(type_id)
+    }
+
+    fn non_exclusive_readers_count(type_id: TypeId) -> usize {
+        (<T::StoreRequest as TupleConsToCons>::Cons::readers(type_id)
+            - <T::StoreRequest as TupleConsToCons>::Cons::exclusive_readers(type_id))
+            + U::non_exclusive_readers_count(type_id)
     }
 
     fn writers(type_id: TypeId) -> impl Iterator<Item = &'static str> {
@@ -361,14 +399,6 @@ where
         .chain(U::writers(type_id))
     }
 
-    fn readers(type_id: TypeId) -> impl Iterator<Item = &'static str> {
-        core::iter::repeat_n(
-            core::any::type_name::<T>(),
-            <T::StoreRequest as TupleConsToCons>::Cons::readers(type_id),
-        )
-        .chain(U::readers(type_id))
-    }
-
     fn exclusive_readers(type_id: TypeId) -> impl Iterator<Item = &'static str> {
         core::iter::repeat_n(
             core::any::type_name::<T>(),
@@ -377,51 +407,14 @@ where
         .chain(U::exclusive_readers(type_id))
     }
 
-    fn other_readers(type_id: TypeId) -> impl Iterator<Item = &'static str> {
+    fn non_exclusive_readers(type_id: TypeId) -> impl Iterator<Item = &'static str> {
         core::iter::repeat_n(
             core::any::type_name::<T>(),
             <T::StoreRequest as TupleConsToCons>::Cons::readers(type_id)
                 - <T::StoreRequest as TupleConsToCons>::Cons::exclusive_readers(type_id),
         )
-        .chain(U::other_readers(type_id))
+        .chain(U::non_exclusive_readers(type_id))
     }
-}
-
-/// Returns a type that will write the given list of types out comma separated with backtick
-/// quoting, or `nothing` if it is empty.
-///
-/// ```text
-/// [] => "nothing"
-/// ["A"] => "`A`"
-/// ["A", "B"] => "`A`, `B`"
-/// ["A", "B", "C"] => "`A`, `B`, `C`"
-/// ```
-fn format_types(types: impl IntoIterator<Item = &'static str>) -> impl core::fmt::Display {
-    struct Helper<T>(core::cell::RefCell<T>);
-
-    impl<T> core::fmt::Display for Helper<T>
-    where
-        T: Iterator<Item = &'static str>,
-    {
-        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-            let mut iter = self.0.borrow_mut();
-            if let Some(first) = iter.next() {
-                f.write_str("`")?;
-                f.write_str(first)?;
-                f.write_str("`")?;
-                for next in &mut *iter {
-                    f.write_str(", `")?;
-                    f.write_str(next)?;
-                    f.write_str("`")?;
-                }
-            } else {
-                f.write_str("nothing")?;
-            }
-            Ok(())
-        }
-    }
-
-    Helper(core::cell::RefCell::new(types.into_iter()))
 }
 
 /// Creates a store and validates actors in a single call to enable type inference.
@@ -437,34 +430,7 @@ where
 {
     let store = make_store::<A::AllSlots>();
 
-    for (type_id, type_name) in A::all_slots() {
-        let writers = A::writers(type_id).count();
-        let readers = A::readers(type_id).count();
-        let exclusive_readers = A::exclusive_readers(type_id).count();
-        assert!(
-            writers > 0,
-            "missing writer for `{type_name}`, read by: {}",
-            format_types(A::readers(type_id)),
-        );
-        assert!(
-            readers > 0,
-            "missing reader for `{type_name}`, written by: {}",
-            format_types(A::writers(type_id)),
-        );
-        assert!(
-            writers == 1,
-            "multiple writers for `{type_name}`: {}",
-            format_types(A::writers(type_id)),
-        );
-        if exclusive_readers > 0 {
-            assert!(
-                readers == 1,
-                "conflict with exclusive reader for `{type_name}`:\nexclusive readers: {}\n    other readers: {}",
-                format_types(A::exclusive_readers(type_id)),
-                format_types(A::other_readers(type_id)),
-            );
-        }
-    }
+    A::AllSlots::validate_all::<'a, A>();
 
     (store, init_contexts)
 }
@@ -676,30 +642,11 @@ mod tests {
     use core::marker::PhantomData;
     use core::pin::pin;
 
-    use super::Slots;
     use crate::actor::Datastore;
     use crate::cons::Cons;
     use crate::cons::Nil;
     use crate::datastore::Slot;
     use crate::execute::generational::Source;
-
-    #[test]
-    fn nil_all_slots_returns_empty() {
-        let slots = Nil::all_slots();
-        assert_eq!(slots.count(), 0);
-    }
-
-    #[test]
-    fn cons_nil_all_slots_returns_empty() {
-        let slots = <Cons<Nil, Nil>>::all_slots();
-        assert_eq!(slots.count(), 0);
-    }
-
-    #[test]
-    fn cons_cons_nil_all_slots_returns_empty() {
-        let slots = <Cons<Nil, Cons<Nil, Nil>>>::all_slots();
-        assert_eq!(slots.count(), 0);
-    }
 
     #[test]
     #[should_panic(

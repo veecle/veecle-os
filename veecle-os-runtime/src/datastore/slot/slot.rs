@@ -147,6 +147,17 @@ pub(crate) trait SlotTrait: Sized + 'static + core::any::Any {
 
     /// Returns the type name of the data type stored in this slot.
     fn data_type_name() -> &'static str;
+
+    /// Validates that this slot type meets its requirements given the access patterns.
+    ///
+    /// # Panics
+    ///
+    /// Panics with an appropriate error message if validation fails.
+    fn validate_access_pattern(
+        writers: (usize, impl Iterator<Item = &'static str>),
+        exclusive_readers: (usize, impl Iterator<Item = &'static str>),
+        non_exclusive_readers: (usize, impl Iterator<Item = &'static str>),
+    );
 }
 
 impl<T> SlotTrait for Slot<T>
@@ -163,5 +174,46 @@ where
 
     fn data_type_name() -> &'static str {
         core::any::type_name::<T>()
+    }
+
+    fn validate_access_pattern(
+        (writers, writers_list): (usize, impl Iterator<Item = &'static str>),
+        (exclusive_readers, exclusive_readers_list): (usize, impl Iterator<Item = &'static str>),
+        (non_exclusive_readers, non_exclusive_readers_list): (
+            usize,
+            impl Iterator<Item = &'static str>,
+        ),
+    ) {
+        use super::super::format_types;
+
+        let type_name = Self::data_type_name();
+
+        let readers = exclusive_readers + non_exclusive_readers;
+
+        if writers == 0 {
+            panic!(
+                "missing writer for `{type_name}`, read by: {}",
+                format_types(exclusive_readers_list.chain(non_exclusive_readers_list)),
+            );
+        }
+        if readers == 0 {
+            panic!(
+                "missing reader for `{type_name}`, written by: {}",
+                format_types(writers_list),
+            );
+        }
+        if writers != 1 {
+            panic!(
+                "multiple writers for `{type_name}`: {}",
+                format_types(writers_list),
+            );
+        }
+        if exclusive_readers > 0 && readers != 1 {
+            panic!(
+                "conflict with exclusive reader for `{type_name}`:\nexclusive readers: {}\n    other readers: {}",
+                format_types(exclusive_readers_list),
+                format_types(non_exclusive_readers_list),
+            );
+        }
     }
 }
