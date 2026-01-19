@@ -103,39 +103,26 @@ impl IntoSlots for Nil {
     }
 }
 
-impl<S, R> IntoSlots for Cons<S, R>
+impl<S> IntoSlots for S
 where
     S: SlotTrait + 'static,
-    R: IntoSlots,
 {
-    type Slots = Cons<S, R::Slots>;
+    type Slots = S;
 
     fn make_slots() -> Self::Slots {
-        Cons(S::new(), R::make_slots())
+        S::new()
     }
 }
 
-impl<Inner, InnerRest, R> IntoSlots for Cons<Cons<Inner, InnerRest>, R>
+impl<S, R> IntoSlots for Cons<S, R>
 where
-    Inner: SlotTrait + 'static,
-    InnerRest: IntoSlots,
+    S: IntoSlots,
     R: IntoSlots,
 {
-    type Slots = Cons<Cons<Inner, InnerRest::Slots>, R::Slots>;
+    type Slots = Cons<S::Slots, R::Slots>;
 
     fn make_slots() -> Self::Slots {
-        Cons(Cons(Inner::new(), InnerRest::make_slots()), R::make_slots())
-    }
-}
-
-impl<R> IntoSlots for Cons<Nil, R>
-where
-    R: IntoSlots,
-{
-    type Slots = Cons<Nil, R::Slots>;
-
-    fn make_slots() -> Self::Slots {
-        Cons(Nil, R::make_slots())
+        Cons(S::make_slots(), R::make_slots())
     }
 }
 
