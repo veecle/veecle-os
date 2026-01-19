@@ -128,7 +128,7 @@ strum = { version = "0.27.2", default-features = false }
 syn = { version = "2.0.114", default-features = false }
 tempfile = { version = "3.22.0", default-features = false }
 test-case = { version = "3.3.1", default-features = false }
-thiserror = { version = "2.0.16", default-features = false }
+thiserror = { version = "2.0.18", default-features = false }
 tinyvec = { version = "1.10.0", default-features = false }
 tokio = { version = "1.49.0", default-features = false }
 tokio-stream = { version = "0.1.17", default-features = false }
