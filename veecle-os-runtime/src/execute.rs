@@ -365,8 +365,6 @@ impl ActorList<'_> for Nil {
 impl<'a, T, U> ActorList<'a> for Cons<T, U>
 where
     T: Actor<'a, StoreRequest: TupleConsToCons> + 'a,
-    <T as Actor<'a>>::Slots: IntoSlots,
-    <<T as Actor<'a>>::Slots as IntoSlots>::Slots: Slots,
     U: ActorList<'a> + 'a,
     <<T as Actor<'a>>::StoreRequest as TupleConsToCons>::Cons: AccessCount,
 {
