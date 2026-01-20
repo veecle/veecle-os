@@ -150,6 +150,9 @@ pub(crate) trait SlotTrait: Sized + 'static + core::any::Any {
 
     /// Validates that this slot type meets its requirements given the access patterns.
     ///
+    /// The defining reader/writer amount cannot be zero because a slot is only created for types
+    /// that are used by at least one defining reader/writer (see [`DefinesSlot`][crate::actor::DefinesSlot]).
+    ///
     /// # Panics
     ///
     /// Panics with an appropriate error message if validation fails.
@@ -190,12 +193,8 @@ where
 
         let readers = exclusive_readers + non_exclusive_readers;
 
-        if writers == 0 {
-            panic!(
-                "missing writer for `{type_name}`, read by: {}",
-                format_types(exclusive_readers_list.chain(non_exclusive_readers_list)),
-            );
-        }
+        // We cannot check the writers amount for zero because the Slot is only created if there is
+        // at least one writer.
         if readers == 0 {
             panic!(
                 "missing reader for `{type_name}`, written by: {}",
