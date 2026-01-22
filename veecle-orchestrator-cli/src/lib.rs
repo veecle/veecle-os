@@ -146,7 +146,6 @@ fn send_add_with_binary(
     let () = send(stream, Request::add_with_binary(id, data, privileged))
         .context("sending AddWithBinary request, receiving initial response")?;
 
-    // get progress bar for binary upload
     let pb = ProgressBar::new(data.len() as u64);
     pb.set_style(
         ProgressStyle::default_bar()
@@ -157,7 +156,6 @@ fn send_add_with_binary(
             .progress_chars("█▓░"),
     );
 
-    // wrap the stream to automatically track progress
     std::io::copy(&mut Cursor::new(data), &mut pb.wrap_write(stream.get_mut()))
         .context("sending binary data")?;
 
