@@ -8,6 +8,9 @@
 #![forbid(unsafe_code)]
 
 use std::collections::BTreeMap;
+
+/// Buffer size for binary data transfer in [`Request::AddWithBinary`].
+pub const BINARY_TRANSFER_CHUNK_SIZE: usize = 8192;
 use std::error::Error;
 use std::fmt;
 use std::net::SocketAddr;
