@@ -1,23 +1,215 @@
-error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
+error[E0277]: the trait bound `(u32, (Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>, ())): StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not satisfied
+ --> tests/ui/actor/unexpected_argument.rs:4:1
+  |
+4 | #[veecle_os_runtime_macros::actor]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+  |
+  = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `(u32, (Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>, ()))`
+note: required by a bound in `veecle_os_runtime::Actor::StoreRequest`
+ --> $WORKSPACE/veecle-os-runtime/src/actor.rs
+  |
+  |     type StoreRequest: StoreRequest<'a>;
+  |                        ^^^^^^^^^^^^^^^^ required by this bound in `Actor::StoreRequest`
+  = note: this error originates in the attribute macro `veecle_os_runtime_macros::actor` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: invalid actor parameter type
  --> tests/ui/actor/unexpected_argument.rs:7:18
   |
 7 |     _unexpected: u32,
-  |                  ^^^
+  |                  ^^^ this type cannot be used as an actor parameter
+  |
+  = help: the trait `DefinesSlot` is not implemented for `u32`
+  = note: only readers or writers provided by the Veecle OS runtime may be used as actor parameters
+  = note: if this is an initialization parameter, mark it with `#[init_context]`
+  = help: the following other types implement trait `DefinesSlot`:
+            ExclusiveReader<'a, T>
+            InitializedReader<'a, T>
+            Reader<'a, T>
+            Writer<'a, T>
 
-error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
-  --> tests/ui/actor/unexpected_argument.rs:13:40
+error[E0277]: the trait bound `(u32, ()): StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not satisfied
+  --> tests/ui/actor/unexpected_argument.rs:12:1
    |
-13 | async fn macro_test_actor(_unexpected: u32) -> veecle_os_runtime::Never {
-   |                                        ^^^
+12 | #[veecle_os_runtime_macros::actor]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `(u32, ())`
+   |
+note: required by a bound in `veecle_os_runtime::Actor::StoreRequest`
+  --> $WORKSPACE/veecle-os-runtime/src/actor.rs
+   |
+   |     type StoreRequest: StoreRequest<'a>;
+   |                        ^^^^^^^^^^^^^^^^ required by this bound in `Actor::StoreRequest`
+   = note: this error originates in the attribute macro `veecle_os_runtime_macros::actor` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
-  --> tests/ui/actor/unexpected_argument.rs:18:40
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:13:41
    |
-18 | async fn macro_test_actor(_unexpected: <Foo as Bar>::Ty) -> veecle_os_runtime::Never {
-   |                                        ^
+13 | async fn macro_test_actor2(_unexpected: u32) -> veecle_os_runtime::Never {
+   |                                         ^^^ this type cannot be used as an actor parameter
+   |
+   = help: the trait `DefinesSlot` is not implemented for `u32`
+   = note: only readers or writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: if this is an initialization parameter, mark it with `#[init_context]`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
 
-error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
-  --> tests/ui/actor/unexpected_argument.rs:23:40
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:26:41
    |
-23 | async fn macro_test_actor(_unexpected: [u32; 0]) -> veecle_os_runtime::Never {
-   |                                        ^^^^^^^^
+26 | async fn macro_test_actor3(_unexpected: <Foo as Bar>::Ty) -> veecle_os_runtime::Never {
+   |                                         ^ this type cannot be used as an actor parameter
+   |
+   = help: the trait `DefinesSlot` is not implemented for `()`
+   = note: only readers or writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: if this is an initialization parameter, mark it with `#[init_context]`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+
+error[E0277]: the trait bound `([u32; 0], ()): StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not satisfied
+  --> tests/ui/actor/unexpected_argument.rs:30:1
+   |
+30 | #[veecle_os_runtime_macros::actor]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `([u32; 0], ())`
+   |
+note: required by a bound in `veecle_os_runtime::Actor::StoreRequest`
+  --> $WORKSPACE/veecle-os-runtime/src/actor.rs
+   |
+   |     type StoreRequest: StoreRequest<'a>;
+   |                        ^^^^^^^^^^^^^^^^ required by this bound in `Actor::StoreRequest`
+   = note: this error originates in the attribute macro `veecle_os_runtime_macros::actor` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:31:41
+   |
+31 | async fn macro_test_actor4(_unexpected: [u32; 0]) -> veecle_os_runtime::Never {
+   |                                         ^^^^^^^^ this type cannot be used as an actor parameter
+   |
+   = help: the trait `DefinesSlot` is not implemented for `[u32; 0]`
+   = note: only readers or writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: if this is an initialization parameter, mark it with `#[init_context]`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+
+error[E0277]: invalid actor parameter type
+ --> tests/ui/actor/unexpected_argument.rs:7:18
+  |
+7 |     _unexpected: u32,
+  |                  ^^^ this type cannot be used as an actor parameter
+  |
+  = help: the trait `DefinesSlot` is not implemented for `u32`
+  = note: only readers or writers provided by the Veecle OS runtime may be used as actor parameters
+  = note: if this is an initialization parameter, mark it with `#[init_context]`
+  = help: the following other types implement trait `DefinesSlot`:
+            ExclusiveReader<'a, T>
+            InitializedReader<'a, T>
+            Reader<'a, T>
+            Writer<'a, T>
+note: required by a bound in `assert_defines_slot`
+ --> $WORKSPACE/veecle-os-runtime/src/lib.rs
+  |
+  | pub const fn assert_defines_slot<T: DefinesSlot>() {}
+  |                                     ^^^^^^^^^^^ required by this bound in `assert_defines_slot`
+
+error[E0277]: the trait bound `u32: StoreRequest<'_>` is not satisfied
+ --> tests/ui/actor/unexpected_argument.rs:7:18
+  |
+7 |     _unexpected: u32,
+  |                  ^^^ the trait `StoreRequest<'_>` is not implemented for `u32`
+  |
+note: required by a bound in `assert_store_request`
+ --> $WORKSPACE/veecle-os-runtime/src/lib.rs
+  |
+  | pub const fn assert_store_request<'a, T: StoreRequest<'a>>() {}
+  |                                          ^^^^^^^^^^^^^^^^ required by this bound in `assert_store_request`
+
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:13:41
+   |
+13 | async fn macro_test_actor2(_unexpected: u32) -> veecle_os_runtime::Never {
+   |                                         ^^^ this type cannot be used as an actor parameter
+   |
+   = help: the trait `DefinesSlot` is not implemented for `u32`
+   = note: only readers or writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: if this is an initialization parameter, mark it with `#[init_context]`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+note: required by a bound in `assert_defines_slot`
+  --> $WORKSPACE/veecle-os-runtime/src/lib.rs
+   |
+   | pub const fn assert_defines_slot<T: DefinesSlot>() {}
+   |                                     ^^^^^^^^^^^ required by this bound in `assert_defines_slot`
+
+error[E0277]: the trait bound `u32: StoreRequest<'_>` is not satisfied
+  --> tests/ui/actor/unexpected_argument.rs:13:41
+   |
+13 | async fn macro_test_actor2(_unexpected: u32) -> veecle_os_runtime::Never {
+   |                                         ^^^ the trait `StoreRequest<'_>` is not implemented for `u32`
+   |
+note: required by a bound in `assert_store_request`
+  --> $WORKSPACE/veecle-os-runtime/src/lib.rs
+   |
+   | pub const fn assert_store_request<'a, T: StoreRequest<'a>>() {}
+   |                                          ^^^^^^^^^^^^^^^^ required by this bound in `assert_store_request`
+
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:26:41
+   |
+26 | async fn macro_test_actor3(_unexpected: <Foo as Bar>::Ty) -> veecle_os_runtime::Never {
+   |                                         ^^^^^^^^^^^^^^^^ this type cannot be used as an actor parameter
+   |
+   = help: the trait `DefinesSlot` is not implemented for `()`
+   = note: only readers or writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: if this is an initialization parameter, mark it with `#[init_context]`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+note: required by a bound in `assert_defines_slot`
+  --> $WORKSPACE/veecle-os-runtime/src/lib.rs
+   |
+   | pub const fn assert_defines_slot<T: DefinesSlot>() {}
+   |                                     ^^^^^^^^^^^ required by this bound in `assert_defines_slot`
+
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:31:41
+   |
+31 | async fn macro_test_actor4(_unexpected: [u32; 0]) -> veecle_os_runtime::Never {
+   |                                         ^^^^^^^^ this type cannot be used as an actor parameter
+   |
+   = help: the trait `DefinesSlot` is not implemented for `[u32; 0]`
+   = note: only readers or writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: if this is an initialization parameter, mark it with `#[init_context]`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+note: required by a bound in `assert_defines_slot`
+  --> $WORKSPACE/veecle-os-runtime/src/lib.rs
+   |
+   | pub const fn assert_defines_slot<T: DefinesSlot>() {}
+   |                                     ^^^^^^^^^^^ required by this bound in `assert_defines_slot`
+
+error[E0277]: the trait bound `[u32; 0]: StoreRequest<'_>` is not satisfied
+  --> tests/ui/actor/unexpected_argument.rs:31:41
+   |
+31 | async fn macro_test_actor4(_unexpected: [u32; 0]) -> veecle_os_runtime::Never {
+   |                                         ^^^^^^^^ the trait `StoreRequest<'_>` is not implemented for `[u32; 0]`
+   |
+note: required by a bound in `assert_store_request`
+  --> $WORKSPACE/veecle-os-runtime/src/lib.rs
+   |
+   | pub const fn assert_store_request<'a, T: StoreRequest<'a>>() {}
+   |                                          ^^^^^^^^^^^^^^^^ required by this bound in `assert_store_request`

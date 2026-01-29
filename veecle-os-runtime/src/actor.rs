@@ -257,12 +257,14 @@ where
 }
 
 /// Implements a no-op for Actors that do not read or write any values.
+#[diagnostic::do_not_recommend]
 impl<'a> StoreRequest<'a> for () {
     async fn request(_store: Pin<&'a impl Datastore>, _requestor: &'static str) -> Self {}
 }
 
 impl<T> sealed::Sealed for Reader<'_, T> where T: Storable + 'static {}
 
+#[diagnostic::do_not_recommend]
 impl<'a, T> StoreRequest<'a> for Reader<'a, T>
 where
     T: Storable + 'static,
@@ -274,6 +276,7 @@ where
 
 impl<T> sealed::Sealed for ExclusiveReader<'_, T> where T: Storable + 'static {}
 
+#[diagnostic::do_not_recommend]
 impl<'a, T> StoreRequest<'a> for ExclusiveReader<'a, T>
 where
     T: Storable + 'static,
@@ -285,6 +288,7 @@ where
 
 impl<T> sealed::Sealed for InitializedReader<'_, T> where T: Storable + 'static {}
 
+#[diagnostic::do_not_recommend]
 impl<'a, T> StoreRequest<'a> for InitializedReader<'a, T>
 where
     T: Storable + 'static,
@@ -298,6 +302,7 @@ where
 
 impl<T> sealed::Sealed for Writer<'_, T> where T: Storable + 'static {}
 
+#[diagnostic::do_not_recommend]
 impl<'a, T> StoreRequest<'a> for Writer<'a, T>
 where
     T: Storable + 'static,
@@ -316,6 +321,7 @@ macro_rules! impl_request_helper {
 
         #[cfg_attr(docsrs, doc(fake_variadic))]
         /// This trait is implemented for tuples up to seven items long.
+        #[diagnostic::do_not_recommend]
         impl<'a, $t> StoreRequest<'a> for ($t,)
         where
             $t: StoreRequest<'a>,
@@ -334,6 +340,7 @@ macro_rules! impl_request_helper {
         { }
 
         #[cfg_attr(docsrs, doc(hidden))]
+        #[diagnostic::do_not_recommend]
         impl<'a, $($t),*> StoreRequest<'a> for ( $( $t, )* )
         where
             $($t: StoreRequest<'a>),*
@@ -396,6 +403,12 @@ impl IsActorResult for Never {
 /// For a [`Writer`] - [`Reader`] combination, the `Writer` defines the slot, as that is the unique side.
 /// As a consequence, every possible combination must have a side that defines the slot.
 #[doc(hidden)]
+#[diagnostic::on_unimplemented(
+    message = "invalid actor parameter type",
+    label = "this type cannot be used as an actor parameter",
+    note = "only readers or writers provided by the Veecle OS runtime may be used as actor parameters",
+    note = "if this is an initialization parameter, mark it with `#[init_context]`"
+)]
 pub trait DefinesSlot {
     /// The slot cons list for this store request type.
     ///

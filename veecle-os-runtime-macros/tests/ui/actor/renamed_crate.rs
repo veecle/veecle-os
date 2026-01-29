@@ -58,6 +58,10 @@ mod fake_veecle_os_runtime {
         pub struct Cons<T, U>(pub T, pub U);
     }
 
+    pub const fn assert_defines_slot<T: __exports::DefinesSlot>() {}
+
+    pub const fn assert_store_request<'a, T: StoreRequest<'a>>() {}
+
     #[derive(Debug)]
     pub struct Reader<'a, T>(core::marker::PhantomData<(&'a (), fn(&T))>);
 

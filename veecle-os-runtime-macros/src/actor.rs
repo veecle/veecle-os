@@ -8,7 +8,7 @@ use syn::spanned::Spanned;
 use syn::token::Paren;
 use syn::visit::Visit;
 use syn::visit_mut::VisitMut;
-use syn::{Error, FnArg, ItemFn, Lifetime, Meta, Type, TypePath};
+use syn::{Error, FnArg, ItemFn, Lifetime, Meta, TypePath};
 
 /// Parses the arguments inside the `#[actor(...)]` attribute itself.
 pub(crate) struct ActorMeta {
@@ -200,39 +200,7 @@ pub fn impl_actor(
 
                     init_context = Some((argument_name.clone(), typed_argument.ty.clone()));
                 } else {
-                    let type_error = Err(Error::new(
-                        typed_argument.ty.span(),
-                        "only \"Reader\", \"ExclusiveReader\", \"InitializedReader\" and \"Writer\" arguments are allowed",
-                    ));
-
-                    let argument_type = match typed_argument.ty.as_ref() {
-                        Type::Path(argument_type) => argument_type,
-                        Type::Group(syn::TypeGroup { elem, .. }) => match elem.as_ref() {
-                            Type::Path(argument_type) => argument_type,
-                            _ => return type_error,
-                        },
-                        _ => return type_error,
-                    };
-
-                    if argument_type.qself.is_some() {
-                        return type_error;
-                    }
-
-                    let Some(argument_type_name) = argument_type
-                        .path
-                        .segments
-                        .last()
-                        .map(|seg| seg.ident.to_string())
-                    else {
-                        return type_error;
-                    };
-
-                    match argument_type_name.as_str() {
-                        "Reader" | "ExclusiveReader" | "InitializedReader" | "Writer" => {
-                            request.push((argument_name.clone(), argument_type.clone()));
-                        }
-                        _ => return type_error,
-                    }
+                    request.push((argument_name.clone(), typed_argument.ty.clone()));
                 }
             }
         }
@@ -243,8 +211,8 @@ pub fn impl_actor(
     let slots = request
         .iter()
         .map(|(_, ty)| {
-            let mut ty = ty.clone();
-            lifetime_replacer.visit_type_path_mut(&mut ty);
+            let mut ty = (**ty).clone();
+            lifetime_replacer.visit_type_mut(&mut ty);
             ty
         })
         .fold(quote!(#veecle_os_runtime::__exports::Nil), |acc, item| {
@@ -257,8 +225,8 @@ pub fn impl_actor(
         request
             .iter()
             .map(|(_, ty)| {
-                let mut ty = ty.clone();
-                lifetime_replacer.visit_type_path_mut(&mut ty);
+                let mut ty = (**ty).clone();
+                lifetime_replacer.visit_type_mut(&mut ty);
                 ty
             })
             .collect(),
@@ -286,6 +254,20 @@ pub fn impl_actor(
 
     lifetime_replacer.check_errors()?;
 
+    // Generate assert_defines_slot calls for each request parameter
+    let validation_assertions: Vec<proc_macro2::TokenStream> = request
+        .iter()
+        .map(|(_, ty)| {
+            let span = ty.span();
+            let mut ty_with_lifetime = (**ty).clone();
+            lifetime_replacer.visit_type_mut(&mut ty_with_lifetime);
+
+            quote_spanned! {span=>
+                #veecle_os_runtime::assert_defines_slot::<#ty_with_lifetime>();
+            }
+        })
+        .collect();
+
     let return_ty = match &parsed_item.sig.output {
         syn::ReturnType::Default => {
             return Err(Error::new(
@@ -311,6 +293,12 @@ pub fn impl_actor(
                 (#(#phantom_generic_types,)*),
             ),
         }
+
+        const _: () = {
+            fn assert #generics () #where_clause {
+               #(#validation_assertions)*
+            }
+        };
 
         impl #generics #struct_name #generic_args #where_clause {
             #parsed_item
@@ -359,7 +347,7 @@ pub fn impl_actor(
 /// Extracts the argument name removing the mutability.
 ///
 /// `mut bar:Foo` -> `bar`
-fn extract_argument_names(argument_type_pairs: &[(syn::Ident, TypePath)]) -> Vec<syn::Ident> {
+fn extract_argument_names(argument_type_pairs: &[(syn::Ident, Box<syn::Type>)]) -> Vec<syn::Ident> {
     argument_type_pairs
         .iter()
         .map(|(name, _)| name.clone())
@@ -449,7 +437,7 @@ fn make_cons_pattern(names: Vec<syn::Ident>) -> syn::PatTuple {
 }
 
 /// Turns a list of types `[A, B, C]` into a cons-list type `(C, (B, (A, ())))`.
-fn make_cons_type(types: Vec<TypePath>) -> syn::TypeTuple {
+fn make_cons_type(types: Vec<syn::Type>) -> syn::TypeTuple {
     fn type_tuple(elems: impl IntoIterator<Item = syn::Type>) -> syn::TypeTuple {
         syn::TypeTuple {
             paren_token: Paren::default(),
@@ -457,7 +445,7 @@ fn make_cons_type(types: Vec<TypePath>) -> syn::TypeTuple {
         }
     }
 
-    types.into_iter().fold(type_tuple([]), |tuple, ty| {
-        type_tuple([ty.into(), tuple.into()])
-    })
+    types
+        .into_iter()
+        .fold(type_tuple([]), |tuple, ty| type_tuple([ty, tuple.into()]))
 }

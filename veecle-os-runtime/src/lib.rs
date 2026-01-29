@@ -112,6 +112,7 @@ pub use self::actor::{Actor, StoreRequest, actor};
 pub use self::datastore::{
     CombinableReader, CombineReaders, ExclusiveReader, InitializedReader, Reader, Storable, Writer,
 };
+use crate::actor::DefinesSlot;
 
 /// Internal exports for proc-macro and `macro_rules!` purposes.
 #[doc(hidden)]
@@ -140,3 +141,9 @@ impl core::fmt::Display for Never {
 }
 
 impl core::error::Error for Never {}
+
+#[doc(hidden)]
+pub const fn assert_defines_slot<T: DefinesSlot>() {}
+
+#[doc(hidden)]
+pub const fn assert_store_request<'a, T: StoreRequest<'a>>() {}
