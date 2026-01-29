@@ -141,6 +141,12 @@ pub trait Actor<'a> {
 /// This trait is not intended for direct usage by users.
 // Developer notes: This works by using type inference via `Datastore::reader` etc. to request `Reader`s etc. from the
 // `Datastore`.
+#[diagnostic::on_unimplemented(
+    message = "invalid actor parameter type",
+    label = "the function signature contains parameters that are neither init_context nor reader/writers",
+    note = "only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters",
+    note = "parameters passed as initialization context need to be marked with `#[init_context]`"
+)]
 pub trait StoreRequest<'a>: sealed::Sealed {
     /// Requests an instance of `Self` from the [`Datastore`].
     ///
@@ -257,6 +263,7 @@ where
 }
 
 /// Implements a no-op for Actors that do not read or write any values.
+#[diagnostic::do_not_recommend]
 impl<'a> StoreRequest<'a> for () {
     async fn request(_store: Pin<&'a impl Datastore>, _requestor: &'static str) -> Self {}
 }
@@ -316,6 +323,7 @@ macro_rules! impl_request_helper {
 
         #[cfg_attr(docsrs, doc(fake_variadic))]
         /// This trait is implemented for tuples up to seven items long.
+        #[diagnostic::do_not_recommend]
         impl<'a, $t> StoreRequest<'a> for ($t,)
         where
             $t: StoreRequest<'a>,
@@ -334,6 +342,7 @@ macro_rules! impl_request_helper {
         { }
 
         #[cfg_attr(docsrs, doc(hidden))]
+        #[diagnostic::do_not_recommend]
         impl<'a, $($t),*> StoreRequest<'a> for ( $( $t, )* )
         where
             $($t: StoreRequest<'a>),*
@@ -396,6 +405,12 @@ impl IsActorResult for Never {
 /// For a [`Writer`] - [`Reader`] combination, the `Writer` defines the slot, as that is the unique side.
 /// As a consequence, every possible combination must have a side that defines the slot.
 #[doc(hidden)]
+#[diagnostic::on_unimplemented(
+    message = "invalid actor parameter type",
+    label = "the function signature contains parameters that are neither init_context nor reader/writers",
+    note = "only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters",
+    note = "parameters passed as initialization context need to be marked with `#[init_context]`"
+)]
 pub trait DefinesSlot {
     /// The slot cons list for this store request type.
     ///

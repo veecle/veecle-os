@@ -1,23 +1,235 @@
-error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
- --> tests/ui/actor/unexpected_argument.rs:7:18
+error[E0277]: invalid actor parameter type
+ --> tests/ui/actor/unexpected_argument.rs:5:27
   |
-7 |     _unexpected: u32,
-  |                  ^^^
+5 |   async fn macro_test_actor1(
+  |  ___________________________^
+6 | |     _sensor_reader: veecle_os_runtime::Reader<'_, Sensor>,
+7 | |     _unexpected: u32,
+8 | | ) -> veecle_os_runtime::Never {
+  | |_^ the function signature contains parameters that are neither init_context nor reader/writers
+  |
+  = help: the trait `DefinesSlot` is not implemented for `u32`
+  = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
+  = note: parameters passed as initialization context need to be marked with `#[init_context]`
+  = help: the following other types implement trait `DefinesSlot`:
+            ExclusiveReader<'a, T>
+            InitializedReader<'a, T>
+            Reader<'a, T>
+            Writer<'a, T>
 
-error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
-  --> tests/ui/actor/unexpected_argument.rs:13:40
-   |
-13 | async fn macro_test_actor(_unexpected: u32) -> veecle_os_runtime::Never {
-   |                                        ^^^
+error[E0277]: invalid actor parameter type
+ --> tests/ui/actor/unexpected_argument.rs:5:27
+  |
+5 |   async fn macro_test_actor1(
+  |  ___________________________^
+6 | |     _sensor_reader: veecle_os_runtime::Reader<'_, Sensor>,
+7 | |     _unexpected: u32,
+8 | | ) -> veecle_os_runtime::Never {
+  | |_^ the function signature contains parameters that are neither init_context nor reader/writers
+  |
+  = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `(u32, (Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>, ()))`
+  = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
+  = note: parameters passed as initialization context need to be marked with `#[init_context]`
+  = help: the following other types implement trait `StoreRequest<'a>`:
+            ExclusiveReader<'a, T>
+            InitializedReader<'a, T>
+            Reader<'a, T>
+            Writer<'a, T>
+note: required by a bound in `veecle_os_runtime::Actor::StoreRequest`
+ --> $WORKSPACE/veecle-os-runtime/src/actor.rs
+  |
+  |     type StoreRequest: StoreRequest<'a>;
+  |                        ^^^^^^^^^^^^^^^^ required by this bound in `Actor::StoreRequest`
 
-error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
-  --> tests/ui/actor/unexpected_argument.rs:18:40
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:13:27
    |
-18 | async fn macro_test_actor(_unexpected: <Foo as Bar>::Ty) -> veecle_os_runtime::Never {
-   |                                        ^
+13 | async fn macro_test_actor2(_unexpected: u32) -> veecle_os_runtime::Never {
+   |                           ^^^^^^^^^^^^^^^^^^ the function signature contains parameters that are neither init_context nor reader/writers
+   |
+   = help: the trait `DefinesSlot` is not implemented for `u32`
+   = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: parameters passed as initialization context need to be marked with `#[init_context]`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
 
-error: only "Reader", "ExclusiveReader", "InitializedReader" and "Writer" arguments are allowed
-  --> tests/ui/actor/unexpected_argument.rs:23:40
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:13:27
    |
-23 | async fn macro_test_actor(_unexpected: [u32; 0]) -> veecle_os_runtime::Never {
-   |                                        ^^^^^^^^
+13 | async fn macro_test_actor2(_unexpected: u32) -> veecle_os_runtime::Never {
+   |                           ^^^^^^^^^^^^^^^^^^ the function signature contains parameters that are neither init_context nor reader/writers
+   |
+   = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `(u32, ())`
+   = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: parameters passed as initialization context need to be marked with `#[init_context]`
+   = help: the following other types implement trait `StoreRequest<'a>`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+note: required by a bound in `veecle_os_runtime::Actor::StoreRequest`
+  --> $WORKSPACE/veecle-os-runtime/src/actor.rs
+   |
+   |     type StoreRequest: StoreRequest<'a>;
+   |                        ^^^^^^^^^^^^^^^^ required by this bound in `Actor::StoreRequest`
+
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:26:27
+   |
+26 | async fn macro_test_actor3(_unexpected: <Foo as Bar>::Ty) -> veecle_os_runtime::Never {
+   |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the function signature contains parameters that are neither init_context nor reader/writers
+   |
+   = help: the trait `DefinesSlot` is not implemented for `()`
+   = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: parameters passed as initialization context need to be marked with `#[init_context]`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:31:27
+   |
+31 | async fn macro_test_actor4(_unexpected: [u32; 0]) -> veecle_os_runtime::Never {
+   |                           ^^^^^^^^^^^^^^^^^^^^^^^ the function signature contains parameters that are neither init_context nor reader/writers
+   |
+   = help: the trait `DefinesSlot` is not implemented for `[u32; 0]`
+   = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: parameters passed as initialization context need to be marked with `#[init_context]`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:31:27
+   |
+31 | async fn macro_test_actor4(_unexpected: [u32; 0]) -> veecle_os_runtime::Never {
+   |                           ^^^^^^^^^^^^^^^^^^^^^^^ the function signature contains parameters that are neither init_context nor reader/writers
+   |
+   = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `([u32; 0], ())`
+   = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: parameters passed as initialization context need to be marked with `#[init_context]`
+   = help: the following other types implement trait `StoreRequest<'a>`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+note: required by a bound in `veecle_os_runtime::Actor::StoreRequest`
+  --> $WORKSPACE/veecle-os-runtime/src/actor.rs
+   |
+   |     type StoreRequest: StoreRequest<'a>;
+   |                        ^^^^^^^^^^^^^^^^ required by this bound in `Actor::StoreRequest`
+
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:36:27
+   |
+36 |   async fn macro_test_actor5(
+   |  ___________________________^
+37 | |     _unexpected: u32,
+38 | |     _sensor_reader: veecle_os_runtime::Reader<'_, Sensor>,
+39 | | ) -> veecle_os_runtime::Never {
+   | |_^ the function signature contains parameters that are neither init_context nor reader/writers
+   |
+   = help: the trait `DefinesSlot` is not implemented for `u32`
+   = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: parameters passed as initialization context need to be marked with `#[init_context]`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:36:27
+   |
+36 |   async fn macro_test_actor5(
+   |  ___________________________^
+37 | |     _unexpected: u32,
+38 | |     _sensor_reader: veecle_os_runtime::Reader<'_, Sensor>,
+39 | | ) -> veecle_os_runtime::Never {
+   | |_^ the function signature contains parameters that are neither init_context nor reader/writers
+   |
+   = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `(Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>, (u32, ()))`
+   = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: parameters passed as initialization context need to be marked with `#[init_context]`
+   = help: the following other types implement trait `StoreRequest<'a>`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+note: required by a bound in `veecle_os_runtime::Actor::StoreRequest`
+  --> $WORKSPACE/veecle-os-runtime/src/actor.rs
+   |
+   |     type StoreRequest: StoreRequest<'a>;
+   |                        ^^^^^^^^^^^^^^^^ required by this bound in `Actor::StoreRequest`
+
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:44:27
+   |
+44 |   async fn macro_test_actor6(
+   |  ___________________________^
+45 | |     _unexpected: u32,
+46 | |     _sensor_reader: veecle_os_runtime::Reader<'_, Sensor>,
+47 | |     _unexpected1: usize,
+48 | | ) -> veecle_os_runtime::Never {
+   | |_^ the function signature contains parameters that are neither init_context nor reader/writers
+   |
+   = help: the trait `DefinesSlot` is not implemented for `usize`
+   = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: parameters passed as initialization context need to be marked with `#[init_context]`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:44:27
+   |
+44 |   async fn macro_test_actor6(
+   |  ___________________________^
+45 | |     _unexpected: u32,
+46 | |     _sensor_reader: veecle_os_runtime::Reader<'_, Sensor>,
+47 | |     _unexpected1: usize,
+48 | | ) -> veecle_os_runtime::Never {
+   | |_^ the function signature contains parameters that are neither init_context nor reader/writers
+   |
+   = help: the trait `DefinesSlot` is not implemented for `u32`
+   = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: parameters passed as initialization context need to be marked with `#[init_context]`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+
+error[E0277]: invalid actor parameter type
+  --> tests/ui/actor/unexpected_argument.rs:44:27
+   |
+44 |   async fn macro_test_actor6(
+   |  ___________________________^
+45 | |     _unexpected: u32,
+46 | |     _sensor_reader: veecle_os_runtime::Reader<'_, Sensor>,
+47 | |     _unexpected1: usize,
+48 | | ) -> veecle_os_runtime::Never {
+   | |_^ the function signature contains parameters that are neither init_context nor reader/writers
+   |
+   = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `(usize, (Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>, (u32, ())))`
+   = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
+   = note: parameters passed as initialization context need to be marked with `#[init_context]`
+   = help: the following other types implement trait `StoreRequest<'a>`:
+             ExclusiveReader<'a, T>
+             InitializedReader<'a, T>
+             Reader<'a, T>
+             Writer<'a, T>
+note: required by a bound in `veecle_os_runtime::Actor::StoreRequest`
+  --> $WORKSPACE/veecle-os-runtime/src/actor.rs
+   |
+   |     type StoreRequest: StoreRequest<'a>;
+   |                        ^^^^^^^^^^^^^^^^ required by this bound in `Actor::StoreRequest`

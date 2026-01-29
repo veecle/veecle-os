@@ -99,7 +99,8 @@ pub fn impl_actor(
         &parsed_item.sig.ident.to_string().to_upper_camel_case(),
         function_name.span(),
     );
-    let mut request = vec![];
+    let mut request_names = vec![];
+    let mut request_types = vec![];
     let mut argument_names = vec![];
     let mut init_context = None;
 
@@ -198,71 +199,38 @@ pub fn impl_actor(
                         ));
                     }
 
-                    init_context = Some((argument_name.clone(), typed_argument.ty.clone()));
+                    init_context = Some((argument_name.clone(), (*typed_argument.ty).clone()));
                 } else {
-                    let type_error = Err(Error::new(
-                        typed_argument.ty.span(),
-                        "only \"Reader\", \"ExclusiveReader\", \"InitializedReader\" and \"Writer\" arguments are allowed",
-                    ));
-
-                    let argument_type = match typed_argument.ty.as_ref() {
-                        Type::Path(argument_type) => argument_type,
-                        Type::Group(syn::TypeGroup { elem, .. }) => match elem.as_ref() {
-                            Type::Path(argument_type) => argument_type,
-                            _ => return type_error,
-                        },
-                        _ => return type_error,
-                    };
-
-                    if argument_type.qself.is_some() {
-                        return type_error;
-                    }
-
-                    let Some(argument_type_name) = argument_type
-                        .path
-                        .segments
-                        .last()
-                        .map(|seg| seg.ident.to_string())
-                    else {
-                        return type_error;
-                    };
-
-                    match argument_type_name.as_str() {
-                        "Reader" | "ExclusiveReader" | "InitializedReader" | "Writer" => {
-                            request.push((argument_name.clone(), argument_type.clone()));
-                        }
-                        _ => return type_error,
-                    }
+                    request_names.push(argument_name.clone());
+                    request_types.push((*typed_argument.ty).clone());
                 }
             }
         }
     }
-
+    let params_span = parsed_item.sig.paren_token.span.join();
     let mut lifetime_replacer = ReplaceAnonymousLifetimeWith::new(actor_lifetime.clone());
 
-    let slots = request
+    let request_argument_types: Vec<_> = request_types
         .iter()
-        .map(|(_, ty)| {
-            let mut ty = ty.clone();
-            lifetime_replacer.visit_type_path_mut(&mut ty);
+        .cloned()
+        .map(|mut ty| {
+            lifetime_replacer.visit_type_mut(&mut ty);
             ty
         })
-        .fold(quote!(#veecle_os_runtime::__exports::Nil), |acc, item| {
-            quote! {
+        .collect();
+
+    let slots = request_argument_types.iter().fold(
+        quote!(#veecle_os_runtime::__exports::Nil),
+        |acc, item| {
+            quote_spanned! {params_span =>
                 <<#item as #veecle_os_runtime::__exports::DefinesSlot>::Slot as #veecle_os_runtime::__exports::AppendCons<#acc>>::Result
             }
-        });
-    let request_argument_names = make_cons_pattern(extract_argument_names(&request));
-    let request_argument_types_struct = make_cons_type(
-        request
-            .iter()
-            .map(|(_, ty)| {
-                let mut ty = ty.clone();
-                lifetime_replacer.visit_type_path_mut(&mut ty);
-                ty
-            })
-            .collect(),
+        },
     );
+    let request_argument_names = make_cons_pattern(request_names);
+
+    let request_argument_types_struct =
+        make_cons_type(request_argument_types.iter().cloned(), params_span);
 
     let phantom_generic_types: Vec<TypePath> = unused_generics
         .types
@@ -277,8 +245,7 @@ pub fn impl_actor(
     // Even if there was no `#[init_context]` argument, we still declare a unit field for it and destructure it, but
     // it's not in `argument_names` so we won't pass it on to the function.
     let (context_name, context_ty) = init_context
-        .map(|(name, ty)| {
-            let mut ty = (*ty).clone();
+        .map(|(name, mut ty)| {
             lifetime_replacer.visit_type_mut(&mut ty);
             (name.clone(), ty)
         })
@@ -317,11 +284,11 @@ pub fn impl_actor(
         }
 
         impl #generics #veecle_os_runtime::Actor<#actor_lifetime> for #struct_name #generic_args #where_clause {
+            // Slots must be listed first to improve error messages for non-reader/writer types.
+            type Slots = #slots;
             type StoreRequest = #request_argument_types_struct;
             type InitContext = #context_ty;
             type Error = #error_ty;
-
-            type Slots = #slots;
 
             fn new(
                 request: Self::StoreRequest,
@@ -354,16 +321,6 @@ pub fn impl_actor(
     };
 
     Ok(expanded)
-}
-
-/// Extracts the argument name removing the mutability.
-///
-/// `mut bar:Foo` -> `bar`
-fn extract_argument_names(argument_type_pairs: &[(syn::Ident, TypePath)]) -> Vec<syn::Ident> {
-    argument_type_pairs
-        .iter()
-        .map(|(name, _)| name.clone())
-        .collect()
 }
 
 /// A [`VisitMut`] implementer that replaces anonymous lifetimes with a specific lifetime, while checking that only
@@ -449,15 +406,20 @@ fn make_cons_pattern(names: Vec<syn::Ident>) -> syn::PatTuple {
 }
 
 /// Turns a list of types `[A, B, C]` into a cons-list type `(C, (B, (A, ())))`.
-fn make_cons_type(types: Vec<TypePath>) -> syn::TypeTuple {
-    fn type_tuple(elems: impl IntoIterator<Item = syn::Type>) -> syn::TypeTuple {
+///
+/// The `outer_span` is used to provide span information for the tuple.
+fn make_cons_type(types: impl IntoIterator<Item = Type>, outer_span: Span) -> syn::TypeTuple {
+    let mut result = types.into_iter().fold(
         syn::TypeTuple {
             paren_token: Paren::default(),
-            elems: Punctuated::from_iter(elems),
-        }
-    }
+            elems: Punctuated::new(),
+        },
+        |tuple, ty| syn::TypeTuple {
+            paren_token: Paren::default(),
+            elems: Punctuated::from_iter([ty, tuple.into()]),
+        },
+    );
 
-    types.into_iter().fold(type_tuple([]), |tuple, ty| {
-        type_tuple([ty.into(), tuple.into()])
-    })
+    result.paren_token = Paren(outer_span);
+    result
 }
