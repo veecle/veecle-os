@@ -102,8 +102,8 @@ poll-promise = { version = "0.3.0", default-features = false }
 pretty_assertions = { version = "1.4.1", default-features = false }
 prettyplease = { version = "0.2.37", default-features = false }
 proc-macro-crate = { version = "3.4.0", default-features = false }
-proc-macro2 = { version = "1.0.105", default-features = false }
-quote = { version = "1.0.43", default-features = false }
+proc-macro2 = { version = "1.0.106", default-features = false }
+quote = { version = "1.0.44", default-features = false }
 rand = { version = "0.9.2", default-features = false }
 re_log = { version = "0.28.2", default-features = false }
 rfd = { version = "0.17.1", default-features = false }
@@ -118,7 +118,7 @@ serde_json = { version = "1.0.149", default-features = false }
 serial_test = { version = "3.2.0", default-features = false }
 sha2 = { version = "0.10.8", default-features = false }
 signal-hook = { version = "0.4.1", default-features = false }
-socket2 = { version = "0.6.1", default-features = false }
+socket2 = { version = "0.6.2", default-features = false }
 someip-test-service = { path = "someip-test-service", version = "0.1.0", default-features = false }
 someip-test-service-macro = { path = "someip-test-service-macro", version = "0.1.0", default-features = false }
 someip-test-service-sys = { path = "someip-test-service-sys", version = "0.1.0", default-features = false }
