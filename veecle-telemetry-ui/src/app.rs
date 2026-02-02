@@ -52,7 +52,7 @@ pub struct VeecleTelemetryApp {
     connection_error: bool,
 
     /// Listens to the local text log stream
-    text_log_rx: std::sync::mpsc::Receiver<re_log::LogMsg>,
+    text_log_rx: re_log::Receiver<re_log::LogMsg>,
     toasts: Toasts,
 
     command_receiver: CommandReceiver,
