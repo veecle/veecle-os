@@ -1,6 +1,7 @@
 use serde::Serialize;
 use veecle_ipc_protocol::EncodedStorable;
-use veecle_os_runtime::{Never, Reader, Storable};
+use veecle_os_runtime::single_writer::Reader;
+use veecle_os_runtime::{Never, Storable};
 
 use crate::{Connector, SendPolicy};
 

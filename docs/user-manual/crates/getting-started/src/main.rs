@@ -3,7 +3,8 @@
 //! Getting started example.
 use core::fmt::Debug;
 
-use veecle_os::runtime::{Never, Reader, Storable, Writer};
+use veecle_os::runtime::single_writer::{Reader, Writer};
+use veecle_os::runtime::{Never, Storable};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Value;

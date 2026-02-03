@@ -13,7 +13,7 @@ use generic_array::{ArrayLength, GenericArray};
 use typenum::operator_aliases::{Quot, Sum};
 use typenum::{Const, ToUInt, U};
 
-use crate::datastore::generational;
+use crate::datastore::sync::generational;
 
 type UsizeBits = U<{ usize::BITS as usize }>;
 type UsizeBitsMinusOne = typenum::operator_aliases::Sub1<UsizeBits>;
@@ -386,7 +386,7 @@ mod tests {
     use std::vec::Vec;
 
     use super::{BitWaker, Executor, ExecutorShared, WakerShared, get_active_index_and_mask};
-    use crate::datastore::generational;
+    use crate::datastore::sync::generational;
 
     const TWO_WORDS: usize = usize::BITS as usize * 2;
 

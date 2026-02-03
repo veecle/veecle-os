@@ -11,7 +11,7 @@ mod storable;
 /// [`Actor`]: https://docs.rs/veecle-os/latest/veecle_os/runtime/trait.Actor.html
 ///
 /// ```rust
-/// use veecle_os_runtime::{Reader, Writer};
+/// use veecle_os_runtime::single_writer::{Reader, Writer};
 /// # use veecle_os_runtime::{Never, Storable};
 /// #
 /// # #[derive(Debug, PartialEq, Clone, Default, Storable)]
@@ -40,7 +40,7 @@ mod storable;
 /// ```rust
 /// extern crate veecle_os_runtime as my_veecle_os_runtime;
 ///
-/// use my_veecle_os_runtime::{Reader, Writer};
+/// use my_veecle_os_runtime::single_writer::{Reader, Writer};
 /// # use my_veecle_os_runtime::{Never, Storable};
 /// #
 /// # #[derive(Debug, PartialEq, Clone, Default, Storable)]

@@ -6,7 +6,8 @@
 /// Any store lifetimes in the `validation` argument should use `'_` as a placeholder.
 ///
 /// ```rust
-/// use veecle_os::runtime::{Never, Reader, Writer, Storable};
+/// use veecle_os::runtime::single_writer::{Reader, Writer};
+/// use veecle_os::runtime::{Never, Storable};
 ///
 /// #[derive(Clone, Copy, Debug, Eq, PartialEq, Storable)]
 /// pub struct Data(u32);

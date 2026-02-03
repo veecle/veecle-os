@@ -1,16 +1,9 @@
 //! Smallest unit of work within a runtime instance.
-use core::pin::Pin;
 
-use crate::Never;
-use crate::cons::{Cons, Nil};
-use crate::datastore::{ExclusiveReader, Reader, SlotTrait, Storable, Writer};
-use crate::datastore::{Slot, generational};
+pub use crate::datastore::StoreRequest;
+use crate::{Never, Sealed};
 #[doc(inline)]
 pub use veecle_os_runtime_macros::actor;
-
-mod sealed {
-    pub trait Sealed {}
-}
 
 /// Actor interface.
 ///
@@ -39,7 +32,8 @@ mod sealed {
 /// ```rust
 /// # use std::fmt::Debug;
 /// #
-/// # use veecle_os_runtime::{Never, Storable, Reader, Writer};
+/// # use veecle_os_runtime::single_writer::{Reader, Writer};
+/// # use veecle_os_runtime::{Never, Storable};
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
@@ -70,7 +64,8 @@ mod sealed {
 /// ```rust
 /// # use std::fmt::Debug;
 /// #
-/// # use veecle_os_runtime::{Never, Storable, Reader, Writer, Actor};
+/// # use veecle_os_runtime::single_writer::{Reader, Writer};
+/// # use veecle_os_runtime::{Never, Storable, Actor};
 /// # use veecle_os_runtime::__exports::{AppendCons, DefinesSlot};
 /// #
 /// # #[derive(Debug, Default, Storable)]
@@ -109,7 +104,10 @@ mod sealed {
 /// }
 /// ```
 pub trait Actor<'a> {
-    /// [`Reader`]s and [`Writer`]s this actor requires.
+    /// Readers and writers this actor requires.
+    ///
+    /// See [`single_writer`][crate::single_writer] for a slot implementation with one writer and
+    /// multiple readers.
     type StoreRequest: StoreRequest<'a>;
 
     /// Context that needs to be passed to the actor at initialisation.
@@ -136,211 +134,13 @@ pub trait Actor<'a> {
     fn run(self) -> impl core::future::Future<Output = Result<Never, Self::Error>>;
 }
 
-/// Allows requesting a (nearly) arbitrary amount of [`Reader`]s and [`Writer`]s in an [`Actor`].
-///
-/// This trait is not intended for direct usage by users.
-// Developer notes: This works by using type inference via `Datastore::reader` etc. to request `Reader`s etc. from the
-// `Datastore`.
-#[diagnostic::on_unimplemented(
-    message = "invalid actor parameter type",
-    label = "the function signature contains parameters that are neither init_context nor reader/writers",
-    note = "only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters",
-    note = "parameters passed as initialization context need to be marked with `#[init_context]`"
-)]
-pub trait StoreRequest<'a>: sealed::Sealed {
-    /// Requests an instance of `Self` from the [`Datastore`].
-    ///
-    /// # Panics
-    ///
-    /// * If there is no [`Slot`] for one of the types in `Self` in the [`Datastore`].
-    ///
-    /// `requestor` will be included in the panic message for context.
-    #[doc(hidden)]
-    #[allow(async_fn_in_trait, reason = "it's actually private so it's fine")]
-    async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self;
-}
-
-impl sealed::Sealed for () {}
-
-#[doc(hidden)]
-/// Internal trait to abstract out type-erased and concrete data stores.
-pub trait Datastore {
-    /// Returns a generational source tracking the global datastore generation.
-    ///
-    /// This is used to ensure that every reader has had (or will have) a chance to read a value before a writer may
-    /// overwrite it.
-    fn source(self: Pin<&Self>) -> Pin<&generational::Source>;
-
-    /// Returns a reference to a slot of a specific type.
-    ///
-    /// # Panics
-    ///
-    /// If there is no slot of type `S` in the datastore.
-    ///
-    /// `requestor` will be included in the panic message for context.
-    #[expect(private_bounds, reason = "the methods are internal")]
-    fn slot<S>(self: Pin<&Self>, requestor: &'static str) -> Pin<&S>
-    where
-        S: SlotTrait;
-}
-
-pub(crate) trait DatastoreExt<'a>: Copy {
-    /// Returns the [`Reader`] for a specific slot.
-    ///
-    /// # Panics
-    ///
-    /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    ///
-    /// `requestor` will be included in the panic message for context.
-    fn reader<T>(self, requestor: &'static str) -> Reader<'a, T>
-    where
-        T: Storable + 'static;
-
-    /// Returns the [`ExclusiveReader`] for a specific slot.
-    ///
-    /// Exclusivity of the reader is not guaranteed by this method and must be ensured via other means (e.g.
-    /// [`crate::execute::make_store_and_validate`]).
-    ///
-    /// # Panics
-    ///
-    /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    ///
-    /// `requestor` will be included in the panic message for context.
-    fn exclusive_reader<T>(self, requestor: &'static str) -> ExclusiveReader<'a, T>
-    where
-        T: Storable + 'static;
-
-    /// Returns the [`Writer`] for a specific slot.
-    ///
-    /// # Panics
-    ///
-    /// * If the [`Writer`] for this slot has already been acquired.
-    ///
-    /// * If there is no [`Slot`] for `T` in the [`Datastore`].
-    ///
-    /// `requestor` will be included in the panic message for context.
-    fn writer<T>(self, requestor: &'static str) -> Writer<'a, T>
-    where
-        T: Storable + 'static;
-}
-
-impl<'a, S> DatastoreExt<'a> for Pin<&'a S>
-where
-    S: Datastore,
-{
-    fn reader<T>(self, requestor: &'static str) -> Reader<'a, T>
-    where
-        T: Storable + 'static,
-    {
-        Reader::from_slot(self.slot::<Slot<T>>(requestor))
-    }
-
-    fn exclusive_reader<T>(self, requestor: &'static str) -> ExclusiveReader<'a, T>
-    where
-        T: Storable + 'static,
-    {
-        ExclusiveReader::from_slot(self.slot::<Slot<T>>(requestor))
-    }
-
-    fn writer<T>(self, requestor: &'static str) -> Writer<'a, T>
-    where
-        T: Storable + 'static,
-    {
-        Writer::new(self.source().waiter(), self.slot::<Slot<T>>(requestor))
-    }
-}
-
-/// Implements a no-op for Actors that do not read or write any values.
-#[diagnostic::do_not_recommend]
-impl<'a> StoreRequest<'a> for () {
-    async fn request(_store: Pin<&'a impl Datastore>, _requestor: &'static str) -> Self {}
-}
-
-impl<T> sealed::Sealed for Reader<'_, T> where T: Storable + 'static {}
-
-impl<'a, T> StoreRequest<'a> for Reader<'a, T>
-where
-    T: Storable + 'static,
-{
-    async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self {
-        datastore.reader(requestor)
-    }
-}
-
-impl<T> sealed::Sealed for ExclusiveReader<'_, T> where T: Storable + 'static {}
-
-impl<'a, T> StoreRequest<'a> for ExclusiveReader<'a, T>
-where
-    T: Storable + 'static,
-{
-    async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self {
-        datastore.exclusive_reader(requestor)
-    }
-}
-impl<T> sealed::Sealed for Writer<'_, T> where T: Storable + 'static {}
-
-impl<'a, T> StoreRequest<'a> for Writer<'a, T>
-where
-    T: Storable + 'static,
-{
-    async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self {
-        datastore.writer(requestor)
-    }
-}
-
-/// Implements [`StoreRequest`] for provided types.
-macro_rules! impl_request_helper {
-    ($t:ident) => {
-        #[cfg_attr(docsrs, doc(fake_variadic))]
-        /// This trait is implemented for tuples up to seven items long.
-        impl<'a, $t> sealed::Sealed for ($t,) { }
-
-        #[cfg_attr(docsrs, doc(fake_variadic))]
-        /// This trait is implemented for tuples up to seven items long.
-        #[diagnostic::do_not_recommend]
-        impl<'a, $t> StoreRequest<'a> for ($t,)
-        where
-            $t: StoreRequest<'a>,
-        {
-            async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self {
-                (<$t as StoreRequest>::request(datastore, requestor).await,)
-            }
-        }
-    };
-
-    (@impl $($t:ident)*) => {
-        #[cfg_attr(docsrs, doc(hidden))]
-        impl<'a, $($t),*> sealed::Sealed for ( $( $t, )* )
-        where
-            $($t: sealed::Sealed),*
-        { }
-
-        #[cfg_attr(docsrs, doc(hidden))]
-        #[diagnostic::do_not_recommend]
-        impl<'a, $($t),*> StoreRequest<'a> for ( $( $t, )* )
-        where
-            $($t: StoreRequest<'a>),*
-        {
-            async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self {
-                futures::join!($( <$t as StoreRequest>::request(datastore, requestor), )*)
-            }
-        }
-    };
-
-    ($head:ident $($rest:ident)*) => {
-        impl_request_helper!(@impl $head $($rest)*);
-        impl_request_helper!($($rest)*);
-    };
-}
-
-impl_request_helper!(Z Y X W V U T);
-
 /// Macro helper to allow actors to return either a [`Result`] type or [`Never`] (and eventually [`!`]).
 #[diagnostic::on_unimplemented(
     message = "#[veecle_os_runtime::actor] functions should return either a `Result<Never, _>` or `Never`",
     label = "not a valid actor return type"
 )]
-pub trait IsActorResult: sealed::Sealed {
+#[expect(private_bounds, reason = "Sealed trait")]
+pub trait IsActorResult: Sealed {
     /// The error type this result converts into.
     type Error;
 
@@ -348,7 +148,7 @@ pub trait IsActorResult: sealed::Sealed {
     fn into_result(self) -> Result<Never, Self::Error>;
 }
 
-impl<E> sealed::Sealed for Result<Never, E> {}
+impl<E> Sealed for Result<Never, E> {}
 
 impl<E> IsActorResult for Result<Never, E> {
     type Error = E;
@@ -358,7 +158,7 @@ impl<E> IsActorResult for Result<Never, E> {
     }
 }
 
-impl sealed::Sealed for Never {}
+impl Sealed for Never {}
 
 impl IsActorResult for Never {
     type Error = Never;
@@ -366,44 +166,4 @@ impl IsActorResult for Never {
     fn into_result(self) -> Result<Never, Self::Error> {
         match self {}
     }
-}
-
-/// Determines whether a reader/writer defines a slot.
-///
-/// A slot is defined by one side of a reader/writer combo.
-/// For a [`Writer`] - [`Reader`] combination, the `Writer` defines the slot, as that is the unique side.
-/// As a consequence, every possible combination must have a side that defines the slot.
-#[doc(hidden)]
-#[diagnostic::on_unimplemented(
-    message = "invalid actor parameter type",
-    label = "the function signature contains parameters that are neither init_context nor reader/writers",
-    note = "only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters",
-    note = "parameters passed as initialization context need to be marked with `#[init_context]`"
-)]
-pub trait DefinesSlot {
-    /// The slot cons list for this store request type.
-    ///
-    /// Returns [`Nil`] for readers or `Cons<Slot<T>, Nil>` for writers.
-    type Slot;
-}
-
-impl<'a, T> DefinesSlot for Writer<'a, T>
-where
-    T: Storable,
-{
-    type Slot = Cons<Slot<T>, Nil>;
-}
-
-impl<'a, T> DefinesSlot for Reader<'a, T>
-where
-    T: Storable,
-{
-    type Slot = Nil;
-}
-
-impl<'a, T> DefinesSlot for ExclusiveReader<'a, T>
-where
-    T: Storable,
-{
-    type Slot = Nil;
 }

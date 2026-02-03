@@ -1,58 +1,114 @@
 //! Central communication hub for [`Actor`]s.
 //!
-//! Actors access data through [`Reader`]s and [`Writer`]s.
+//! Actors access data through readers and writers provided by slot implementations.
+//! See the [`single_writer`] module for a slot implementation with one writer and multiple readers.
 //!
-//! [`Actor`]:crate::actor::Actor
+//! [`Actor`]: crate::actor::Actor
 
-mod combined_readers;
-mod exclusive_reader;
-pub(crate) mod generational;
-mod reader;
+mod combine_readers;
+pub mod single_writer;
 mod slot;
-mod writer;
+mod storable;
+mod store_request;
+pub(crate) mod sync;
 
-pub use self::combined_readers::{CombinableReader, CombineReaders};
-pub use self::exclusive_reader::ExclusiveReader;
-pub use self::reader::Reader;
-pub use self::slot::Storable;
-pub(crate) use self::slot::{Slot, SlotTrait};
-pub use self::writer::Writer;
+pub use self::combine_readers::{CombinableReader, CombineReaders};
+pub use self::slot::DefinesSlot;
+pub(crate) use self::slot::{SlotTrait, format_types};
+pub use self::storable::Storable;
+pub use self::store_request::StoreRequest;
+#[doc(inline)]
+pub use veecle_os_runtime_macros::Storable;
 
-/// Returns a type that will write the given list of types out comma separated with backtick
-/// quoting, or `nothing` if it is empty.
-///
-/// ```text
-/// [] => "nothing"
-/// ["A"] => "`A`"
-/// ["A", "B"] => "`A`, `B`"
-/// ["A", "B", "C"] => "`A`, `B`, `C`"
-/// ```
-pub(crate) fn format_types(
-    types: impl IntoIterator<Item = &'static str>,
-) -> impl core::fmt::Display {
-    struct Helper<T>(core::cell::RefCell<T>);
+use crate::datastore::sync::generational;
+use crate::single_writer::{ExclusiveReader, Reader, Slot, Writer};
 
-    impl<T> core::fmt::Display for Helper<T>
+use core::pin::Pin;
+
+#[doc(hidden)]
+/// Internal trait to abstract out type-erased and concrete data stores.
+pub trait Datastore {
+    /// Returns a generational source tracking the global datastore generation.
+    ///
+    /// This is used to ensure that every reader has had (or will have) a chance to read a value before a writer may
+    /// overwrite it.
+    fn source(self: Pin<&Self>) -> Pin<&generational::Source>;
+
+    /// Returns a reference to a slot of a specific type.
+    ///
+    /// # Panics
+    ///
+    /// If there is no slot of type `S` in the datastore.
+    ///
+    /// `requestor` will be included in the panic message for context.
+    #[expect(private_bounds, reason = "the methods are internal")]
+    fn slot<S>(self: Pin<&Self>, requestor: &'static str) -> Pin<&S>
     where
-        T: Iterator<Item = &'static str>,
+        S: SlotTrait;
+}
+
+pub(crate) trait DatastoreExt<'a>: Copy {
+    /// Returns the [`Reader`] for a specific slot.
+    ///
+    /// # Panics
+    ///
+    /// * If there is no [`Slot`] for `T` in the [`Datastore`].
+    ///
+    /// `requestor` will be included in the panic message for context.
+    fn reader<T>(self, requestor: &'static str) -> Reader<'a, T>
+    where
+        T: Storable + 'static;
+
+    /// Returns the [`ExclusiveReader`] for a specific slot.
+    ///
+    /// Exclusivity of the reader is not guaranteed by this method and must be ensured via other means (e.g.
+    /// [`crate::execute::make_store_and_validate`]).
+    ///
+    /// # Panics
+    ///
+    /// * If there is no [`Slot`] for `T` in the [`Datastore`].
+    ///
+    /// `requestor` will be included in the panic message for context.
+    fn exclusive_reader<T>(self, requestor: &'static str) -> ExclusiveReader<'a, T>
+    where
+        T: Storable + 'static;
+
+    /// Returns the [`Writer`] for a specific slot.
+    ///
+    /// # Panics
+    ///
+    /// * If the [`Writer`] for this slot has already been acquired.
+    ///
+    /// * If there is no [`Slot`] for `T` in the [`Datastore`].
+    ///
+    /// `requestor` will be included in the panic message for context.
+    fn writer<T>(self, requestor: &'static str) -> Writer<'a, T>
+    where
+        T: Storable + 'static;
+}
+
+impl<'a, S> DatastoreExt<'a> for Pin<&'a S>
+where
+    S: Datastore,
+{
+    fn reader<T>(self, requestor: &'static str) -> Reader<'a, T>
+    where
+        T: Storable + 'static,
     {
-        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-            let mut iter = self.0.borrow_mut();
-            if let Some(first) = iter.next() {
-                f.write_str("`")?;
-                f.write_str(first)?;
-                f.write_str("`")?;
-                for next in &mut *iter {
-                    f.write_str(", `")?;
-                    f.write_str(next)?;
-                    f.write_str("`")?;
-                }
-            } else {
-                f.write_str("nothing")?;
-            }
-            Ok(())
-        }
+        Reader::from_slot(self.slot::<Slot<T>>(requestor))
     }
 
-    Helper(core::cell::RefCell::new(types.into_iter()))
+    fn exclusive_reader<T>(self, requestor: &'static str) -> ExclusiveReader<'a, T>
+    where
+        T: Storable + 'static,
+    {
+        ExclusiveReader::from_slot(self.slot::<Slot<T>>(requestor))
+    }
+
+    fn writer<T>(self, requestor: &'static str) -> Writer<'a, T>
+    where
+        T: Storable + 'static,
+    {
+        Writer::new(self.source().waiter(), self.slot::<Slot<T>>(requestor))
+    }
 }

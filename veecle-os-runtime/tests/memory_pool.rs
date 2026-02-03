@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::task::Poll;
 use veecle_os_runtime::Storable;
 use veecle_os_runtime::memory_pool::{Chunk, MemoryPool};
-use veecle_os_runtime::{ExclusiveReader, Writer};
+use veecle_os_runtime::single_writer::{ExclusiveReader, Writer};
 
 #[test]
 fn memory_pool() {

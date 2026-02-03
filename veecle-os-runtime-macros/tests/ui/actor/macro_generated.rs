@@ -10,10 +10,10 @@ macro_rules! make_actor {
     () => {
         #[$crate::veecle_os_runtime_macros::actor]
         async fn macro_test_actor(
-            _sensor_reader: $crate::veecle_os_runtime::Reader<'_, Sensor>,
-            _sensor1_reader_exlc: $crate::veecle_os_runtime::ExclusiveReader<'_, Sensor1>,
-            _sensor_writer: $crate::veecle_os_runtime::Writer<'_, Sensor>,
-            _sensor1_writer: $crate::veecle_os_runtime::Writer<'_, Sensor1>,
+            _sensor_reader: $crate::veecle_os_runtime::single_writer::Reader<'_, Sensor>,
+            _sensor1_reader_exlc: $crate::veecle_os_runtime::single_writer::ExclusiveReader<'_, Sensor1>,
+            _sensor_writer: $crate::veecle_os_runtime::single_writer::Writer<'_, Sensor>,
+            _sensor1_writer: $crate::veecle_os_runtime::single_writer::Writer<'_, Sensor1>,
         ) -> veecle_os_runtime::Never {
             unreachable!("We only care about the code compiling.");
         }

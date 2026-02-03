@@ -55,7 +55,7 @@ See the [`veecle_os::runtime::Storable`][`trait@veecle_os::runtime::Storable`] d
 You can implement actors in multiple ways.
 This example uses the [`actor` macro][`attr@veecle_os::runtime::actor`], that defines an actor from a Rust function.
 
-In this example, the actors use [`Reader`s][`struct@veecle_os::runtime::Reader`] and [`Writer`s][`struct@veecle_os::runtime::Writer`] to communicate with other actors.
+In this example, the actors use [`Reader`s][`struct@veecle_os::runtime::single_writer::Reader`] and [`Writer`s][`struct@veecle_os::runtime::single_writer::Writer`] to communicate with other actors.
 
 Copy the following actors into `src/main.rs`:
 

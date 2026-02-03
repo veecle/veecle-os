@@ -16,7 +16,8 @@
 //! # Example
 //!
 //! ```
-//! use veecle_os_runtime::{ExclusiveReader, Never, Writer};
+//! use veecle_os_runtime::single_writer::{ExclusiveReader, Writer};
+//! use veecle_os_runtime::Never;
 //! use veecle_os_runtime::memory_pool::{Chunk, MemoryPool};
 //! use veecle_os_runtime::Storable;
 //!

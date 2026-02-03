@@ -23,7 +23,7 @@ macro_rules! make_test {
         #[veecle_os_runtime::actor]
         async fn read_and_discard_all(
             $(
-                $ident: veecle_os_runtime::Reader<'_, data::$ident>,
+                $ident: veecle_os_runtime::single_writer::Reader<'_, data::$ident>,
             )*
         ) -> veecle_os_runtime::Never {
             panic!("test completed");
@@ -32,7 +32,7 @@ macro_rules! make_test {
         #[veecle_os_runtime::actor]
         async fn write_all_never(
             $(
-                $ident: veecle_os_runtime::Writer<'_, data::$ident>,
+                $ident: veecle_os_runtime::single_writer::Writer<'_, data::$ident>,
             )*
         ) -> veecle_os_runtime::Never {
             panic!("test completed");

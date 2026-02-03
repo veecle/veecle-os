@@ -15,10 +15,10 @@ pub enum Sensor1 {
 
 #[veecle_os_runtime_macros::actor]
 async fn macro_test_actor(
-    _sensor0_reader: veecle_os_runtime::Reader<'_, Sensor0>,
-    _sensor0_writer: veecle_os_runtime::Writer<'_, Sensor0>,
-    _sensor1_reader: veecle_os_runtime::Reader<'_, Sensor1>,
-    _sensor1_writer: veecle_os_runtime::Writer<'_, Sensor1>,
+    _sensor0_reader: veecle_os_runtime::single_writer::Reader<'_, Sensor0>,
+    _sensor0_writer: veecle_os_runtime::single_writer::Writer<'_, Sensor0>,
+    _sensor1_reader: veecle_os_runtime::single_writer::Reader<'_, Sensor1>,
+    _sensor1_writer: veecle_os_runtime::single_writer::Writer<'_, Sensor1>,
 ) -> veecle_os_runtime::Never {
     unreachable!("We only care about the code compiling.");
 }

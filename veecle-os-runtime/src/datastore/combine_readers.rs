@@ -1,11 +1,15 @@
+//! Traits for combining multiple readers into a single logical reader.
+
+use crate::Sealed;
+use core::cell::Ref;
 use core::future::{Future, poll_fn};
 use core::pin::pin;
 use core::task::Poll;
 
 /// Allows combining (nearly) arbitrary amounts of [`Reader`]s or [`ExclusiveReader`]s.
 ///
-/// [`ExclusiveReader`]: super::ExclusiveReader
-/// [`Reader`]: super::Reader
+/// [`ExclusiveReader`]: crate::datastore::single_writer::ExclusiveReader
+/// [`Reader`]: crate::datastore::single_writer::Reader
 pub trait CombineReaders {
     /// The (tuple) value that will be read from the combined readers.
     type ToBeRead<'b>;
@@ -25,8 +29,6 @@ pub trait CombineReaders {
     fn is_updated(&self) -> bool;
 }
 
-pub(super) trait Sealed {}
-
 #[allow(private_bounds)]
 /// A marker trait for types that can be used with [`CombineReaders`], see that for more details.
 pub trait CombinableReader: Sealed {
@@ -37,13 +39,13 @@ pub trait CombinableReader: Sealed {
     ///
     /// Borrows the value of the reader from the slot's internal [`RefCell`][core::cell::RefCell].
     #[doc(hidden)]
-    fn borrow(&mut self) -> core::cell::Ref<'_, Self::ToBeRead>;
+    fn borrow(&mut self) -> Ref<'_, Self::ToBeRead>;
 
     /// Internal implementation details.
     ///
     /// See [`Reader::wait_for_update`] for more.
     ///
-    /// [`Reader::wait_for_update`]: super::Reader::wait_for_update
+    /// [`Reader::wait_for_update`]: crate::datastore::single_writer::Reader::wait_for_update
     #[doc(hidden)]
     #[allow(async_fn_in_trait)]
     async fn wait_for_update(&mut self) -> &mut Self;
@@ -138,9 +140,9 @@ mod tests {
     use core::pin::pin;
     use futures::FutureExt;
 
-    use crate::datastore::{
-        CombineReaders, ExclusiveReader, Reader, Slot, Storable, Writer, generational,
-    };
+    use crate::datastore::single_writer::{ExclusiveReader, Reader, Slot, Writer};
+    use crate::datastore::sync::generational;
+    use crate::datastore::{CombineReaders, Storable};
 
     #[test]
     fn read_exclusive_reader() {

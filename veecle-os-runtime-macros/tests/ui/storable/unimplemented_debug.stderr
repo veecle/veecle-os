@@ -6,7 +6,7 @@ error[E0277]: `Sensor` doesn't implement `Debug`
   |
   = note: add `#[derive(Debug)]` to `Sensor` or manually `impl Debug for Sensor`
 note: required by a bound in `veecle_os_runtime::Storable::DataType`
- --> $WORKSPACE/veecle-os-runtime/src/datastore/slot/storable.rs
+ --> $WORKSPACE/veecle-os-runtime/src/datastore/storable.rs
   |
   |     type DataType: Debug;
   |                    ^^^^^ required by this bound in `Storable::DataType`

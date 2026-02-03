@@ -1,5 +1,6 @@
 use futures::future::join;
-use veecle_os_runtime::{Never, Reader, Writer};
+use veecle_os_runtime::Never;
+use veecle_os_runtime::single_writer::{Reader, Writer};
 
 use crate::{Connector, ControlRequest, ControlResponse};
 

@@ -1,5 +1,6 @@
 use serde::de::DeserializeOwned;
-use veecle_os_runtime::{Never, Storable, Writer};
+use veecle_os_runtime::single_writer::Writer;
+use veecle_os_runtime::{Never, Storable};
 
 use crate::Connector;
 

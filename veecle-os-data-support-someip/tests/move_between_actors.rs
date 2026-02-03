@@ -5,9 +5,10 @@ use veecle_os_data_support_someip::parse::ParseExt;
 use veecle_os_data_support_someip::service_discovery;
 use veecle_os_data_support_someip::service_discovery::{Entry, ServiceEntry};
 use veecle_os_runtime::Never;
+use veecle_os_runtime::Storable;
 use veecle_os_runtime::actor;
 use veecle_os_runtime::memory_pool::{Chunk, MemoryPool};
-use veecle_os_runtime::{ExclusiveReader, Storable, Writer};
+use veecle_os_runtime::single_writer::{ExclusiveReader, Writer};
 use yoke::{Yoke, Yokeable};
 
 #[test]

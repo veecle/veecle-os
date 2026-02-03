@@ -1,12 +1,15 @@
-use super::super::generational;
-use super::Waiter;
-use crate::Storable;
+//! Slot implementation for single-writer slots.
+
+use crate::datastore::sync::generational;
+use crate::datastore::{SlotTrait, Storable};
 use core::any::TypeId;
 use core::cell::{Cell, Ref, RefCell, RefMut};
 use core::pin::Pin;
 
 use pin_project::pin_project;
 use veecle_telemetry::SpanContext;
+
+use super::waiter::Waiter;
 
 /// Runtime storage for a single storable value.
 ///
@@ -23,22 +26,6 @@ where
     writer_context: Cell<Option<SpanContext>>,
 
     item: RefCell<Option<T::DataType>>,
-}
-
-impl<T> core::fmt::Debug for Slot<T>
-where
-    T: Storable + 'static,
-{
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let mut debug = f.debug_struct("Slot");
-
-        debug.field("source", &self.source);
-        debug.field("writer_taken", &self.writer_taken);
-        debug.field("writer_context", &self.writer_context.get());
-        debug.field("item", &"<opaque>");
-
-        debug.finish()
-    }
 }
 
 impl<T> Slot<T>
@@ -65,12 +52,7 @@ where
 
         self.borrow_mut(span_context).take()
     }
-}
 
-impl<T> Slot<T>
-where
-    T: Storable + 'static,
-{
     /// Returns the type name of the value stored in this slot.
     ///
     /// # Panics
@@ -135,34 +117,6 @@ where
     }
 }
 
-/// Marker trait for all slot types.
-///
-/// This trait must be implemented by any type that can be used as a slot in the datastore.
-pub(crate) trait SlotTrait: Sized + 'static + core::any::Any {
-    /// Creates a new empty slot.
-    fn new() -> Self;
-
-    /// Returns the TypeId of the data type stored in this slot.
-    fn data_type_id() -> TypeId;
-
-    /// Returns the type name of the data type stored in this slot.
-    fn data_type_name() -> &'static str;
-
-    /// Validates that this slot type meets its requirements given the access patterns.
-    ///
-    /// The defining reader/writer amount cannot be zero because a slot is only created for types
-    /// that are used by at least one defining reader/writer (see [`DefinesSlot`][crate::actor::DefinesSlot]).
-    ///
-    /// # Panics
-    ///
-    /// Panics with an appropriate error message if validation fails.
-    fn validate_access_pattern(
-        writers: (usize, impl Iterator<Item = &'static str>),
-        exclusive_readers: (usize, impl Iterator<Item = &'static str>),
-        non_exclusive_readers: (usize, impl Iterator<Item = &'static str>),
-    );
-}
-
 impl<T> SlotTrait for Slot<T>
 where
     T: Storable + 'static,
@@ -187,7 +141,7 @@ where
             impl Iterator<Item = &'static str>,
         ),
     ) {
-        use super::super::format_types;
+        use crate::datastore::format_types;
 
         let type_name = Self::data_type_name();
 
@@ -214,5 +168,21 @@ where
                 format_types(non_exclusive_readers_list),
             );
         }
+    }
+}
+
+impl<T> core::fmt::Debug for Slot<T>
+where
+    T: Storable + 'static,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut debug = f.debug_struct("Slot");
+
+        debug.field("source", &self.source);
+        debug.field("writer_taken", &self.writer_taken);
+        debug.field("writer_context", &self.writer_context.get());
+        debug.field("item", &"<opaque>");
+
+        debug.finish()
     }
 }

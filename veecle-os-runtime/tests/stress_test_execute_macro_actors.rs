@@ -18,7 +18,7 @@ macro_rules! make_test {
         $(
             #[veecle_os_runtime::actor]
             async fn $ident(
-                reader: veecle_os_runtime::Reader<'_, Data>,
+                reader: veecle_os_runtime::single_writer::Reader<'_, Data>,
             ) -> veecle_os_runtime::Never {
                 panic!("test completed");
             }
@@ -26,7 +26,7 @@ macro_rules! make_test {
 
         #[veecle_os_runtime::actor]
         async fn writer(
-            writer: veecle_os_runtime::Writer<'_, Data>,
+            writer: veecle_os_runtime::single_writer::Writer<'_, Data>,
         ) -> veecle_os_runtime::Never {
             panic!("test completed");
         }

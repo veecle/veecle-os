@@ -1,7 +1,10 @@
-use super::super::generational;
-use super::Slot;
-use crate::Storable;
+//! Internal waiter for single-writer slot synchronization.
+
+use crate::datastore::Storable;
+use crate::datastore::sync::generational;
 use core::pin::Pin;
+
+use super::Slot;
 
 pub(crate) struct Waiter<'a, T>
 where
@@ -63,12 +66,7 @@ where
             );
         }
     }
-}
 
-impl<'a, T> Waiter<'a, T>
-where
-    T: Storable + 'static,
-{
     /// Takes the current value of the slot, leaving behind `None`.
     ///
     /// Stores the provided `span_context` to connect this write to the next read operation.

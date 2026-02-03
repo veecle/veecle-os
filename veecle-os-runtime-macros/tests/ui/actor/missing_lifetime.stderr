@@ -1,141 +1,141 @@
 error: lifetimes on actor arguments must be anonymous or static
-  --> tests/ui/actor/missing_lifetime.rs:21:40
+  --> tests/ui/actor/missing_lifetime.rs:21:55
    |
-21 |     _reader: veecle_os_runtime::Reader<'b, Sensor>,
-   |                                        ^^
+21 |     _reader: veecle_os_runtime::single_writer::Reader<'b, Sensor>,
+   |                                                       ^^
 
 error[E0106]: missing lifetime specifier
- --> tests/ui/actor/missing_lifetime.rs:5:55
+ --> tests/ui/actor/missing_lifetime.rs:5:70
   |
-5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
-  |                                                       ^^^^^^ expected named lifetime parameter
+5 | async fn macro_test_actor(_reader: veecle_os_runtime::single_writer::Reader) -> veecle_os_runtime::Never {
+  |                                                                      ^^^^^^ expected named lifetime parameter
   |
 help: consider using the `'__dont_use_internal_actor_macro_lifetime` lifetime
   |
-5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader<'__dont_use_internal_actor_macro_lifetime>) -> veecle_os_runtime::Never {
-  |                                                             +++++++++++++++++++++++++++++++++++++++++++
+5 | async fn macro_test_actor(_reader: veecle_os_runtime::single_writer::Reader<'__dont_use_internal_actor_macro_lifetime>) -> veecle_os_runtime::Never {
+  |                                                                            +++++++++++++++++++++++++++++++++++++++++++
 
 error[E0726]: implicit elided lifetime not allowed here
  --> tests/ui/actor/missing_lifetime.rs:5:36
   |
-5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
-  |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ expected lifetime parameter
+5 | async fn macro_test_actor(_reader: veecle_os_runtime::single_writer::Reader) -> veecle_os_runtime::Never {
+  |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected lifetime parameter
   |
 help: indicate the anonymous lifetime
   |
-5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader<'_>) -> veecle_os_runtime::Never {
-  |                                                             ++++
+5 | async fn macro_test_actor(_reader: veecle_os_runtime::single_writer::Reader<'_>) -> veecle_os_runtime::Never {
+  |                                                                            ++++
 
 error[E0106]: missing lifetime specifier
-  --> tests/ui/actor/missing_lifetime.rs:10:56
+  --> tests/ui/actor/missing_lifetime.rs:10:71
    |
-10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
-   |                                                        ^^^^^^ expected named lifetime parameter
+10 | async fn macro_test_actor2(_reader: veecle_os_runtime::single_writer::Reader) -> veecle_os_runtime::Never {
+   |                                                                       ^^^^^^ expected named lifetime parameter
    |
 help: consider using the `'__dont_use_internal_actor_macro_lifetime` lifetime
    |
-10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader<'__dont_use_internal_actor_macro_lifetime>) -> veecle_os_runtime::Never {
-   |                                                              +++++++++++++++++++++++++++++++++++++++++++
+10 | async fn macro_test_actor2(_reader: veecle_os_runtime::single_writer::Reader<'__dont_use_internal_actor_macro_lifetime>) -> veecle_os_runtime::Never {
+   |                                                                             +++++++++++++++++++++++++++++++++++++++++++
 
 error[E0726]: implicit elided lifetime not allowed here
   --> tests/ui/actor/missing_lifetime.rs:10:37
    |
-10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
-   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ expected lifetime parameter
+10 | async fn macro_test_actor2(_reader: veecle_os_runtime::single_writer::Reader) -> veecle_os_runtime::Never {
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected lifetime parameter
    |
 help: indicate the anonymous lifetime
    |
-10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader<'_>) -> veecle_os_runtime::Never {
-   |                                                              ++++
+10 | async fn macro_test_actor2(_reader: veecle_os_runtime::single_writer::Reader<'_>) -> veecle_os_runtime::Never {
+   |                                                                             ++++
 
 error[E0106]: missing lifetime specifier
-  --> tests/ui/actor/missing_lifetime.rs:15:62
+  --> tests/ui/actor/missing_lifetime.rs:15:77
    |
-15 | async fn macro_test_actor3(_reader: veecle_os_runtime::Reader<Sensor>) -> veecle_os_runtime::Never {
-   |                                                              ^ expected named lifetime parameter
+15 | async fn macro_test_actor3(_reader: veecle_os_runtime::single_writer::Reader<Sensor>) -> veecle_os_runtime::Never {
+   |                                                                             ^ expected named lifetime parameter
    |
 help: consider using the `'__dont_use_internal_actor_macro_lifetime` lifetime
    |
-15 | async fn macro_test_actor3(_reader: veecle_os_runtime::Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>) -> veecle_os_runtime::Never {
-   |                                                               ++++++++++++++++++++++++++++++++++++++++++
+15 | async fn macro_test_actor3(_reader: veecle_os_runtime::single_writer::Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>) -> veecle_os_runtime::Never {
+   |                                                                              ++++++++++++++++++++++++++++++++++++++++++
 
 error[E0726]: implicit elided lifetime not allowed here
   --> tests/ui/actor/missing_lifetime.rs:15:37
    |
-15 | async fn macro_test_actor3(_reader: veecle_os_runtime::Reader<Sensor>) -> veecle_os_runtime::Never {
-   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected lifetime parameter
+15 | async fn macro_test_actor3(_reader: veecle_os_runtime::single_writer::Reader<Sensor>) -> veecle_os_runtime::Never {
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected lifetime parameter
    |
 help: indicate the anonymous lifetime
    |
-15 | async fn macro_test_actor3(_reader: veecle_os_runtime::Reader<'_, Sensor>) -> veecle_os_runtime::Never {
-   |                                                               +++
+15 | async fn macro_test_actor3(_reader: veecle_os_runtime::single_writer::Reader<'_, Sensor>) -> veecle_os_runtime::Never {
+   |                                                                              +++
 
 error[E0106]: missing lifetime specifier
-  --> tests/ui/actor/missing_lifetime.rs:27:56
+  --> tests/ui/actor/missing_lifetime.rs:27:71
    |
-27 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
-   |                                                        ^^^^^^ expected named lifetime parameter
+27 | async fn macro_test_actor5(_reader: veecle_os_runtime::single_writer::Reader) -> veecle_os_runtime::Never {
+   |                                                                       ^^^^^^ expected named lifetime parameter
    |
 help: consider using the `'__dont_use_internal_actor_macro_lifetime` lifetime
    |
-27 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader<'__dont_use_internal_actor_macro_lifetime>) -> veecle_os_runtime::Never {
-   |                                                              +++++++++++++++++++++++++++++++++++++++++++
+27 | async fn macro_test_actor5(_reader: veecle_os_runtime::single_writer::Reader<'__dont_use_internal_actor_macro_lifetime>) -> veecle_os_runtime::Never {
+   |                                                                             +++++++++++++++++++++++++++++++++++++++++++
 
 error[E0726]: implicit elided lifetime not allowed here
   --> tests/ui/actor/missing_lifetime.rs:27:37
    |
-27 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
-   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ expected lifetime parameter
+27 | async fn macro_test_actor5(_reader: veecle_os_runtime::single_writer::Reader) -> veecle_os_runtime::Never {
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected lifetime parameter
    |
 help: indicate the anonymous lifetime
    |
-27 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader<'_>) -> veecle_os_runtime::Never {
-   |                                                              ++++
+27 | async fn macro_test_actor5(_reader: veecle_os_runtime::single_writer::Reader<'_>) -> veecle_os_runtime::Never {
+   |                                                                             ++++
 
 error[E0107]: missing generics for struct `Reader`
- --> tests/ui/actor/missing_lifetime.rs:5:55
+ --> tests/ui/actor/missing_lifetime.rs:5:70
   |
-5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
-  |                                                       ^^^^^^ expected 1 generic argument
+5 | async fn macro_test_actor(_reader: veecle_os_runtime::single_writer::Reader) -> veecle_os_runtime::Never {
+  |                                                                      ^^^^^^ expected 1 generic argument
   |
 note: struct defined here, with 1 generic parameter: `T`
- --> $WORKSPACE/veecle-os-runtime/src/datastore/reader.rs
+ --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
   |
   | pub struct Reader<'a, T>
   |            ^^^^^^     -
 help: add missing generic argument
   |
-5 | async fn macro_test_actor(_reader: veecle_os_runtime::Reader<T>) -> veecle_os_runtime::Never {
-  |                                                             +++
+5 | async fn macro_test_actor(_reader: veecle_os_runtime::single_writer::Reader<T>) -> veecle_os_runtime::Never {
+  |                                                                            +++
 
 error[E0107]: missing generics for struct `Reader`
-  --> tests/ui/actor/missing_lifetime.rs:10:56
+  --> tests/ui/actor/missing_lifetime.rs:10:71
    |
-10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
-   |                                                        ^^^^^^ expected 1 generic argument
+10 | async fn macro_test_actor2(_reader: veecle_os_runtime::single_writer::Reader) -> veecle_os_runtime::Never {
+   |                                                                       ^^^^^^ expected 1 generic argument
    |
 note: struct defined here, with 1 generic parameter: `T`
-  --> $WORKSPACE/veecle-os-runtime/src/datastore/reader.rs
+  --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
    |
    | pub struct Reader<'a, T>
    |            ^^^^^^     -
 help: add missing generic argument
    |
-10 | async fn macro_test_actor2(_reader: veecle_os_runtime::Reader<T>) -> veecle_os_runtime::Never {
-   |                                                              +++
+10 | async fn macro_test_actor2(_reader: veecle_os_runtime::single_writer::Reader<T>) -> veecle_os_runtime::Never {
+   |                                                                             +++
 
 error[E0107]: missing generics for struct `Reader`
-  --> tests/ui/actor/missing_lifetime.rs:27:56
+  --> tests/ui/actor/missing_lifetime.rs:27:71
    |
-27 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader) -> veecle_os_runtime::Never {
-   |                                                        ^^^^^^ expected 1 generic argument
+27 | async fn macro_test_actor5(_reader: veecle_os_runtime::single_writer::Reader) -> veecle_os_runtime::Never {
+   |                                                                       ^^^^^^ expected 1 generic argument
    |
 note: struct defined here, with 1 generic parameter: `T`
-  --> $WORKSPACE/veecle-os-runtime/src/datastore/reader.rs
+  --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
    |
    | pub struct Reader<'a, T>
    |            ^^^^^^     -
 help: add missing generic argument
    |
-27 | async fn macro_test_actor5(_reader: veecle_os_runtime::Reader<T>) -> veecle_os_runtime::Never {
-   |                                                              +++
+27 | async fn macro_test_actor5(_reader: veecle_os_runtime::single_writer::Reader<T>) -> veecle_os_runtime::Never {
+   |                                                                             +++

@@ -3,8 +3,8 @@ pub struct Sensor(pub u8);
 
 #[veecle_os_runtime::actor]
 async fn with_lifetime<'a>(
-    _reader: veecle_os_runtime::Reader<'_, Sensor>,
-    _writer: veecle_os_runtime::Writer<'_, Sensor>,
+    _reader: veecle_os_runtime::single_writer::Reader<'_, Sensor>,
+    _writer: veecle_os_runtime::single_writer::Writer<'_, Sensor>,
     #[init_context] _context: &'a (),
 ) -> veecle_os_runtime::Never {
     core::future::pending().await

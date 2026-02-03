@@ -12,11 +12,11 @@
 //! to be specified.
 //!
 //! ```rust
-//! use veecle_os_runtime::Never;
+//! use veecle_os_runtime::single_writer::{Reader, Writer};
+//! use veecle_os_runtime::{Never, Storable};
 //!
 //! use veecle_osal_api::time::{Duration, TimeAbstraction};
 //! use veecle_osal_std::time::Time;
-//! use veecle_os_runtime::{Reader, Storable, Writer};
 //!
 //! #[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
 //! pub struct Tick {

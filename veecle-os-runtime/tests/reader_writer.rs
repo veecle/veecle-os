@@ -4,7 +4,8 @@ use core::fmt::Debug;
 use veecle_os_runtime::Never;
 
 use futures_test::future::FutureTestExt;
-use veecle_os_runtime::{Reader, Storable, Writer};
+use veecle_os_runtime::Storable;
+use veecle_os_runtime::single_writer::{Reader, Writer};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, PartialOrd, Storable)]
 pub struct Signal(usize);
