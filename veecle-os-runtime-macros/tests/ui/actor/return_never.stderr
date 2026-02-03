@@ -13,9 +13,14 @@ error[E0277]: #[veecle_os_runtime::actor] functions should return either a `Resu
   |      ^ not a valid actor return type
   |
   = help: the trait `IsActorResult` is not implemented for `!`
-  = help: the following other types implement trait `IsActorResult`:
-            Never
-            Result<Never, E>
+help: the following other types implement trait `IsActorResult`
+ --> $WORKSPACE/veecle-os-runtime/src/actor.rs
+  |
+  | impl<E> IsActorResult for Result<Never, E> {
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Result<Never, E>`
+...
+  | impl IsActorResult for Never {
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Never`
 
 error[E0277]: #[veecle_os_runtime::actor] functions should return either a `Result<Never, _>` or `Never`
  --> tests/ui/actor/return_never.rs:4:1
@@ -24,6 +29,11 @@ error[E0277]: #[veecle_os_runtime::actor] functions should return either a `Resu
   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not a valid actor return type
   |
   = help: the trait `IsActorResult` is not implemented for `!`
-  = help: the following other types implement trait `IsActorResult`:
-            Never
-            Result<Never, E>
+help: the following other types implement trait `IsActorResult`
+ --> $WORKSPACE/veecle-os-runtime/src/actor.rs
+  |
+  | impl<E> IsActorResult for Result<Never, E> {
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Result<Never, E>`
+...
+  | impl IsActorResult for Never {
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Never`

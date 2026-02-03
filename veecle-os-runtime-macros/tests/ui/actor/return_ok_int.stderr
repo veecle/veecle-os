@@ -5,7 +5,11 @@ error[E0277]: #[veecle_os_runtime::actor] functions should return either a `Resu
    |      ^^^^^^ not a valid actor return type
    |
    = help: the trait `IsActorResult` is not implemented for `Result<i32, Never>`
-   = help: the trait `IsActorResult` is implemented for `Result<Never, E>`
+help: the trait `IsActorResult` is implemented for `Result<Never, E>`
+  --> $WORKSPACE/veecle-os-runtime/src/actor.rs
+   |
+   | impl<E> IsActorResult for Result<Never, E> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 error[E0277]: #[veecle_os_runtime::actor] functions should return either a `Result<Never, _>` or `Never`
  --> tests/ui/actor/return_ok_int.rs:6:1
@@ -14,7 +18,11 @@ error[E0277]: #[veecle_os_runtime::actor] functions should return either a `Resu
   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not a valid actor return type
   |
   = help: the trait `IsActorResult` is not implemented for `Result<i32, Never>`
-  = help: the trait `IsActorResult` is implemented for `Result<Never, E>`
+help: the trait `IsActorResult` is implemented for `Result<Never, E>`
+ --> $WORKSPACE/veecle-os-runtime/src/actor.rs
+  |
+  | impl<E> IsActorResult for Result<Never, E> {
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 error[E0277]: #[veecle_os_runtime::actor] functions should return either a `Result<Never, _>` or `Never`
   --> tests/ui/actor/return_ok_int.rs:10:6
@@ -23,4 +31,8 @@ error[E0277]: #[veecle_os_runtime::actor] functions should return either a `Resu
    |      ^^^^^^^^^^^^^^^^^^ not a valid actor return type
    |
    = help: the trait `IsActorResult` is not implemented for `Result<i32, Never>`
-   = help: the trait `IsActorResult` is implemented for `Result<Never, E>`
+help: the trait `IsActorResult` is implemented for `Result<Never, E>`
+  --> $WORKSPACE/veecle-os-runtime/src/actor.rs
+   |
+   | impl<E> IsActorResult for Result<Never, E> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -4,7 +4,7 @@ error: #[actor] functions cannot be generic over a lifetime
 5 | async fn with_lifetime<'a>(
   |                        ^^
 
-error[E0412]: cannot find type `WithLifetime` in this scope
+error[E0425]: cannot find type `WithLifetime` in this scope
   --> tests/ui/actor/generic/lifetime.rs:15:18
    |
 15 |         actors: [WithLifetime<'static>: &()],
