@@ -34,7 +34,8 @@ Add the following code to your `main.rs` file:
 ```rust
 use veecle_os::info;
 use veecle_os::osal::api::time::{Duration, Instant, Interval, TimeAbstraction};
-use veecle_os::runtime::{Never, Reader, Storable, Writer};
+use veecle_os::runtime::single_writer::{Reader, Writer};
+use veecle_os::runtime::{Never, Storable};
 use veecle_os::telemetry::collector::{ConsolePrettyExporter, ProcessId};
 
 #[derive(Debug, PartialEq, Clone, Storable)]
