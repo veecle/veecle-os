@@ -3,7 +3,7 @@ use core::pin::Pin;
 
 use crate::Never;
 use crate::cons::{Cons, Nil};
-use crate::datastore::{ExclusiveReader, InitializedReader, Reader, SlotTrait, Storable, Writer};
+use crate::datastore::{ExclusiveReader, Reader, SlotTrait, Storable, Writer};
 use crate::datastore::{Slot, generational};
 #[doc(inline)]
 pub use veecle_os_runtime_macros::actor;
@@ -277,20 +277,6 @@ where
         datastore.exclusive_reader(requestor)
     }
 }
-
-impl<T> sealed::Sealed for InitializedReader<'_, T> where T: Storable + 'static {}
-
-impl<'a, T> StoreRequest<'a> for InitializedReader<'a, T>
-where
-    T: Storable + 'static,
-{
-    async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self {
-        Reader::from_slot(datastore.slot(requestor))
-            .wait_init()
-            .await
-    }
-}
-
 impl<T> sealed::Sealed for Writer<'_, T> where T: Storable + 'static {}
 
 impl<'a, T> StoreRequest<'a> for Writer<'a, T>
@@ -336,11 +322,6 @@ macro_rules! impl_request_helper {
             $($t: StoreRequest<'a>),*
         {
             async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self {
-                // join! is necessary here to avoid argument-order-dependence with the #[actor] macro.
-                // This ensures that any `InitializedReaders` in self correctly track the generation at which they were
-                // first ready, so that the first `wait_for_update` sees the value that caused them to become
-                // initialized.
-                // See `multi_request_order_independence` for the verification of this.
                 futures::join!($( <$t as StoreRequest>::request(datastore, requestor), )*)
             }
         }
@@ -425,120 +406,4 @@ where
     T: Storable,
 {
     type Slot = Nil;
-}
-
-impl<'a, T> DefinesSlot for InitializedReader<'a, T>
-where
-    T: Storable,
-{
-    type Slot = Nil;
-}
-
-#[cfg(test)]
-#[cfg_attr(coverage_nightly, coverage(off))]
-mod tests {
-    use core::future::Future;
-    use core::pin::pin;
-    use core::task::{Context, Poll};
-
-    use futures::future::FutureExt;
-
-    use crate::actor::{DatastoreExt, StoreRequest};
-    use crate::cons::{Cons, Nil};
-    use crate::datastore::{InitializedReader, Slot, Storable};
-
-    #[test]
-    fn multi_request_order_independence() {
-        #[derive(Debug, Storable)]
-        #[storable(crate = crate)]
-        struct A;
-
-        #[derive(Debug, Storable)]
-        #[storable(crate = crate)]
-        struct B;
-
-        let datastore = pin!(crate::execute::make_store::<
-            Cons<Slot<A>, Cons<Slot<B>, Nil>>,
-        >());
-
-        let mut a_writer = datastore.as_ref().writer::<A>("a_writer");
-        let mut b_writer = datastore.as_ref().writer::<B>("b_writer");
-
-        // No matter the order these two request the readers, they should both resolve during the generation where the
-        // later of the two is first written.
-        let mut request_1 = pin!(<(InitializedReader<A>, InitializedReader<B>)>::request(
-            datastore.as_ref(),
-            "request_1",
-        ));
-        let mut request_2 = pin!(<(InitializedReader<B>, InitializedReader<A>)>::request(
-            datastore.as_ref(),
-            "request_2",
-        ));
-
-        let (request_1_waker, request_1_wake_count) = futures_test::task::new_count_waker();
-        let (request_2_waker, request_2_wake_count) = futures_test::task::new_count_waker();
-
-        let mut request_1_context = Context::from_waker(&request_1_waker);
-        let mut request_2_context = Context::from_waker(&request_2_waker);
-
-        assert!(matches!(
-            request_1.as_mut().poll(&mut request_1_context),
-            Poll::Pending
-        ));
-        assert!(matches!(
-            request_2.as_mut().poll(&mut request_2_context),
-            Poll::Pending
-        ));
-
-        let old_request_1_wake_count = request_1_wake_count.get();
-        let old_request_2_wake_count = request_2_wake_count.get();
-
-        datastore.as_ref().increment_generation();
-
-        a_writer.write(A).now_or_never().unwrap();
-
-        // When the first value is written, each future may or may not wake up, but if they do we need to poll them.
-        if request_1_wake_count.get() > old_request_1_wake_count {
-            assert!(matches!(
-                request_1.as_mut().poll(&mut request_1_context),
-                Poll::Pending
-            ));
-        }
-        if request_2_wake_count.get() > old_request_2_wake_count {
-            assert!(matches!(
-                request_2.as_mut().poll(&mut request_2_context),
-                Poll::Pending
-            ));
-        }
-
-        let old_request_1_wake_count = request_1_wake_count.get();
-        let old_request_2_wake_count = request_2_wake_count.get();
-
-        datastore.as_ref().increment_generation();
-
-        b_writer.write(B).now_or_never().unwrap();
-
-        // When the second value is written, both futures _must_ wake up and complete.
-        assert!(request_1_wake_count.get() > old_request_1_wake_count);
-        assert!(request_2_wake_count.get() > old_request_2_wake_count);
-
-        let Poll::Ready((mut request_1_a, mut request_1_b)) =
-            request_1.as_mut().poll(&mut request_1_context)
-        else {
-            panic!("request 1 was not ready")
-        };
-
-        let Poll::Ready((mut request_2_a, mut request_2_b)) =
-            request_2.as_mut().poll(&mut request_2_context)
-        else {
-            panic!("request 2 was not ready")
-        };
-
-        // All readers should see an update, since they've just been initialized but not `wait_for_update`d.
-        assert!(request_1_a.wait_for_update().now_or_never().is_some());
-        assert!(request_1_b.wait_for_update().now_or_never().is_some());
-
-        assert!(request_2_a.wait_for_update().now_or_never().is_some());
-        assert!(request_2_b.wait_for_update().now_or_never().is_some());
-    }
 }

@@ -304,12 +304,12 @@ use ::my_veecle_os_data_support_can::Frame;
 /// If used you must also provide some interface-actor that writes the `Frame`s from your transceiver.
 #[::my_veecle_os_runtime::actor(crate = ::my_veecle_os_runtime)]
 pub async fn deserialize_frames(
-    mut reader: ::my_veecle_os_runtime::InitializedReader<'_, Frame>,
+    mut reader: ::my_veecle_os_runtime::Reader<'_, Frame>,
     mut eec1_writer: ::my_veecle_os_runtime::Writer<'_, Eec1>,
     mut ccvs1_writer: ::my_veecle_os_runtime::Writer<'_, Ccvs1>,
 ) -> ::my_veecle_os_runtime::Never {
     loop {
-        let frame = reader.wait_for_update().await.read_cloned();
+        let frame = reader.read_updated_cloned().await;
         match frame.id() {
             Eec1::FRAME_ID => {
                 let Ok(msg) = Eec1::try_from(frame) else { continue };

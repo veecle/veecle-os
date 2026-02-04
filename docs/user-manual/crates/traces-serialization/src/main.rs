@@ -1,7 +1,7 @@
 // ANCHOR: full
 use core::fmt::Debug;
 
-use veecle_os::runtime::{InitializedReader, Never, Reader, Storable, Writer};
+use veecle_os::runtime::{Never, Reader, Storable, Writer};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Ping;
@@ -18,21 +18,21 @@ impl Storable for Pong {
 }
 
 #[veecle_os::runtime::actor]
-async fn ping_actor(mut ping: Writer<'_, Ping>, pong: Reader<'_, Pong>) -> Never {
+async fn ping_actor(mut ping: Writer<'_, Ping>, mut pong: Reader<'_, Pong>) -> Never {
     let mut value = 0;
 
     ping.write(value).await;
     value += 1;
 
-    let mut pong = pong.wait_init().await;
     loop {
-        pong.wait_for_update().await.read(|pong| {
+        pong.read_updated(|pong| {
             assert_eq!(pong, &value);
             if *pong == 5 {
                 // Exit the application to allow doc-tests to complete.
                 std::process::exit(0);
             }
-        });
+        })
+        .await;
 
         ping.write(value).await;
         value += 1;
@@ -40,9 +40,9 @@ async fn ping_actor(mut ping: Writer<'_, Ping>, pong: Reader<'_, Pong>) -> Never
 }
 
 #[veecle_os::runtime::actor]
-async fn pong_actor(mut pong: Writer<'_, Pong>, mut ping: InitializedReader<'_, Ping>) -> Never {
+async fn pong_actor(mut pong: Writer<'_, Pong>, mut ping: Reader<'_, Ping>) -> Never {
     loop {
-        let value = ping.wait_for_update().await.read(|ping| ping + 1);
+        let value = ping.read_updated(|ping| ping + 1).await;
 
         pong.write(value).await;
     }

@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use serde::Serialize;
-use veecle_os_runtime::{CombineReaders, InitializedReader, Never, Reader, Storable, Writer};
+use veecle_os_runtime::{CombineReaders, Never, Reader, Storable, Writer};
 
 #[derive(Debug, Default, Storable, Serialize)]
 pub struct Ping {
@@ -32,22 +32,21 @@ pub async fn ping_loop(ping: &mut Writer<'_, Ping>, pong: &mut Reader<'_, Pong>,
 
 /// An actor that reads `Ping`, replies with `Pong { ping + 1 }` and waits for the next `Ping`.
 #[veecle_os_runtime::actor]
-pub async fn pong_actor(
-    mut pong: Writer<'_, Pong>,
-    mut ping: InitializedReader<'_, Ping>,
-) -> Never {
+pub async fn pong_actor(mut pong: Writer<'_, Pong>, mut ping: Reader<'_, Ping>) -> Never {
     loop {
         pong_loop(&mut pong, &mut ping).await
     }
 }
 
 #[veecle_telemetry::instrument]
-async fn pong_loop(pong: &mut Writer<'_, Pong>, ping: &mut InitializedReader<'_, Ping>) {
+async fn pong_loop(pong: &mut Writer<'_, Pong>, ping: &mut Reader<'_, Ping>) {
     veecle_telemetry::info!("Waiting for ping");
-    let value = ping.wait_for_update().await.read(|ping| {
-        veecle_telemetry::info!("Ping received", ping = format!("{:?}", ping));
-        ping.value + 1
-    });
+    let value = ping
+        .read_updated(|ping| {
+            veecle_telemetry::info!("Ping received", ping = format!("{:?}", ping));
+            ping.value + 1
+        })
+        .await;
 
     let data = Pong { value };
     veecle_telemetry::info!("Sending pong", pong = format!("{:?}", data));

@@ -14,20 +14,20 @@
 //! #[derive(Debug, Default, veecle_os_runtime::Storable)]
 //! pub struct Total(usize);
 //! #
-//! # use veecle_os_runtime::{InitializedReader, Never, Reader, Writer};
+//! # use veecle_os_runtime::{ Never, Reader, Writer};
 //!
 //! // `total_actor` reads numbers from a `Number` reader, keeps a running
 //! // total, and writes running totals to a `Total` writer.
 //! #[veecle_os_runtime::actor]
 //! async fn total_actor(
 //!     mut total: Writer<'_, Total>,
-//!     mut numbers: InitializedReader<'_, Number>,
+//!     mut numbers: Reader<'_, Number>,
 //! ) -> Never {
 //!     let mut sum: usize = 0;
 //!     loop {
-//!         numbers.wait_for_update().await.read(|value| {
+//!         numbers.read_updated(|value| {
 //!             sum += value.0;
-//!         });
+//!         }).await;
 //!
 //!         total.write(Total(sum)).await;
 //!     }

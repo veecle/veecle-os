@@ -1,6 +1,6 @@
 use serde::Serialize;
 use veecle_ipc_protocol::EncodedStorable;
-use veecle_os_runtime::{InitializedReader, Never, Storable};
+use veecle_os_runtime::{Never, Reader, Storable};
 
 use crate::{Connector, SendPolicy};
 
@@ -42,10 +42,7 @@ use crate::{Connector, SendPolicy};
 /// # }
 /// ```
 #[veecle_os_runtime::actor]
-pub async fn output<T>(
-    #[init_context] config: OutputConfig<'_>,
-    mut reader: InitializedReader<'_, T>,
-) -> Never
+pub async fn output<T>(#[init_context] config: OutputConfig<'_>, mut reader: Reader<'_, T>) -> Never
 where
     T: Storable<DataType: Serialize> + 'static,
 {
@@ -54,9 +51,8 @@ where
 
     loop {
         let value = reader
-            .wait_for_update()
-            .await
-            .read(|value| EncodedStorable::new(value).unwrap());
+            .read_updated(|value| EncodedStorable::new(value).unwrap())
+            .await;
 
         match send_policy {
             SendPolicy::Drop => {

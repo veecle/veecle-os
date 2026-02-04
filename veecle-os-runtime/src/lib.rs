@@ -108,7 +108,7 @@ pub mod memory_pool;
 
 pub use self::actor::{Actor, StoreRequest, actor};
 pub use self::datastore::{
-    CombinableReader, CombineReaders, ExclusiveReader, InitializedReader, Reader, Storable, Writer,
+    CombinableReader, CombineReaders, ExclusiveReader, Reader, Storable, Writer,
 };
 
 /// Internal exports for proc-macro and `macro_rules!` purposes.

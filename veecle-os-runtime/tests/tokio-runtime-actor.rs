@@ -12,7 +12,7 @@ use tokio::net::unix::pipe;
 use tokio::net::unix::pipe::{Receiver, Sender};
 use tokio::runtime::Builder;
 use tokio::sync::mpsc;
-use veecle_os_runtime::{InitializedReader, Storable, Writer};
+use veecle_os_runtime::{Reader, Storable, Writer};
 
 // This test showcases how two runtime instances can communicate via I/O runtime-actors (using anonymous unix pipes).
 // The runtime-actors use their own Tokio runtimes.
@@ -105,17 +105,16 @@ async fn read_pipe_runtime_actor(
 
 #[veecle_os_runtime::actor]
 async fn read_printer(
-    mut pipe_message_reader: InitializedReader<'_, PipeMessage>,
+    mut pipe_message_reader: Reader<'_, PipeMessage>,
     #[init_context] read_counter: &'static AtomicUsize,
 ) -> veecle_os_runtime::Never {
     loop {
         pipe_message_reader
-            .wait_for_update()
-            .await
-            .read(|pipe_message: &PipeMessage| {
+            .read_updated(|pipe_message: &PipeMessage| {
                 println!("[PRINTER]: PipeMessage: {pipe_message:?}");
                 read_counter.fetch_add(1, Ordering::AcqRel);
-            });
+            })
+            .await;
     }
 }
 

@@ -6,7 +6,6 @@ use core::pin::Pin;
 use pin_project::pin_project;
 
 use crate::datastore::Storable;
-use crate::datastore::initialized_reader::InitializedReader;
 use crate::datastore::slot::{self, Slot};
 
 /// Reader for a [`Storable`] type.
@@ -16,7 +15,6 @@ use crate::datastore::slot::{self, Slot};
 ///
 /// The reader allows reading the current value.
 /// If no value for type `T` has been written to yet, [`Reader::read`] will return `None`.
-/// See [`Self::wait_init`] for creating a reader that ensures available values for `T`.
 ///
 /// # Usage
 ///
@@ -174,17 +172,6 @@ where
             waiter: slot.waiter(),
             marker: PhantomData,
         }
-    }
-
-    /// Converts the `Reader` into an [`InitializedReader`].
-    ///
-    /// Pends until a value for `T` is available or resolves immediately if a value is already available.
-    /// This will not mark the value as seen, [`InitializedReader::wait_for_update`] is unaffected by this method.
-    pub async fn wait_init(mut self) -> InitializedReader<'a, T> {
-        if self.read(|t| t.is_none()) {
-            self.waiter.wait().await;
-        }
-        InitializedReader::new(self.waiter)
     }
 }
 

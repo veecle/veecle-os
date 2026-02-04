@@ -12,7 +12,7 @@ use veecle_os::runtime::{Reader, Writer};
 async fn useless_machine_actor(
     #[init_context] id: Uuid,
     mut request: Writer<'_, ControlRequest>,
-    response: Reader<'_, ControlResponse>,
+    mut response: Reader<'_, ControlResponse>,
 ) -> Never {
     veecle_os::telemetry::info!(
         "useless machine starting, will shut down soon",
@@ -25,8 +25,7 @@ async fn useless_machine_actor(
 
     request.write(ControlRequest::StopRuntime { id }).await;
 
-    let response = response.wait_init().await;
-    let response = response.read_cloned();
+    let response = response.read_updated_cloned().await;
 
     veecle_os::telemetry::error!(
         "runtime still executing after stop request—either lacks privileges or an error occurred",

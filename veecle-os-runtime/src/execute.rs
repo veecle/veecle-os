@@ -9,9 +9,7 @@
 use crate::Never;
 use crate::actor::{Actor, Datastore, StoreRequest};
 use crate::cons::{Cons, Nil, TupleConsToCons};
-use crate::datastore::{
-    ExclusiveReader, InitializedReader, Reader, SlotTrait, Storable, Writer, generational,
-};
+use crate::datastore::{ExclusiveReader, Reader, SlotTrait, Storable, Writer, generational};
 use core::any::TypeId;
 use core::pin::Pin;
 
@@ -219,15 +217,6 @@ where
 }
 
 impl<T> AccessKind for Reader<'_, T>
-where
-    T: Storable + 'static,
-{
-    fn reader(type_id: TypeId) -> bool {
-        type_id == TypeId::of::<T>()
-    }
-}
-
-impl<T> AccessKind for InitializedReader<'_, T>
 where
     T: Storable + 'static,
 {

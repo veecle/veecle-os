@@ -3,7 +3,7 @@
 use core::fmt::Debug;
 
 use veecle_os::osal::api::time::{Duration, Instant, Interval, TimeAbstraction};
-use veecle_os::runtime::{InitializedReader, Never, Storable, Writer};
+use veecle_os::runtime::{Never, Reader, Storable, Writer};
 use veecle_os::telemetry::{error, info};
 
 const INTERVAL_PERIOD: Duration = Duration::from_secs(1);
@@ -35,14 +35,12 @@ where
 /// Additionally, prints to stderr if the time between
 /// the previous and current tick differs by more than 10 millis.
 #[veecle_os::runtime::actor]
-pub async fn ticker_reader(mut reader: InitializedReader<'_, Tick>) -> Never {
+pub async fn ticker_reader(mut reader: Reader<'_, Tick>) -> Never {
     let mut previous: Option<Instant> = None;
 
     loop {
         reader
-            .wait_for_update()
-            .await
-            .read(|&Tick { at: tick_at }| {
+            .read_updated(|&Tick { at: tick_at }| {
                 info!("last tick was at", tick_at = format_args!("{tick_at:?}"));
 
                 if let Some(previous) = previous
@@ -63,6 +61,7 @@ pub async fn ticker_reader(mut reader: InitializedReader<'_, Tick>) -> Never {
                         error_bound = i64::try_from(ABS_ERROR.as_millis()).unwrap()
                     );
                 }
-            });
+            })
+            .await;
     }
 }

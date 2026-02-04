@@ -2,10 +2,9 @@ use core::future::{Future, poll_fn};
 use core::pin::pin;
 use core::task::Poll;
 
-/// Allows combining (nearly) arbitrary amounts of [`Reader`]s, [`ExclusiveReader`]s or [`InitializedReader`]s.
+/// Allows combining (nearly) arbitrary amounts of [`Reader`]s or [`ExclusiveReader`]s.
 ///
 /// [`ExclusiveReader`]: super::ExclusiveReader
-/// [`InitializedReader`]: super::InitializedReader
 /// [`Reader`]: super::Reader
 pub trait CombineReaders {
     /// The (tuple) value that will be read from the combined readers.
@@ -222,10 +221,8 @@ mod tests {
         writer0.write(Sensor0(2)).now_or_never().unwrap();
         writer1.write(Sensor1(2)).now_or_never().unwrap();
 
-        let mut reader0 = reader0.wait_init().now_or_never().unwrap();
-        let mut reader1 = reader1.wait_init().now_or_never().unwrap();
-
-        (&mut reader0, &mut reader1).read(|(a, b)| assert_eq!(a.0, b.0));
+        (&mut reader0, &mut reader1)
+            .read(|(a, b)| assert_eq!(a.as_ref().unwrap().0, b.as_ref().unwrap().0));
     }
 
     #[test]
@@ -263,26 +260,6 @@ mod tests {
                 .now_or_never()
                 .is_some()
         );
-
-        let mut reader0 = reader0.wait_init().now_or_never().unwrap();
-        let mut reader1 = reader1.wait_init().now_or_never().unwrap();
-
-        assert!(
-            (&mut reader0, &mut reader1)
-                .wait_for_update()
-                .now_or_never()
-                .is_none()
-        );
-
-        source.as_ref().increment_generation();
-        writer0.write(Sensor0(3)).now_or_never().unwrap();
-        writer1.write(Sensor1(3)).now_or_never().unwrap();
-
-        (&mut reader0, &mut reader1)
-            .wait_for_update()
-            .now_or_never()
-            .unwrap();
-        assert!((&mut reader0, &mut reader1).is_updated());
     }
 
     #[test]
@@ -308,10 +285,5 @@ mod tests {
         source.as_ref().increment_generation();
         writer0.write(Sensor0(2)).now_or_never().unwrap();
         writer1.write(Sensor1(2)).now_or_never().unwrap();
-
-        let mut reader0 = reader0.wait_init().now_or_never().unwrap();
-
-        (&mut reader0, &mut reader1)
-            .read(|(a, b): (&Sensor0, &Option<Sensor1>)| assert_eq!(a.0, b.as_ref().unwrap().0));
     }
 }

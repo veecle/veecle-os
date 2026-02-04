@@ -10,7 +10,7 @@
 //!
 //! ```no_run
 //! # fn main() {
-//! use veecle_os_runtime::{InitializedReader, Storable, Writer, Never};
+//! use veecle_os_runtime::{Reader, Storable, Writer, Never};
 //!
 //! #[derive(Copy, Clone, Debug, Storable, serde::Deserialize)]
 //! pub struct Ping(u8);
@@ -20,11 +20,11 @@
 //!
 //! #[veecle_os_runtime::actor]
 //! async fn local_actor(
-//!     mut ping: InitializedReader<'_, Ping>,
+//!     mut ping: Reader<'_, Ping>,
 //!     mut pong: Writer<'_, Pong>,
 //! ) -> Never {
 //!     loop {
-//!         let Ping(value) = ping.wait_for_update().await.read_cloned();
+//!         let Ping(value) = ping.read_updated_cloned().await;
 //!         pong.write(Pong(value)).await;
 //!     }
 //! }
