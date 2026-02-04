@@ -31,6 +31,10 @@ where
         Self { slot, waiter }
     }
 
+    pub(crate) fn is_updated(&self) -> bool {
+        self.waiter.is_updated()
+    }
+
     /// Updates the last seen generation of this waiter so that we will wait for a newer value.
     pub(crate) fn update_generation(&mut self) {
         self.waiter.update_generation();

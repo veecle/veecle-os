@@ -23,14 +23,11 @@ pub async fn ping_loop(ping: &mut Writer<'_, Ping>, pong: &mut Reader<'_, Pong>,
     *value += 1;
 
     veecle_telemetry::info!("Waiting for pong");
-    pong.wait_for_update().await.read(|pong| {
+    pong.read_updated(|pong| {
         veecle_telemetry::info!("Pong received", pong = format!("{:?}", pong));
-        assert_eq!(
-            pong.expect("pong value should be available after an update")
-                .value,
-            *value
-        );
-    });
+        assert_eq!(pong.value, *value);
+    })
+    .await;
 }
 
 /// An actor that reads `Ping`, replies with `Pong { ping + 1 }` and waits for the next `Ping`.
@@ -68,6 +65,7 @@ pub async fn concrete_trace_actor(mut ping: Reader<'_, Ping>, mut pong: Reader<'
 #[veecle_telemetry::instrument]
 async fn concrete_trace_loop(ping: &mut Reader<'_, Ping>, pong: &mut Reader<'_, Pong>) {
     let mut pair = (ping, pong);
+    veecle_telemetry::info!("Waiting for pong");
     pair.wait_for_update().await.read(|(ping, pong)| {
         veecle_telemetry::error!(
             "Concrete Trace",

@@ -185,12 +185,6 @@ pub trait Datastore {
 }
 
 pub(crate) trait DatastoreExt<'a>: Copy {
-    #[cfg(test)]
-    /// Increments the global datastore generation.
-    ///
-    /// Asserts that every reader has had (or will have) a chance to read a value before a writer may overwrite it.
-    fn increment_generation(self);
-
     /// Returns the [`Reader`] for a specific slot.
     ///
     /// # Panics
@@ -234,12 +228,6 @@ impl<'a, S> DatastoreExt<'a> for Pin<&'a S>
 where
     S: Datastore,
 {
-    #[cfg(test)]
-    #[cfg_attr(coverage_nightly, coverage(off))]
-    fn increment_generation(self) {
-        self.source().increment_generation()
-    }
-
     fn reader<T>(self, requestor: &'static str) -> Reader<'a, T>
     where
         T: Storable + 'static,

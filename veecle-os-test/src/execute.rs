@@ -30,11 +30,11 @@
 ///
 ///         validation: async |mut reader: Reader<'_, Data>, mut trigger: Writer<'_, Trigger>| {
 ///             trigger.write(Trigger).await;
-///             assert_eq!(reader.wait_for_update().await.read_cloned(), Some(Data(0)));
+///             assert_eq!(reader.read_updated_cloned().await, Data(0));
 ///             trigger.write(Trigger).await;
-///             assert_eq!(reader.wait_for_update().await.read_cloned(), Some(Data(1)));
+///             assert_eq!(reader.read_updated_cloned().await, Data(1));
 ///             trigger.write(Trigger).await;
-///             assert_eq!(reader.wait_for_update().await.read_cloned(), Some(Data(2)));
+///             assert_eq!(reader.read_updated_cloned().await, Data(2));
 ///         },
 ///     }
 /// );

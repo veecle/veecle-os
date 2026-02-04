@@ -103,6 +103,10 @@ where
         self.waiter.update_generation();
         self
     }
+    /// Returns `true` if a unseen value is available.
+    pub fn is_updated(&self) -> bool {
+        self.waiter.is_updated()
+    }
 }
 
 impl<'a, T> InitializedReader<'a, T>
@@ -125,13 +129,24 @@ where
     T: Storable,
 {
     type ToBeRead = T::DataType;
+    type ToBeWaitRead = T::DataType;
 
-    fn borrow(&self) -> Ref<'_, Self::ToBeRead> {
+    fn borrow(&mut self) -> Ref<'_, Self::ToBeRead> {
+        self.waiter.update_generation();
+        Ref::map(self.waiter.borrow(), |t| t.as_ref().unwrap())
+    }
+
+    fn borrow_for_updated(&mut self) -> Ref<'_, Self::ToBeWaitRead> {
+        self.waiter.update_generation();
         Ref::map(self.waiter.borrow(), |t| t.as_ref().unwrap())
     }
 
     async fn wait_for_update(&mut self) {
         self.wait_for_update().await;
+    }
+
+    fn is_updated(&self) -> bool {
+        self.is_updated()
     }
 }
 

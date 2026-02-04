@@ -45,11 +45,11 @@
 //! #[veecle_os_runtime::actor]
 //! async fn tick_reader(mut reader: Reader<'_, Tick>) -> Never {
 //!     loop {
-//!         reader.wait_for_update().await.read(|tick| {
+//!         reader.read_updated(|tick| {
 //!             println!("[READER TASK] Tick received: {tick:?}");
 //! #           // Exit the application to allow doc-tests to complete.
 //! #           std::process::exit(0);
-//!         })
+//!         }).await
 //!     }
 //! }
 //!

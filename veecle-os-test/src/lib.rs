@@ -41,18 +41,17 @@
 //!         actors: [TotalActor],
 //!         validation: async |mut total_reader: Reader<'_, Total>, mut numbers_writer: Writer<'_, Number>| {
 //!             numbers_writer.write(Number(0)).await;
-//!             let mut total_reader = total_reader.wait_init().await;
-//!             total_reader.wait_for_update().await.read(|value| {
+//!             total_reader.read_updated(|value| {
 //!                 assert_eq!(value.0, 0);
-//!             });
+//!             }).await;
 //!             numbers_writer.write(Number(1)).await;
-//!             total_reader.wait_for_update().await.read(|value| {
+//!             total_reader.read_updated(|value| {
 //!                 assert_eq!(value.0, 1);
-//!             });
+//!             }).await;
 //!             numbers_writer.write(Number(2)).await;
-//!             total_reader.wait_for_update().await.read(|value| {
+//!             total_reader.read_updated(|value| {
 //!                 assert_eq!(value.0, 3);
-//!             });
+//!             }).await;
 //!         }
 //!     }
 //! );

@@ -37,13 +37,13 @@ fn outdated_signals_should_be_discarded() {
         validation: async |mut reader: Reader<'_, UpToDateSignal>, mut writer: Writer<'_, Signal>| {
             writer.write(Signal(1)).await;
 
-            reader.wait_for_update().await.read(|value| {
+            reader.read_updated(|value| {
                 assert_eq!(
-                    &value.unwrap().0,
+                    &value.0,
                     &Signal(1),
                     "up-to-date signal should be written"
                 );
-            });
+            }).await;
 
             writer.write(Signal(0)).await;
 

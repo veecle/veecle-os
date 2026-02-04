@@ -1,6 +1,6 @@
-static RAW_OUTPUT: &str = r"[sender] Sending 0
+static RAW_OUTPUT: &str = r"[receiver] Waiting for value
+[sender] Sending 0
 [sender] Sending 1
-[receiver] Waiting for value
 [receiver] Received: 0
 [receiver] Waiting for value
 [sender] Sending 2

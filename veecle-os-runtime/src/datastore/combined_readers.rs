@@ -12,15 +12,18 @@ pub trait CombineReaders {
     type ToBeRead<'b>;
 
     /// Reads a tuple of values from all combined readers in the provided function.
-    fn read<U>(&self, f: impl FnOnce(Self::ToBeRead<'_>) -> U) -> U;
+    fn read<U>(&mut self, f: impl FnOnce(Self::ToBeRead<'_>) -> U) -> U;
 
     /// Observes the combined readers for updates.
     ///
     /// Will return if **any** of the readers is updated.
     ///
-    /// This returns `&mut Self` to allow chaining a call to [`read`][Self::read`].
+    /// This returns `&mut Self` to allow chaining a call to [`read`][Self::read].
     #[allow(async_fn_in_trait)]
     async fn wait_for_update(&mut self) -> &mut Self;
+
+    /// Returns `true` if **any** of the readers was updated.
+    fn is_updated(&self) -> bool;
 }
 
 pub(super) trait Sealed {}
@@ -35,7 +38,7 @@ pub trait CombinableReader: Sealed {
     ///
     /// Borrows the value of the reader from the slot's internal [`RefCell`][core::cell::RefCell].
     #[doc(hidden)]
-    fn borrow(&self) -> core::cell::Ref<'_, Self::ToBeRead>;
+    fn borrow(&mut self) -> core::cell::Ref<'_, Self::ToBeRead>;
 
     /// Internal implementation details.
     ///
@@ -44,7 +47,14 @@ pub trait CombinableReader: Sealed {
     /// [`Reader::wait_for_update`]: super::Reader::wait_for_update
     #[doc(hidden)]
     #[allow(async_fn_in_trait)]
-    async fn wait_for_update(&mut self);
+    async fn wait_for_update(&mut self) -> &mut Self;
+
+    /// Internal implementation details.
+    ///
+    /// See [`Reader::is_updated`] for more.
+    ///
+    /// [`Reader::is_updated`]: super::Reader::is_updated
+    fn is_updated(&self) -> bool;
 }
 
 /// Implements [`CombineReaders`] for provided types for the various reader types.
@@ -65,7 +75,7 @@ macro_rules! impl_combined_reader_helper {
 
                 #[allow(non_snake_case)]
                 #[veecle_telemetry::instrument]
-                fn read<A>(&self, f: impl FnOnce(Self::ToBeRead<'_>) -> A) -> A {
+                fn read<A>(&mut self, f: impl FnOnce(Self::ToBeRead<'_>) -> A) -> A {
                     let ($($generic_type,)*) = self;
                     let ($($generic_type,)*) = ($({
                         $generic_type.borrow()
@@ -95,6 +105,16 @@ macro_rules! impl_combined_reader_helper {
                         }).await;
                     }
                     self
+                }
+
+                #[allow(non_snake_case)]
+                #[veecle_telemetry::instrument]
+                fn is_updated(&self) -> bool {
+                    let ($($generic_type,)*) = self;
+                    let result = $({
+                        $generic_type.is_updated()
+                    })||*;
+                    result
                 }
             }
         )*
@@ -176,12 +196,6 @@ mod tests {
                 .now_or_never()
                 .is_some()
         );
-        assert!(
-            (&mut reader0, &mut reader1)
-                .wait_for_update()
-                .now_or_never()
-                .is_none()
-        );
     }
 
     #[test]
@@ -249,12 +263,6 @@ mod tests {
                 .now_or_never()
                 .is_some()
         );
-        assert!(
-            (&mut reader0, &mut reader1)
-                .wait_for_update()
-                .now_or_never()
-                .is_none()
-        );
 
         let mut reader0 = reader0.wait_init().now_or_never().unwrap();
         let mut reader1 = reader1.wait_init().now_or_never().unwrap();
@@ -273,14 +281,8 @@ mod tests {
         (&mut reader0, &mut reader1)
             .wait_for_update()
             .now_or_never()
-            .unwrap()
-            .read(|(a, b)| assert_eq!(a.0, b.0));
-        assert!(
-            (&mut reader0, &mut reader1)
-                .wait_for_update()
-                .now_or_never()
-                .is_none()
-        );
+            .unwrap();
+        assert!((&mut reader0, &mut reader1).is_updated());
     }
 
     #[test]
