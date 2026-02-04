@@ -206,6 +206,74 @@ mod tests {
     use crate::datastore::{Reader, Slot, Storable, Writer, generational};
 
     #[test]
+    fn read() {
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor(u8);
+
+        let source = pin!(generational::Source::new());
+        let slot = pin!(Slot::<Sensor>::new());
+
+        let mut reader = Reader::from_slot(slot.as_ref());
+        let mut writer = Writer::new(source.as_ref().waiter(), slot.as_ref());
+
+        assert_eq!(reader.read(|x| x.cloned()), None);
+        assert_eq!(reader.read_cloned(), None);
+
+        source.as_ref().increment_generation();
+        writer.write(Sensor(1)).now_or_never().unwrap();
+
+        assert_eq!(reader.read(|x| x.cloned()), Some(Sensor(1)));
+        assert_eq!(reader.read_cloned(), Some(Sensor(1)));
+    }
+
+    #[test]
+    fn read_updated() {
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor(u8);
+
+        let source = pin!(generational::Source::new());
+        let slot = pin!(Slot::<Sensor>::new());
+
+        let mut reader = Reader::from_slot(slot.as_ref());
+        let mut writer = Writer::new(source.as_ref().waiter(), slot.as_ref());
+
+        assert_eq!(reader.read_updated(|x| x.clone()).now_or_never(), None);
+
+        source.as_ref().increment_generation();
+        writer.write(Sensor(1)).now_or_never().unwrap();
+
+        assert_eq!(
+            reader.read_updated(|x| x.clone()).now_or_never(),
+            Some(Sensor(1))
+        );
+        assert_eq!(reader.read_updated_cloned().now_or_never(), None);
+    }
+
+    #[test]
+    fn is_updated() {
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor(u8);
+
+        let source = pin!(generational::Source::new());
+        let slot = pin!(Slot::<Sensor>::new());
+
+        let mut reader = Reader::from_slot(slot.as_ref());
+        let mut writer = Writer::new(source.as_ref().waiter(), slot.as_ref());
+
+        assert!(!reader.is_updated());
+
+        source.as_ref().increment_generation();
+        writer.write(Sensor(1)).now_or_never().unwrap();
+
+        assert!(reader.is_updated());
+        reader.read(|x| assert_eq!(x, Some(&Sensor(1))));
+        assert!(!reader.is_updated());
+    }
+
+    #[test]
     fn wait_for_update() {
         #[derive(Eq, PartialEq, Debug, Clone, Storable)]
         #[storable(crate = crate)]
@@ -223,6 +291,7 @@ mod tests {
         writer.write(Sensor(1)).now_or_never().unwrap();
 
         reader.wait_for_update().now_or_never().unwrap();
-        assert!(reader.is_updated());
+        reader.read(|x| assert_eq!(x, Some(&Sensor(1))));
+        assert!(reader.wait_for_update().now_or_never().is_none());
     }
 }

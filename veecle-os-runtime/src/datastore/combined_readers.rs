@@ -286,4 +286,64 @@ mod tests {
         writer0.write(Sensor0(2)).now_or_never().unwrap();
         writer1.write(Sensor1(2)).now_or_never().unwrap();
     }
+
+    #[test]
+    fn is_updated() {
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor0(u8);
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor1(u8);
+
+        let source = pin!(generational::Source::new());
+        let slot0 = pin!(Slot::<Sensor0>::new());
+        let slot1 = pin!(Slot::<Sensor1>::new());
+
+        let mut writer0 = Writer::new(source.as_ref().waiter(), slot0.as_ref());
+        let mut reader0 = Reader::from_slot(slot0.as_ref());
+        let mut reader1 = Reader::from_slot(slot1.as_ref());
+
+        assert!(!(&mut reader0, &mut reader1).is_updated());
+
+        source.as_ref().increment_generation();
+        writer0.write(Sensor0(1)).now_or_never().unwrap();
+
+        assert!((&mut reader0, &mut reader1).is_updated());
+
+        (&mut reader0, &mut reader1).read(|(a, b)| {
+            assert_eq!(a.as_ref().unwrap(), &Sensor0(1));
+            assert!(b.is_none());
+        });
+    }
+
+    #[test]
+    fn is_updated_exclusive_reader() {
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor0(u8);
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor1(u8);
+
+        let source = pin!(generational::Source::new());
+        let slot0 = pin!(Slot::<Sensor0>::new());
+        let slot1 = pin!(Slot::<Sensor1>::new());
+
+        let mut writer1 = Writer::new(source.as_ref().waiter(), slot1.as_ref());
+        let mut reader0 = ExclusiveReader::from_slot(slot0.as_ref());
+        let mut reader1 = ExclusiveReader::from_slot(slot1.as_ref());
+
+        assert!(!(&mut reader0, &mut reader1).is_updated());
+
+        source.as_ref().increment_generation();
+        writer1.write(Sensor1(1)).now_or_never().unwrap();
+
+        assert!((&mut reader0, &mut reader1).is_updated());
+
+        (&mut reader0, &mut reader1).read(|(a, b)| {
+            assert!(a.is_none());
+            assert_eq!(b.as_ref().unwrap(), &Sensor1(1));
+        });
+    }
 }
