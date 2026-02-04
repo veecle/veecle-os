@@ -4,7 +4,7 @@ error: #[actor] functions must return a `Result` or `Never`
 5 | async fn macro_test_actor(
   | ^^^^^
 
-error[E0412]: cannot find type `MacroTestActor` in this scope
+error[E0425]: cannot find type `MacroTestActor` in this scope
   --> tests/ui/actor/return_nothing.rs:14:18
    |
 14 |         actors: [MacroTestActor],
