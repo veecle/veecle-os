@@ -16,6 +16,7 @@
 use core::fmt;
 use core::num::NonZeroU64;
 use core::str::FromStr;
+use rand::RngExt;
 
 /// A globally-unique id identifying a process.
 ///
