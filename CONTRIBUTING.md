@@ -209,15 +209,7 @@ The `README.md` file contains a code example that is automatically tested to ens
 
 ### Public Dependency Constraint
 
-The `readme-example` crate depends on the public release of `veecle-os` (currently via a git dependency that points to the `main` branch).
-This dependency configuration has an important implication: **the README example cannot be updated in the same PR that introduces breaking changes to the public API**.
-
-### Workflow for Breaking API Changes
-
-When making breaking changes to the public API:
-
-1. Submit your PR with the breaking changes but **without** updating the README example.
-2. After the PR is merged to `main`, CI will start failing, so submit a follow-up PR that updates the README example to use the new API.
+The `readme-example` crate depends on the latest development version of `veecle-os` (currently via a path dependency).
 
 ## YAML
 
