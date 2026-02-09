@@ -104,7 +104,7 @@ prettyplease = { version = "0.2.37", default-features = false }
 proc-macro-crate = { version = "3.4.0", default-features = false }
 proc-macro2 = { version = "1.0.106", default-features = false }
 quote = { version = "1.0.44", default-features = false }
-rand = { version = "0.9.2", default-features = false }
+rand = { version = "0.10.0", default-features = false }
 re_log = { version = "0.29.0", default-features = false }
 rfd = { version = "0.17.1", default-features = false }
 rtt-target = { version = "0.6.2", default-features = false }
@@ -141,7 +141,7 @@ tracing-error = { version = "0.2.1", default-features = false }
 tracing-subscriber = { version = "0.3.22", default-features = false }
 trybuild = { version = "1.0.115", default-features = false }
 typenum = { version = "1.19.0", default-features = false }
-unicode-ident = { version = "1.0.22", default-features = false }
+unicode-ident = { version = "1.0.23", default-features = false }
 uuid = { version = "1.18.1", default-features = false }
 veecle-freertos-integration = { version = "0.1.1", default-features = false }
 veecle-freertos-sys = { version = "0.1.1", default-features = false }
