@@ -18,11 +18,11 @@ Due to depending on the released version of the crate, this example cannot be up
 See "README Example" in `CONTRIBUTING.md` for the workflow.
 -->
 
+The example uses the latest development version (`main`).
 Add the following dependencies to your `Cargo.toml` file:
 
 ```toml
-rand = "0.9.2"
-tokio = "1.48.0"
+tokio = "1.49.0"
 # TODO(#161): Uses a git dependency until the `ConsolePrettyExporter` is released.
 veecle-os = { git = "https://github.com/veecle/veecle-os", branch = "main", features = [
     "osal-std",
@@ -33,15 +33,15 @@ veecle-os = { git = "https://github.com/veecle/veecle-os", branch = "main", feat
 Add the following code to your `main.rs` file:
 
 ```rust
-use core::convert::Infallible;
 use veecle_os::info;
 use veecle_os::osal::api::time::{Duration, Instant, Interval, TimeAbstraction};
-use veecle_os::runtime::{InitializedReader, Storable, Writer};
-use veecle_os::telemetry::collector::{ConsolePrettyExporter, set_exporter, ProcessId};
+use veecle_os::runtime::{InitializedReader, Never, Storable, Writer};
+use veecle_os::telemetry::collector::{ConsolePrettyExporter, ProcessId};
 
-#[derive(Debug, Storable)]
-#[storable(data_type = Instant)]
-pub struct Tick;
+#[derive(Debug, PartialEq, Clone, Storable)]
+pub struct Tick {
+    at: Instant,
+}
 
 /// Emits a timestamp every second.
 ///
@@ -49,7 +49,7 @@ pub struct Tick;
 #[veecle_os::runtime::actor]
 pub async fn ticker_actor<T>(
     mut tick_writer: Writer<'_, Tick>,
-) -> Result<Infallible, veecle_os::osal::api::Error>
+) -> Result<Never, veecle_os::osal::api::Error>
 where
     T: TimeAbstraction,
 {
@@ -57,7 +57,7 @@ where
 
     loop {
         interval.tick().await?;
-        tick_writer.write(T::now()).await;
+        tick_writer.write(Tick { at: T::now() }).await;
     }
 }
 
@@ -65,34 +65,41 @@ where
 ///
 /// Can be used on any supported platform.
 #[veecle_os::runtime::actor]
-pub async fn ticker_reader(mut reader: InitializedReader<'_, Tick>) -> Infallible {
+pub async fn ticker_reader(mut reader: InitializedReader<'_, Tick>) -> Never {
     loop {
-        reader.wait_for_update().await.read(|tick| {
-            info!(
-                "latest tick",
-                tick = {
-                    i64::try_from(tick.duration_since(Instant::MIN).unwrap().as_secs()).unwrap()
+        reader
+            .wait_for_update()
+            .await
+            .read(|&Tick { at: tick_at }| {
+                info!(
+                    "latest tick",
+                    tick = {
+                        i64::try_from(tick_at.duration_since(Instant::MIN).unwrap().as_secs()).unwrap()
+                    }
+                );
+                // This is not relevant for running the example.
+                // To test the example in CI, we need to force it to terminate.
+                if env!("CARGO_PKG_NAME") == "readme-example" {
+                    std::process::exit(0);
                 }
-            );
-            // This is not relevant for running the example.
-            // To test the example in CI, we need to force it to terminate.
-            if env!("CARGO_PKG_NAME") == "readme-example" {
-                std::process::exit(0);
-            }
-        });
+            });
     }
 }
 
 /// Platform specific `main` implementation for `std`.
 #[tokio::main]
 async fn main() {
-    let process_id = ProcessId::random(&mut rand::rng());
     // The `ConsolePrettyExporter` should only be used for experimentation.
     // See the `veecle-telemetry-ui` application for fully featured telemetry.
-    set_exporter(process_id, &ConsolePrettyExporter::DEFAULT).unwrap();
+    veecle_os::telemetry::collector::build()
+        .random_process_id()
+        .exporter(&ConsolePrettyExporter::DEFAULT)
+        .time::<veecle_os::osal::std::time::Time>()
+        .thread::<veecle_os::osal::std::thread::Thread>()
+        .set_global()
+        .expect("exporter was not set yet");
 
     veecle_os::runtime::execute! {
-        store: [Tick],
         actors: [
             TickerReader,
             TickerActor<veecle_os::osal::std::time::Time>,
