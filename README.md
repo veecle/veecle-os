@@ -14,7 +14,6 @@ After completing the setup instructions, go to [the examples](veecle-os-examples
 <!--
 This example is automatically tested via the `readme-example` crate.
 Dependencies in `readme-example/Cargo.toml` must be kept in sync with this.
-Due to depending on the released version of the crate, this example cannot be updated in the same PR as breaking API changes.
 See "README Example" in `CONTRIBUTING.md` for the workflow.
 -->
 
