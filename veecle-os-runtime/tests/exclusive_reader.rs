@@ -5,7 +5,8 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 use std::future::poll_fn;
 use std::sync::atomic::Ordering::SeqCst;
 use std::task::Poll;
-use veecle_os_runtime::{ExclusiveReader, Never, Reader, Storable, Writer};
+use veecle_os_runtime::single_writer::{ExclusiveReader, Reader, Writer};
+use veecle_os_runtime::{Never, Storable};
 
 static READ_COUNTER: AtomicUsize = AtomicUsize::new(0);
 

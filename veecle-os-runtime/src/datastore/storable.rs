@@ -1,3 +1,5 @@
+//! Storable trait for types that can be stored in a slot.
+
 use core::fmt::Debug;
 
 /// Marks a type as an identifier for the inner `DataType`, which can be transferred via a slot.

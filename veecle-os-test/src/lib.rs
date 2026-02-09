@@ -14,7 +14,8 @@
 //! #[derive(Debug, Default, veecle_os_runtime::Storable)]
 //! pub struct Total(usize);
 //! #
-//! # use veecle_os_runtime::{ Never, Reader, Writer};
+//! # use veecle_os_runtime::single_writer::{Reader, Writer};
+//! # use veecle_os_runtime::Never;
 //!
 //! // `total_actor` reads numbers from a `Number` reader, keeps a running
 //! // total, and writes running totals to a `Total` writer.

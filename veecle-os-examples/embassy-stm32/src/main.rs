@@ -5,8 +5,8 @@ use core::num::Wrapping;
 use embassy_executor::Spawner;
 use veecle_os::osal::api::log::LogTarget;
 use veecle_os::osal::api::time::{Duration, TimeAbstraction};
-use veecle_os::runtime::Never;
-use veecle_os::runtime::{Reader, Storable, Writer};
+use veecle_os::runtime::single_writer::{Reader, Writer};
+use veecle_os::runtime::{Never, Storable};
 
 use panic_halt as _;
 

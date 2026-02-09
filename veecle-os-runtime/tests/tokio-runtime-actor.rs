@@ -12,7 +12,8 @@ use tokio::net::unix::pipe;
 use tokio::net::unix::pipe::{Receiver, Sender};
 use tokio::runtime::Builder;
 use tokio::sync::mpsc;
-use veecle_os_runtime::{Reader, Storable, Writer};
+use veecle_os_runtime::Storable;
+use veecle_os_runtime::single_writer::{Reader, Writer};
 
 // This test showcases how two runtime instances can communicate via I/O runtime-actors (using anonymous unix pipes).
 // The runtime-actors use their own Tokio runtimes.

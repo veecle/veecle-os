@@ -7,7 +7,8 @@
 //! cargo run --package veecle-telemetry-ui -- ./spans.jsonl
 //! ```
 
-use veecle_os_runtime::{Never, Reader, Writer};
+use veecle_os_runtime::Never;
+use veecle_os_runtime::single_writer::{Reader, Writer};
 
 use crate::common::{ConcreteTraceActor, Ping, Pong, PongActor, ping_loop};
 

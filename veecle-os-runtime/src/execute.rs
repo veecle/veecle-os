@@ -7,9 +7,11 @@
 )]
 
 use crate::Never;
-use crate::actor::{Actor, Datastore, StoreRequest};
+use crate::actor::Actor;
 use crate::cons::{Cons, Nil, TupleConsToCons};
-use crate::datastore::{ExclusiveReader, Reader, SlotTrait, Storable, Writer, generational};
+use crate::datastore::single_writer::{ExclusiveReader, Reader, Writer};
+use crate::datastore::sync::generational;
+use crate::datastore::{Datastore, SlotTrait, Storable, StoreRequest};
 use core::any::TypeId;
 use core::pin::Pin;
 
@@ -453,7 +455,8 @@ where
 /// ```rust
 /// use core::fmt::Debug;
 ///
-/// use veecle_os_runtime::{Never, Reader, Storable, Writer};
+/// use veecle_os_runtime::single_writer::{Reader, Writer};
+/// use veecle_os_runtime::{Never, Storable};
 ///
 /// #[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
 /// pub struct Ping {
@@ -627,11 +630,11 @@ mod tests {
     use core::marker::PhantomData;
     use core::pin::pin;
 
-    use crate::actor::Datastore;
     use crate::cons::Cons;
     use crate::cons::Nil;
-    use crate::datastore::Slot;
-    use crate::execute::generational::Source;
+    use crate::datastore::Datastore;
+    use crate::datastore::single_writer::Slot;
+    use crate::datastore::sync::generational::Source;
 
     #[test]
     #[should_panic(

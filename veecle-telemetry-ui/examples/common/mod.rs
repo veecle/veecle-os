@@ -1,7 +1,8 @@
 use std::fmt::Debug;
 
 use serde::Serialize;
-use veecle_os_runtime::{CombineReaders, Never, Reader, Storable, Writer};
+use veecle_os_runtime::single_writer::{Reader, Writer};
+use veecle_os_runtime::{CombineReaders, Never, Storable};
 
 #[derive(Debug, Default, Storable, Serialize)]
 pub struct Ping {

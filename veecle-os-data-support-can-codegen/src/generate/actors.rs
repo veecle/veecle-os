@@ -35,9 +35,9 @@ pub(super) fn generate(options: &crate::Options, dbc: &Dbc) -> Result<TokenStrea
         #[#veecle_os_runtime::actor #actor_args]
         #allow
         pub async fn deserialize_frames(
-            mut reader: #veecle_os_runtime::Reader<'_, Frame>,
+            mut reader: #veecle_os_runtime::single_writer::Reader<'_, Frame>,
             #(
-                mut #writer_names: #veecle_os_runtime::Writer<'_, #message_names>,
+                mut #writer_names: #veecle_os_runtime::single_writer::Writer<'_, #message_names>,
             )*
         ) -> #veecle_os_runtime::Never {
             loop {

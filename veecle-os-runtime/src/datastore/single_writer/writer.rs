@@ -1,9 +1,15 @@
+//! Writer for single-writer slots.
+
 use core::fmt::Debug;
 use core::marker::PhantomData;
 use core::pin::Pin;
 
 use super::slot::Slot;
-use super::{Storable, generational};
+use crate::Sealed;
+use crate::cons::{Cons, Nil};
+use crate::datastore::sync::generational;
+use crate::datastore::{Datastore, DatastoreExt};
+use crate::datastore::{DefinesSlot, Storable, StoreRequest};
 
 /// Writer for a [`Storable`] type.
 ///
@@ -25,7 +31,7 @@ use super::{Storable, generational};
 /// // Writing a value.
 /// # use std::fmt::Debug;
 /// #
-/// # use veecle_os_runtime::{Storable, Writer};
+/// # use veecle_os_runtime::{Storable, single_writer::Writer};
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
@@ -43,7 +49,7 @@ use super::{Storable, generational};
 /// // Modifying a value.
 /// # use std::fmt::Debug;
 /// #
-/// # use veecle_os_runtime::{Storable, Writer};
+/// # use veecle_os_runtime::{Storable, single_writer::Writer};
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
@@ -68,7 +74,7 @@ use super::{Storable, generational};
 /// ```rust
 /// # use std::fmt::Debug;
 /// #
-/// # use veecle_os_runtime::{Storable, Reader, Writer};
+/// # use veecle_os_runtime::{Storable, single_writer::{Reader, Writer}};
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
@@ -88,7 +94,7 @@ use super::{Storable, generational};
 /// ```
 ///
 /// [`Actor`]: crate::Actor
-/// [`Reader`]: crate::Reader
+/// [`Reader`]: super::Reader
 #[derive(Debug)]
 pub struct Writer<'a, T>
 where
@@ -172,10 +178,30 @@ where
     }
 }
 
+impl<'a, T> DefinesSlot for Writer<'a, T>
+where
+    T: Storable,
+{
+    type Slot = Cons<Slot<T>, Nil>;
+}
+
+impl<T> Sealed for Writer<'_, T> where T: Storable + 'static {}
+
+impl<'a, T> StoreRequest<'a> for Writer<'a, T>
+where
+    T: Storable + 'static,
+{
+    async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self {
+        datastore.writer(requestor)
+    }
+}
+
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
-    use crate::datastore::{Slot, Storable, Writer, generational};
+    use crate::datastore::Storable;
+    use crate::datastore::single_writer::{Slot, Writer};
+    use crate::datastore::sync::generational;
     use core::pin::pin;
 
     #[test]

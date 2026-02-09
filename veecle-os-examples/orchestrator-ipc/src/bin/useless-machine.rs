@@ -2,11 +2,10 @@
 //!
 //! This implements a [useless machine](https://en.wikipedia.org/wiki/Useless_machine) in the form
 //! of a runtime process that just shuts itself down.
-use veecle_os::runtime::Never;
-
 use veecle_ipc::{ControlRequest, ControlResponse, Uuid};
 use veecle_os::osal::std::time::{Duration, Time, TimeAbstraction};
-use veecle_os::runtime::{Reader, Writer};
+use veecle_os::runtime::Never;
+use veecle_os::runtime::single_writer::{Reader, Writer};
 
 #[veecle_os::runtime::actor]
 async fn useless_machine_actor(

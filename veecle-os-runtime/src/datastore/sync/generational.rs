@@ -142,7 +142,7 @@ mod tests {
     use std::future::Future;
     use std::pin::pin;
 
-    use crate::datastore::generational;
+    use crate::datastore::sync::generational;
 
     #[test]
     fn example() {

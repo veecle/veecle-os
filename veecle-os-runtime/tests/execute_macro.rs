@@ -34,8 +34,8 @@ async fn yield_once() {
 
 #[veecle_os_runtime::actor]
 async fn sensor_reader_writer(
-    _sensor_reader: veecle_os_runtime::Reader<'_, Sensor>,
-    _sensor_writer: veecle_os_runtime::Writer<'_, Sensor>,
+    _sensor_reader: veecle_os_runtime::single_writer::Reader<'_, Sensor>,
+    _sensor_writer: veecle_os_runtime::single_writer::Writer<'_, Sensor>,
 ) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
@@ -43,7 +43,7 @@ async fn sensor_reader_writer(
 
 #[veecle_os_runtime::actor]
 async fn sensor_reader(
-    _sensor_reader: veecle_os_runtime::Reader<'_, Sensor>,
+    _sensor_reader: veecle_os_runtime::single_writer::Reader<'_, Sensor>,
 ) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
@@ -51,7 +51,7 @@ async fn sensor_reader(
 
 #[veecle_os_runtime::actor]
 async fn other_reader(
-    _other_reader: veecle_os_runtime::Reader<'_, Other>,
+    _other_reader: veecle_os_runtime::single_writer::Reader<'_, Other>,
 ) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
@@ -59,7 +59,7 @@ async fn other_reader(
 
 #[veecle_os_runtime::actor]
 async fn other_exclusive_reader(
-    _other_reader: veecle_os_runtime::ExclusiveReader<'_, Other>,
+    _other_reader: veecle_os_runtime::single_writer::ExclusiveReader<'_, Other>,
 ) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
@@ -67,8 +67,8 @@ async fn other_exclusive_reader(
 
 #[veecle_os_runtime::actor]
 async fn other_double_exclusive_reader(
-    _other_reader: veecle_os_runtime::ExclusiveReader<'_, Other>,
-    _other_reader_2: veecle_os_runtime::ExclusiveReader<'_, Other>,
+    _other_reader: veecle_os_runtime::single_writer::ExclusiveReader<'_, Other>,
+    _other_reader_2: veecle_os_runtime::single_writer::ExclusiveReader<'_, Other>,
 ) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
@@ -76,8 +76,8 @@ async fn other_double_exclusive_reader(
 
 #[veecle_os_runtime::actor]
 async fn other_dual_reader(
-    _other_reader: veecle_os_runtime::ExclusiveReader<'_, Other>,
-    _other_reader_2: veecle_os_runtime::Reader<'_, Other>,
+    _other_reader: veecle_os_runtime::single_writer::ExclusiveReader<'_, Other>,
+    _other_reader_2: veecle_os_runtime::single_writer::Reader<'_, Other>,
 ) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
@@ -85,7 +85,7 @@ async fn other_dual_reader(
 
 #[veecle_os_runtime::actor]
 async fn other_writer(
-    _other_writer: veecle_os_runtime::Writer<'_, Other>,
+    _other_writer: veecle_os_runtime::single_writer::Writer<'_, Other>,
 ) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
@@ -93,7 +93,7 @@ async fn other_writer(
 
 #[veecle_os_runtime::actor]
 async fn data_writer(
-    _data_writer: veecle_os_runtime::Writer<'_, Data>,
+    _data_writer: veecle_os_runtime::single_writer::Writer<'_, Data>,
 ) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
@@ -101,7 +101,7 @@ async fn data_writer(
 
 #[veecle_os_runtime::actor]
 async fn exclusive_data_reader(
-    _reader: veecle_os_runtime::ExclusiveReader<'_, Data>,
+    _reader: veecle_os_runtime::single_writer::ExclusiveReader<'_, Data>,
 ) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
@@ -109,7 +109,7 @@ async fn exclusive_data_reader(
 
 #[veecle_os_runtime::actor]
 async fn generic_reader<T: veecle_os_runtime::Storable + 'static>(
-    _reader: veecle_os_runtime::Reader<'_, T>,
+    _reader: veecle_os_runtime::single_writer::Reader<'_, T>,
 ) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")
@@ -117,7 +117,7 @@ async fn generic_reader<T: veecle_os_runtime::Storable + 'static>(
 
 #[veecle_os_runtime::actor]
 async fn generic_writer<T: veecle_os_runtime::Storable + 'static>(
-    _writer: veecle_os_runtime::Writer<'_, T>,
+    _writer: veecle_os_runtime::single_writer::Writer<'_, T>,
 ) -> veecle_os_runtime::Never {
     yield_once().await;
     panic!("done")

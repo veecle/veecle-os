@@ -83,6 +83,10 @@ mod fake_veecle_os_runtime {
         type Slot = __exports::Nil;
     }
 
+    pub mod single_writer {
+        pub use super::{ExclusiveReader, Reader, Writer};
+    }
+
     pub fn assert_right_actor_trait<'a, T>()
     where
         T: self::Actor<'a>,
@@ -95,9 +99,9 @@ pub struct Sensor(pub u8);
 
 #[veecle_os_runtime_macros::actor(crate = self::fake_veecle_os_runtime)]
 async fn macro_test_actor(
-    _sensor_reader: fake_veecle_os_runtime::Reader<'_, Sensor>,
-    _sensor_reader_excl: fake_veecle_os_runtime::ExclusiveReader<'_, Sensor>,
-    _sensor_writer: fake_veecle_os_runtime::Writer<'_, Sensor>,
+    _sensor_reader: fake_veecle_os_runtime::single_writer::Reader<'_, Sensor>,
+    _sensor_reader_excl: fake_veecle_os_runtime::single_writer::ExclusiveReader<'_, Sensor>,
+    _sensor_writer: fake_veecle_os_runtime::single_writer::Writer<'_, Sensor>,
 ) -> fake_veecle_os_runtime::Never {
     unreachable!("We only care about the code compiling.");
 }

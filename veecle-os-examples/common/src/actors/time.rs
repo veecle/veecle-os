@@ -3,7 +3,8 @@
 use core::fmt::Debug;
 
 use veecle_os::osal::api::time::{Duration, Instant, Interval, TimeAbstraction};
-use veecle_os::runtime::{Never, Reader, Storable, Writer};
+use veecle_os::runtime::single_writer::{Reader, Writer};
+use veecle_os::runtime::{Never, Storable};
 use veecle_os::telemetry::{error, info};
 
 const INTERVAL_PERIOD: Duration = Duration::from_secs(1);

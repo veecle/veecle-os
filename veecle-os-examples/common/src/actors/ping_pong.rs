@@ -3,7 +3,8 @@
 use core::fmt::Debug;
 use futures::future::FutureExt;
 use serde::{Deserialize, Serialize};
-use veecle_os::runtime::{Never, Reader, Storable, Writer};
+use veecle_os::runtime::single_writer::{Reader, Writer};
+use veecle_os::runtime::{Never, Storable};
 use veecle_os::telemetry::{error, info};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Storable, Deserialize, Serialize)]

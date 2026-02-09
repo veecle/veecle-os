@@ -4,7 +4,8 @@
 //! `DataType`. Changes to how slots are created or assigned could introduce bugs where data from
 //! one Storable overwrites another.
 
-use veecle_os_runtime::{Reader, Storable, Writer};
+use veecle_os_runtime::Storable;
+use veecle_os_runtime::single_writer::{Reader, Writer};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Temperature;

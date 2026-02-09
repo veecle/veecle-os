@@ -5,7 +5,8 @@
 //! cargo run --package veecle-telemetry-ui --example continuous | cargo run --package veecle-telemetry-ui
 //! ```
 
-use veecle_os_runtime::{Never, Reader, Writer};
+use veecle_os_runtime::Never;
+use veecle_os_runtime::single_writer::{Reader, Writer};
 use veecle_osal_std::time::{Duration, Time, TimeAbstraction};
 
 use crate::common::{ConcreteTraceActor, Ping, Pong, PongActor, ping_loop};

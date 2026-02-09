@@ -1,27 +1,33 @@
+//! Exclusive reader for single-writer slots.
+
 use core::cell::Ref;
 use core::fmt::Debug;
 use core::marker::PhantomData;
 use core::pin::Pin;
 
-use pin_project::pin_project;
+use super::slot::Slot;
+use super::waiter::Waiter;
+use crate::Sealed;
+use crate::cons::Nil;
+use crate::datastore::{
+    CombinableReader, Datastore, DatastoreExt, DefinesSlot, Storable, StoreRequest,
+};
 
-use crate::datastore::Storable;
-use crate::datastore::slot::{self, Slot};
-
-/// Reader for a [`Storable`] type.
+/// Exclusive reader for a [`Storable`] type.
 ///
-/// Allows [`Actor`]s to read a value of a type written by another actor.
+/// By being the sole reader for a [`Storable`] type, this reader can move the read value out.
 /// The generic type `T` from the reader specifies the type of the value that is being read.
 ///
 /// The reader allows reading the current value.
-/// If no value for type `T` has been written to yet, [`Reader::read`] will return `None`.
+/// If no value for type `T` has been written yet, [`ExclusiveReader::read`] and
+/// [`ExclusiveReader::take`] will return `None`.
 ///
 /// # Usage
 ///
-/// [`Reader::wait_for_update`] allows waiting until the type is written to.
+/// [`ExclusiveReader::wait_for_update`] allows waiting until the type is written to.
 /// It will return immediately if an unseen value is available.
 /// Unseen does not imply the value actually changed, just that an [`Actor`] has written a value.
-/// A write of the same value still triggers [`Reader::wait_for_update`] to resolve.
+/// A write of the same value still triggers [`ExclusiveReader::wait_for_update`] to resolve.
 ///
 /// To illustrate:
 /// ```text
@@ -35,51 +41,47 @@ use crate::datastore::slot::{self, Slot};
 /// ```
 ///
 /// The reader is woken, even if the new value equals the old one.
-/// The [`Reader`] is only aware of the act of writing.
+/// The [`ExclusiveReader`] is only aware of the act of writing.
 ///
 /// # Seen values
 ///
 /// The reader tracks whether the current value has been "seen".
-/// A value is marked as seen when any read method is called, such as [`Reader::read`] or [`Reader::read_updated`].
+/// A value is marked as seen when any read method is called, such as [`ExclusiveReader::read`] or [`ExclusiveReader::take`].
 /// A new write from a [`Writer`][super::Writer] marks the value as unseen.
 ///
-/// [`Reader::is_updated`] returns `true` if the current value is unseen.
-/// [`Reader::wait_for_update`] waits until an unseen value is available.
+/// [`ExclusiveReader::is_updated`] returns `true` if the current value is unseen.
+/// [`ExclusiveReader::wait_for_update`] waits until an unseen value is available.
 ///
 /// # Example
 ///
 /// ```rust
 /// # use std::fmt::Debug;
 /// #
-/// # use veecle_os_runtime::{Storable, Reader};
+/// # use veecle_os_runtime::{Storable, single_writer::ExclusiveReader};
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
 /// #
 /// #[veecle_os_runtime::actor]
-/// async fn foo_reader(mut reader: Reader<'_, Foo>) -> veecle_os_runtime::Never {
+/// async fn foo_reader(mut reader: ExclusiveReader<'_, Foo>) -> veecle_os_runtime::Never {
 ///     loop {
-///         let processed_value = reader.read_updated(|value: &Foo| {
-///             // do something with the value.
-///         }).await;
+///         let value = reader.take_updated().await;
 ///     }
 /// }
 /// ```
 ///
 /// [`Actor`]: crate::actor::Actor
 #[derive(Debug)]
-#[pin_project]
-pub struct Reader<'a, T>
+pub struct ExclusiveReader<'a, T>
 where
     T: Storable + 'static,
 {
-    #[pin]
-    waiter: slot::Waiter<'a, T>,
+    waiter: Waiter<'a, T>,
 
     marker: PhantomData<fn(T)>,
 }
 
-impl<T> Reader<'_, T>
+impl<T> ExclusiveReader<'_, T>
 where
     T: Storable + 'static,
 {
@@ -143,7 +145,7 @@ where
     /// Returns `true` if an unseen value is available.
     ///
     /// A value becomes "seen" after calling [`read`][Self::read], [`read_updated`][Self::read_updated],
-    /// or similar read methods.
+    /// [`take`][Self::take], [`take_updated`][Self::take_updated], or similar methods.
     pub fn is_updated(&self) -> bool {
         self.waiter.is_updated()
     }
@@ -160,24 +162,57 @@ where
         self.waiter.wait().await;
         self
     }
+
+    /// Takes the current value of the type, leaving behind `None`.
+    ///
+    /// Marks the current value as seen.
+    pub fn take(&mut self) -> Option<T::DataType> {
+        let span = veecle_telemetry::span!("take");
+        let _guard = span.enter();
+
+        self.waiter.update_generation();
+        let value = self.waiter.take(span.context());
+
+        veecle_telemetry::trace!("Slot value taken", value = format_args!("{value:?}"));
+
+        value
+    }
+
+    /// Takes the next unseen value of the type, leaving behind `None`.
+    ///
+    /// Waits until an unseen value is available, then takes it.
+    /// Marks the current value as seen.
+    pub async fn take_updated(&mut self) -> T::DataType {
+        let span = veecle_telemetry::span!("take");
+        let _guard = span.enter();
+
+        self.wait_for_update().await;
+        self.waiter.update_generation();
+
+        let value = self.waiter.take(span.context()).unwrap();
+
+        veecle_telemetry::trace!("Slot value taken", value = format_args!("{value:?}"));
+
+        value
+    }
 }
 
-impl<'a, T> Reader<'a, T>
+impl<'a, T> ExclusiveReader<'a, T>
 where
     T: Storable + 'static,
 {
-    /// Creates a new `Reader` from a `slot`.
+    /// Creates a new `ExclusiveReader` from a `slot`.
     pub(crate) fn from_slot(slot: Pin<&'a Slot<T>>) -> Self {
-        Reader {
+        ExclusiveReader {
             waiter: slot.waiter(),
             marker: PhantomData,
         }
     }
 }
 
-impl<T> super::combined_readers::Sealed for Reader<'_, T> where T: Storable {}
+impl<T> Sealed for ExclusiveReader<'_, T> where T: Storable {}
 
-impl<T> super::combined_readers::CombinableReader for Reader<'_, T>
+impl<T> CombinableReader for ExclusiveReader<'_, T>
 where
     T: Storable,
 {
@@ -197,13 +232,31 @@ where
     }
 }
 
+impl<T> DefinesSlot for ExclusiveReader<'_, T>
+where
+    T: Storable,
+{
+    type Slot = Nil;
+}
+
+impl<'a, T> StoreRequest<'a> for ExclusiveReader<'a, T>
+where
+    T: Storable + 'static,
+{
+    async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self {
+        datastore.exclusive_reader(requestor)
+    }
+}
+
 #[cfg(test)]
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use core::pin::pin;
     use futures::FutureExt;
 
-    use crate::datastore::{Reader, Slot, Storable, Writer, generational};
+    use crate::datastore::Storable;
+    use crate::datastore::single_writer::{ExclusiveReader, Slot, Writer};
+    use crate::datastore::sync::generational;
 
     #[test]
     fn read() {
@@ -214,7 +267,7 @@ mod tests {
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());
 
-        let mut reader = Reader::from_slot(slot.as_ref());
+        let mut reader = ExclusiveReader::from_slot(slot.as_ref());
         let mut writer = Writer::new(source.as_ref().waiter(), slot.as_ref());
 
         assert_eq!(reader.read(|x| x.cloned()), None);
@@ -223,8 +276,33 @@ mod tests {
         source.as_ref().increment_generation();
         writer.write(Sensor(1)).now_or_never().unwrap();
 
-        assert_eq!(reader.read(|x| x.cloned()), Some(Sensor(1)));
+        assert_eq!(
+            reader.read(|x: Option<&Sensor>| x.cloned()),
+            Some(Sensor(1))
+        );
+        assert!(!reader.is_updated());
+        source.as_ref().increment_generation();
+        writer.write(Sensor(1)).now_or_never().unwrap();
         assert_eq!(reader.read_cloned(), Some(Sensor(1)));
+    }
+
+    #[test]
+    fn take() {
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor(u8);
+
+        let source = pin!(generational::Source::new());
+        let slot = pin!(Slot::<Sensor>::new());
+
+        let mut reader = ExclusiveReader::from_slot(slot.as_ref());
+        let mut writer = Writer::new(source.as_ref().waiter(), slot.as_ref());
+
+        assert_eq!(reader.take(), None);
+        source.as_ref().increment_generation();
+        writer.write(Sensor(10)).now_or_never().unwrap();
+        assert_eq!(reader.take(), Some(Sensor(10)));
+        assert_eq!(reader.take(), None);
     }
 
     #[test]
@@ -236,10 +314,8 @@ mod tests {
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());
 
-        let mut reader = Reader::from_slot(slot.as_ref());
+        let mut reader = ExclusiveReader::from_slot(slot.as_ref());
         let mut writer = Writer::new(source.as_ref().waiter(), slot.as_ref());
-
-        assert_eq!(reader.read_updated(|x| x.clone()).now_or_never(), None);
 
         source.as_ref().increment_generation();
         writer.write(Sensor(1)).now_or_never().unwrap();
@@ -252,6 +328,25 @@ mod tests {
     }
 
     #[test]
+    fn take_updated() {
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor(u8);
+
+        let source = pin!(generational::Source::new());
+        let slot = pin!(Slot::<Sensor>::new());
+
+        let mut reader = ExclusiveReader::from_slot(slot.as_ref());
+        let mut writer = Writer::new(source.as_ref().waiter(), slot.as_ref());
+
+        source.as_ref().increment_generation();
+        writer.write(Sensor(1)).now_or_never().unwrap();
+
+        assert_eq!(reader.take_updated().now_or_never(), Some(Sensor(1)));
+        assert_eq!(reader.take_updated().now_or_never(), None);
+    }
+
+    #[test]
     fn is_updated() {
         #[derive(Eq, PartialEq, Debug, Clone, Storable)]
         #[storable(crate = crate)]
@@ -260,7 +355,7 @@ mod tests {
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());
 
-        let mut reader = Reader::from_slot(slot.as_ref());
+        let mut reader = ExclusiveReader::from_slot(slot.as_ref());
         let mut writer = Writer::new(source.as_ref().waiter(), slot.as_ref());
 
         assert!(!reader.is_updated());
@@ -282,7 +377,7 @@ mod tests {
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());
 
-        let mut reader = Reader::from_slot(slot.as_ref());
+        let mut reader = ExclusiveReader::from_slot(slot.as_ref());
         let mut writer = Writer::new(source.as_ref().waiter(), slot.as_ref());
 
         assert!(reader.wait_for_update().now_or_never().is_none());
@@ -292,6 +387,5 @@ mod tests {
 
         reader.wait_for_update().now_or_never().unwrap();
         reader.read(|x| assert_eq!(x, Some(&Sensor(1))));
-        assert!(reader.wait_for_update().now_or_never().is_none());
     }
 }

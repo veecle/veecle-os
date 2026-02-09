@@ -10,7 +10,8 @@
 //!
 //! ```no_run
 //! # fn main() {
-//! use veecle_os_runtime::{Reader, Storable, Writer, Never};
+//! use veecle_os_runtime::single_writer::{Reader, Writer};
+//! use veecle_os_runtime::{Never, Storable};
 //!
 //! #[derive(Copy, Clone, Debug, Storable, serde::Deserialize)]
 //! pub struct Ping(u8);

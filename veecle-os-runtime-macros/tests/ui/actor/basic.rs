@@ -3,8 +3,8 @@ pub struct Sensor(pub u8);
 
 #[veecle_os_runtime_macros::actor]
 async fn macro_test_actor(
-    _sensor_reader: veecle_os_runtime::Reader<'_, Sensor>,
-    _sensor_writer: veecle_os_runtime::Writer<'_, Sensor>,
+    _sensor_reader: veecle_os_runtime::single_writer::Reader<'_, Sensor>,
+    _sensor_writer: veecle_os_runtime::single_writer::Writer<'_, Sensor>,
 ) -> veecle_os_runtime::Never {
     unreachable!("We only care about the code compiling.");
 }

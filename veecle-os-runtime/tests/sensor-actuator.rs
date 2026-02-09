@@ -6,7 +6,8 @@ use std::future::poll_fn;
 use std::sync::Mutex;
 use std::task::Poll;
 
-use veecle_os_runtime::{CombineReaders, Never, Reader, Storable, Writer};
+use veecle_os_runtime::single_writer::{Reader, Writer};
+use veecle_os_runtime::{CombineReaders, Never, Storable};
 
 static SENSOR_VALIDATION_COUNT: AtomicUsize = AtomicUsize::new(0);
 static PRINTER_OUTPUT: Mutex<String> = Mutex::new(String::new());

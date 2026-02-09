@@ -1,10 +1,14 @@
 //! The Veecle OS runtime.
 //!
-//! This crate contains the main building blocks for any Veecle OS application.  Veecle OS applications are composed of [`Actor`]s,
-//! that use the [`Reader`] and [`Writer`] types to communicate with each other within the runtime.
+//! This crate contains the main building blocks for any Veecle OS application.
+//! Veecle OS applications are composed of [`Actor`]s that communicate with each other through
+//! slots.
+//! Slots come in different implementations; see [`single_writer`] for a slot implementation
+//! with one writer and multiple readers.
 //!
 //! This crate is meant to be used with asynchronous programming, which means that actors are expected to be async
-//! functions. For example, it will be ensured that an actor does not update a value till all its readers had the
+//! functions.
+//! For example, it will be ensured that an actor does not update a value till all its readers had the
 //! chance to read its latest state.
 //!
 //! # Example
@@ -15,7 +19,8 @@
 //! ```rust
 //! use std::fmt::Debug;
 //!
-//! use veecle_os_runtime::{Never, Reader, Storable, Writer};
+//! use veecle_os_runtime::single_writer::{Reader, Writer};
+//! use veecle_os_runtime::{Never, Storable};
 //!
 //! #[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
 //! pub struct Ping {
@@ -102,22 +107,23 @@ mod cons;
 pub(crate) mod datastore;
 mod execute;
 
-mod heapfree_executor;
+mod executor;
 
 pub mod memory_pool;
 
 pub use self::actor::{Actor, StoreRequest, actor};
-pub use self::datastore::{
-    CombinableReader, CombineReaders, ExclusiveReader, Reader, Storable, Writer,
-};
+pub use self::datastore::single_writer;
+pub use self::datastore::{CombinableReader, CombineReaders, Storable};
 
 /// Internal exports for proc-macro and `macro_rules!` purposes.
 #[doc(hidden)]
 pub mod __exports {
-    pub use crate::actor::{Datastore, DefinesSlot, IsActorResult};
+    pub use crate::actor::IsActorResult;
     pub use crate::cons::{AppendCons, Cons, Nil};
+    pub use crate::datastore::Datastore;
+    pub use crate::datastore::DefinesSlot;
     pub use crate::execute::{execute_actor, make_store_and_validate};
-    pub use crate::heapfree_executor::{Executor, ExecutorShared};
+    pub use crate::executor::{Executor, ExecutorShared};
 }
 
 /// A type that can never be constructed.
@@ -138,3 +144,6 @@ impl core::fmt::Display for Never {
 }
 
 impl core::error::Error for Never {}
+
+/// Marker trait to seal internal traits.
+trait Sealed {}
