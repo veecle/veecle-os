@@ -35,13 +35,13 @@ pub(super) fn generate(options: &crate::Options, dbc: &Dbc) -> Result<TokenStrea
         #[#veecle_os_runtime::actor #actor_args]
         #allow
         pub async fn deserialize_frames(
-            mut reader: #veecle_os_runtime::InitializedReader<'_, Frame>,
+            mut reader: #veecle_os_runtime::Reader<'_, Frame>,
             #(
                 mut #writer_names: #veecle_os_runtime::Writer<'_, #message_names>,
             )*
         ) -> #veecle_os_runtime::Never {
             loop {
-                let frame = reader.wait_for_update().await.read_cloned();
+                let frame = reader.read_updated_cloned().await;
                 match frame.id() {
                     #(
                         #message_names::FRAME_ID => {

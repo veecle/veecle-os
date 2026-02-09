@@ -17,11 +17,11 @@ pub struct Value(pub usize);
 #[veecle_os::runtime::actor]
 pub async fn print_actor<L: LogTarget>(mut reader: Reader<'_, Value>) -> Never {
     loop {
-        reader.wait_for_update().await.read(|value| {
-            if let Some(value) = value {
+        reader
+            .read_updated(|value| {
                 L::println(format_args!("{value:?}"));
-            }
-        });
+            })
+            .await;
     }
 }
 

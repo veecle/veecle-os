@@ -81,6 +81,10 @@ impl<'a> Waiter<'a> {
         self.generation = self.source.generation.get();
     }
 
+    pub(crate) fn is_updated(&self) -> bool {
+        self.source.generation.get() > self.generation
+    }
+
     pub(crate) async fn wait(&self) -> Result<(), MissedUpdate> {
         // Using a guard here makes sure that the slot is unlinked if this future is dropped before completing.
         struct Guard<'a, 'b> {

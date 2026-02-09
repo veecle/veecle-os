@@ -71,7 +71,7 @@ fn yoke() {
             async {
                 let chunk = POOL.chunk(*BYTES).unwrap();
                 writer.write(chunk).await;
-                let deserialized = reader.wait_for_update().await.take().unwrap();
+                let deserialized = reader.take_updated().await;
                 let expected_entry = Entry::OfferService(
                     ServiceEntry {
                         first_option: 0x00,

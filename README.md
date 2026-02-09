@@ -34,7 +34,7 @@ Add the following code to your `main.rs` file:
 ```rust
 use veecle_os::info;
 use veecle_os::osal::api::time::{Duration, Instant, Interval, TimeAbstraction};
-use veecle_os::runtime::{InitializedReader, Never, Storable, Writer};
+use veecle_os::runtime::{Never, Reader, Storable, Writer};
 use veecle_os::telemetry::collector::{ConsolePrettyExporter, ProcessId};
 
 #[derive(Debug, PartialEq, Clone, Storable)]
@@ -64,24 +64,21 @@ where
 ///
 /// Can be used on any supported platform.
 #[veecle_os::runtime::actor]
-pub async fn ticker_reader(mut reader: InitializedReader<'_, Tick>) -> Never {
+pub async fn ticker_reader(mut reader: Reader<'_, Tick>) -> Never {
     loop {
-        reader
-            .wait_for_update()
-            .await
-            .read(|&Tick { at: tick_at }| {
-                info!(
-                    "latest tick",
-                    tick = {
-                        i64::try_from(tick_at.duration_since(Instant::MIN).unwrap().as_secs()).unwrap()
-                    }
-                );
-                // This is not relevant for running the example.
-                // To test the example in CI, we need to force it to terminate.
-                if env!("CARGO_PKG_NAME") == "readme-example" {
-                    std::process::exit(0);
+        reader.read_updated(|&Tick { at: tick_at }| {
+            info!(
+                "latest tick",
+                tick = {
+                    i64::try_from(tick_at.duration_since(Instant::MIN).unwrap().as_secs()).unwrap()
                 }
-            });
+            );
+            // This is not relevant for running the example.
+            // To test the example in CI, we need to force it to terminate.
+            if env!("CARGO_PKG_NAME") == "readme-example" {
+                std::process::exit(0);
+            }
+        }).await;
     }
 }
 

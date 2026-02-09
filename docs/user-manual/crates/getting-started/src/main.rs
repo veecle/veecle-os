@@ -3,7 +3,7 @@
 //! Getting started example.
 use core::fmt::Debug;
 
-use veecle_os::runtime::{InitializedReader, Never, Storable, Writer};
+use veecle_os::runtime::{Never, Reader, Storable, Writer};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Value;
@@ -29,18 +29,20 @@ async fn sender_actor(mut writer: Writer<'_, Value>) -> Never {
 // ANCHOR: receiver
 /// An actor that reads `Value` and terminates when the value is 5.
 #[veecle_os::runtime::actor]
-async fn receiver_actor(mut reader: InitializedReader<'_, Value>) -> Never {
+async fn receiver_actor(mut reader: Reader<'_, Value>) -> Never {
     loop {
         println!("[receiver] Waiting for value");
-        reader.wait_for_update().await.read(|value| {
-            println!("[receiver] Received: {value:?}");
-            if *value == 5 {
-                println!("[receiver] Exiting because value is 5");
-                // Actors should never terminate. This program ends so it always generates the same short output that is
-                // easy to verify.
-                std::process::exit(0);
-            }
-        });
+        reader
+            .read_updated(|value| {
+                println!("[receiver] Received: {value:?}");
+                if *value == 5 {
+                    println!("[receiver] Exiting because value is 5");
+                    // Actors should never terminate. This program ends so it always generates the same short output that is
+                    // easy to verify.
+                    std::process::exit(0);
+                }
+            })
+            .await;
     }
 }
 // ANCHOR_END: receiver

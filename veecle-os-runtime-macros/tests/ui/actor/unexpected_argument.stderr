@@ -28,11 +28,6 @@ help: the following other types implement trait `DefinesSlot`
   | | where
   | |     T: Storable,
   | |________________^ `ExclusiveReader<'a, T>`
-...
-  | / impl<'a, T> DefinesSlot for InitializedReader<'a, T>
-  | | where
-  | |     T: Storable,
-  | |________________^ `InitializedReader<'a, T>`
 
 error[E0277]: invalid actor parameter type
  --> tests/ui/actor/unexpected_argument.rs:5:27
@@ -59,11 +54,6 @@ help: the following other types implement trait `StoreRequest<'a>`
   | | where
   | |     T: Storable + 'static,
   | |__________________________^ `ExclusiveReader<'a, T>`
-...
-  | / impl<'a, T> StoreRequest<'a> for InitializedReader<'a, T>
-  | | where
-  | |     T: Storable + 'static,
-  | |__________________________^ `InitializedReader<'a, T>`
 ...
   | / impl<'a, T> StoreRequest<'a> for Writer<'a, T>
   | | where
@@ -101,11 +91,6 @@ help: the following other types implement trait `DefinesSlot`
    | | where
    | |     T: Storable,
    | |________________^ `ExclusiveReader<'a, T>`
-...
-   | / impl<'a, T> DefinesSlot for InitializedReader<'a, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `InitializedReader<'a, T>`
 
 error[E0277]: invalid actor parameter type
   --> tests/ui/actor/unexpected_argument.rs:13:27
@@ -128,11 +113,6 @@ help: the following other types implement trait `StoreRequest<'a>`
    | | where
    | |     T: Storable + 'static,
    | |__________________________^ `ExclusiveReader<'a, T>`
-...
-   | / impl<'a, T> StoreRequest<'a> for InitializedReader<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `InitializedReader<'a, T>`
 ...
    | / impl<'a, T> StoreRequest<'a> for Writer<'a, T>
    | | where
@@ -170,11 +150,6 @@ help: the following other types implement trait `DefinesSlot`
    | | where
    | |     T: Storable,
    | |________________^ `ExclusiveReader<'a, T>`
-...
-   | / impl<'a, T> DefinesSlot for InitializedReader<'a, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `InitializedReader<'a, T>`
 
 error[E0277]: invalid actor parameter type
   --> tests/ui/actor/unexpected_argument.rs:31:27
@@ -202,11 +177,6 @@ help: the following other types implement trait `DefinesSlot`
    | | where
    | |     T: Storable,
    | |________________^ `ExclusiveReader<'a, T>`
-...
-   | / impl<'a, T> DefinesSlot for InitializedReader<'a, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `InitializedReader<'a, T>`
 
 error[E0277]: invalid actor parameter type
   --> tests/ui/actor/unexpected_argument.rs:31:27
@@ -229,11 +199,6 @@ help: the following other types implement trait `StoreRequest<'a>`
    | | where
    | |     T: Storable + 'static,
    | |__________________________^ `ExclusiveReader<'a, T>`
-...
-   | / impl<'a, T> StoreRequest<'a> for InitializedReader<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `InitializedReader<'a, T>`
 ...
    | / impl<'a, T> StoreRequest<'a> for Writer<'a, T>
    | | where
@@ -275,11 +240,6 @@ help: the following other types implement trait `DefinesSlot`
    | | where
    | |     T: Storable,
    | |________________^ `ExclusiveReader<'a, T>`
-...
-   | / impl<'a, T> DefinesSlot for InitializedReader<'a, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `InitializedReader<'a, T>`
 
 error[E0277]: invalid actor parameter type
   --> tests/ui/actor/unexpected_argument.rs:36:27
@@ -306,11 +266,6 @@ help: the following other types implement trait `StoreRequest<'a>`
    | | where
    | |     T: Storable + 'static,
    | |__________________________^ `ExclusiveReader<'a, T>`
-...
-   | / impl<'a, T> StoreRequest<'a> for InitializedReader<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `InitializedReader<'a, T>`
 ...
    | / impl<'a, T> StoreRequest<'a> for Writer<'a, T>
    | | where
@@ -353,11 +308,6 @@ help: the following other types implement trait `DefinesSlot`
    | | where
    | |     T: Storable,
    | |________________^ `ExclusiveReader<'a, T>`
-...
-   | / impl<'a, T> DefinesSlot for InitializedReader<'a, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `InitializedReader<'a, T>`
 
 error[E0277]: invalid actor parameter type
   --> tests/ui/actor/unexpected_argument.rs:44:27
@@ -390,11 +340,6 @@ help: the following other types implement trait `DefinesSlot`
    | | where
    | |     T: Storable,
    | |________________^ `ExclusiveReader<'a, T>`
-...
-   | / impl<'a, T> DefinesSlot for InitializedReader<'a, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `InitializedReader<'a, T>`
 
 error[E0277]: invalid actor parameter type
   --> tests/ui/actor/unexpected_argument.rs:44:27
@@ -422,11 +367,6 @@ help: the following other types implement trait `StoreRequest<'a>`
    | | where
    | |     T: Storable + 'static,
    | |__________________________^ `ExclusiveReader<'a, T>`
-...
-   | / impl<'a, T> StoreRequest<'a> for InitializedReader<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `InitializedReader<'a, T>`
 ...
    | / impl<'a, T> StoreRequest<'a> for Writer<'a, T>
    | | where

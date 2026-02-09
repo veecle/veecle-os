@@ -9,9 +9,7 @@
 use crate::Never;
 use crate::actor::{Actor, Datastore, StoreRequest};
 use crate::cons::{Cons, Nil, TupleConsToCons};
-use crate::datastore::{
-    ExclusiveReader, InitializedReader, Reader, SlotTrait, Storable, Writer, generational,
-};
+use crate::datastore::{ExclusiveReader, Reader, SlotTrait, Storable, Writer, generational};
 use core::any::TypeId;
 use core::pin::Pin;
 
@@ -219,15 +217,6 @@ where
 }
 
 impl<T> AccessKind for Reader<'_, T>
-where
-    T: Storable + 'static,
-{
-    fn reader(type_id: TypeId) -> bool {
-        type_id == TypeId::of::<T>()
-    }
-}
-
-impl<T> AccessKind for InitializedReader<'_, T>
 where
     T: Storable + 'static,
 {
@@ -477,28 +466,26 @@ where
 /// }
 ///
 /// #[veecle_os_runtime::actor]
-/// async fn ping_actor(mut ping: Writer<'_, Ping>, pong: Reader<'_, Pong>) -> Never {
+/// async fn ping_actor(mut ping: Writer<'_, Ping>, mut pong: Reader<'_, Pong>) -> Never {
 ///     let mut value = 0;
 ///     ping.write(Ping { value }).await;
 ///
-///     let mut pong = pong.wait_init().await;
 ///     loop {
 ///         ping.write(Ping { value }).await;
 ///         value += 1;
 ///
-///         pong.wait_for_update().await.read(|pong| {
+///         pong.read_updated(|pong| {
 ///             println!("Pong: {}", pong.value);
-///         });
+///         }).await;
 /// #       // Exit the application to allow doc-tests to complete.
 /// #       std::process::exit(0);
 ///     }
 /// }
 ///
 /// #[veecle_os_runtime::actor]
-/// async fn pong_actor(mut pong: Writer<'_, Pong>, ping: Reader<'_, Ping>) -> Never {
-///     let mut ping = ping.wait_init().await;
+/// async fn pong_actor(mut pong: Writer<'_, Pong>, mut ping: Reader<'_, Ping>) -> Never {
 ///     loop {
-///         let ping = ping.wait_for_update().await.read_cloned();
+///         let ping = ping.read_updated_cloned().await;
 ///         println!("Ping: {}", ping.value);
 ///
 ///         let data = Pong { value: ping.value };

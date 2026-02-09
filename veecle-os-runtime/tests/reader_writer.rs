@@ -4,7 +4,7 @@ use core::fmt::Debug;
 use veecle_os_runtime::Never;
 
 use futures_test::future::FutureTestExt;
-use veecle_os_runtime::{InitializedReader, Reader, Storable, Writer};
+use veecle_os_runtime::{Reader, Storable, Writer};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, PartialOrd, Storable)]
 pub struct Signal(usize);
@@ -15,12 +15,12 @@ pub struct UpToDateSignal(Signal);
 #[veecle_os_runtime::actor]
 async fn filter_actor(
     mut up_to_date: Writer<'_, UpToDateSignal>,
-    mut source: InitializedReader<'_, Signal>,
+    mut source: Reader<'_, Signal>,
 ) -> Never {
     let mut latest = Signal(0);
 
     loop {
-        let signal = source.wait_for_update().await.read_cloned();
+        let signal = source.read_updated_cloned().await;
 
         if latest < signal {
             up_to_date.write(UpToDateSignal(signal)).await;
@@ -37,13 +37,13 @@ fn outdated_signals_should_be_discarded() {
         validation: async |mut reader: Reader<'_, UpToDateSignal>, mut writer: Writer<'_, Signal>| {
             writer.write(Signal(1)).await;
 
-            reader.wait_for_update().await.read(|value| {
+            reader.read_updated(|value| {
                 assert_eq!(
-                    &value.unwrap().0,
+                    &value.0,
                     &Signal(1),
                     "up-to-date signal should be written"
                 );
-            });
+            }).await;
 
             writer.write(Signal(0)).await;
 

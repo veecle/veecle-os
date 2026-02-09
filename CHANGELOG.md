@@ -2,6 +2,15 @@
 
 ## Veecle OS
 
+* **breaking** Removed `InitializedReader`.
+  Use `Reader` with the new `read_updated` method instead.
+  * `reader.wait_init().await` is no longer needed.
+  * `reader.wait_for_update().await.read(|v| ...)` becomes `reader.read_updated(|v| ...).await`.
+  * `reader.wait_for_update().await.read_cloned()` becomes `reader.read_updated_cloned().await`.
+* **breaking** `Reader::read` and `ExclusiveReader::read` now take `&mut self` instead of `&self`.
+* Added `read_updated` and `read_updated_cloned` methods to `Reader` and `ExclusiveReader`.
+* Added `is_updated` method to `Reader`, `ExclusiveReader` and `CombineReaders` to check if an unseen value is available.
+* Added `take_updated` method to `ExclusiveReader` to wait for an unseen value and take it.
 * **breaking** The `execute!` macro no longer takes the `store` parameter.
   The `Storable` types used by the actors are now detected automatically.
 * **breaking** Replaced `core::convert::Infallible` with custom `Never` enum for actor return types.

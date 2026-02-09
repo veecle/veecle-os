@@ -8,16 +8,15 @@ use crate::{Connector, ControlRequest, ControlResponse};
 #[veecle_os_runtime::actor]
 pub async fn control_handler(
     #[init_context] connector: &Connector,
-    requests: Reader<'_, ControlRequest>,
+    mut requests: Reader<'_, ControlRequest>,
     mut responses: Writer<'_, ControlResponse>,
 ) -> Never {
     let (output, mut input) = connector.control_channels();
 
     let result: (Never, Never) = join(
         async move {
-            let mut requests = requests.wait_init().await;
             loop {
-                let request = requests.wait_for_update().await.read_cloned();
+                let request = requests.read_updated_cloned().await;
 
                 if let Err(error) = output.send(request).await {
                     veecle_telemetry::error!(

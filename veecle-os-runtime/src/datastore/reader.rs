@@ -6,7 +6,6 @@ use core::pin::Pin;
 use pin_project::pin_project;
 
 use crate::datastore::Storable;
-use crate::datastore::initialized_reader::InitializedReader;
 use crate::datastore::slot::{self, Slot};
 
 /// Reader for a [`Storable`] type.
@@ -16,7 +15,6 @@ use crate::datastore::slot::{self, Slot};
 ///
 /// The reader allows reading the current value.
 /// If no value for type `T` has been written to yet, [`Reader::read`] will return `None`.
-/// See [`Self::wait_init`] for creating a reader that ensures available values for `T`.
 ///
 /// # Usage
 ///
@@ -36,7 +34,17 @@ use crate::datastore::slot::{self, Slot};
 /// ...
 /// ```
 ///
-/// The reader is woken, even if the new value equals the old one. The [`Reader`] is only aware of the act of writing.
+/// The reader is woken, even if the new value equals the old one.
+/// The [`Reader`] is only aware of the act of writing.
+///
+/// # Seen values
+///
+/// The reader tracks whether the current value has been "seen".
+/// A value is marked as seen when any read method is called, such as [`Reader::read`] or [`Reader::read_updated`].
+/// A new write from a [`Writer`][super::Writer] marks the value as unseen.
+///
+/// [`Reader::is_updated`] returns `true` if the current value is unseen.
+/// [`Reader::wait_for_update`] waits until an unseen value is available.
 ///
 /// # Example
 ///
@@ -51,9 +59,9 @@ use crate::datastore::slot::{self, Slot};
 /// #[veecle_os_runtime::actor]
 /// async fn foo_reader(mut reader: Reader<'_, Foo>) -> veecle_os_runtime::Never {
 ///     loop {
-///         let processed_value = reader.wait_for_update().await.read(|value: Option<&Foo>| {
+///         let processed_value = reader.read_updated(|value: &Foo| {
 ///             // do something with the value.
-///         });
+///         }).await;
 ///     }
 /// }
 /// ```
@@ -77,11 +85,11 @@ where
 {
     /// Reads the current value of a type.
     ///
-    /// Can be combined with [`Self::wait_for_update`] to wait for the value to be updated before reading it.
-    ///
+    /// Marks the current value as seen.
     /// This method takes a closure to ensure the reference is not held across await points.
     #[veecle_telemetry::instrument]
-    pub fn read<U>(&self, f: impl FnOnce(Option<&T::DataType>) -> U) -> U {
+    pub fn read<U>(&mut self, f: impl FnOnce(Option<&T::DataType>) -> U) -> U {
+        self.waiter.update_generation();
         self.waiter.read(|value| {
             let value = value.as_ref();
 
@@ -90,28 +98,66 @@ where
         })
     }
 
+    /// Reads the next unseen value of a type.
+    ///
+    /// Waits until an unseen value is available, then reads it.
+    /// Marks the current value as seen.
+    /// This method takes a closure to ensure the reference is not held across await points.
+    #[veecle_telemetry::instrument]
+    pub async fn read_updated<U>(&mut self, f: impl FnOnce(&T::DataType) -> U) -> U {
+        self.wait_for_update().await;
+        self.waiter.update_generation();
+        self.waiter.read(|value| {
+            let value = value.as_ref().unwrap();
+
+            veecle_telemetry::trace!("Slot read", value = format_args!("{value:?}"));
+            f(value)
+        })
+    }
+
     /// Reads and clones the current value.
     ///
+    /// Marks the current value as seen.
     /// This is a wrapper around [`Self::read`] that additionally clones the value.
     /// You can use it instead of `reader.read(|c| c.clone())`.
-    pub fn read_cloned(&self) -> Option<T::DataType>
+    pub fn read_cloned(&mut self) -> Option<T::DataType>
     where
         T::DataType: Clone,
     {
         self.read(|t| t.cloned())
     }
 
+    /// Reads and clones the next unseen value.
+    ///
+    /// Waits until an unseen value is available, then reads it.
+    /// Marks the current value as seen.
+    /// This is a wrapper around [`Self::read_updated`] that additionally clones the value.
+    /// You can use it instead of `reader.read_updated(|c| c.clone())`.
+    pub async fn read_updated_cloned(&mut self) -> T::DataType
+    where
+        T::DataType: Clone,
+    {
+        self.read_updated(|t| t.clone()).await
+    }
+
+    /// Returns `true` if an unseen value is available.
+    ///
+    /// A value becomes "seen" after calling [`read`][Self::read], [`read_updated`][Self::read_updated],
+    /// or similar read methods.
+    pub fn is_updated(&self) -> bool {
+        self.waiter.is_updated()
+    }
+
     /// Waits for any write to occur.
     ///
     /// This future resolving does not imply that `previous_value != new_value`, just that a
-    /// [`Writer`][super::Writer] has written a value of `T` since the last time this future resolved.
+    /// [`Writer`][super::Writer] has written a value of `T` since the last read operation.
     ///
-    /// This returns `&mut Self` to allow chaining a call to methods accessing the value, for example
-    /// [`read`][Self::read`].
+    ///
+    /// This returns `&mut Self` to allow chaining a call to [`read`][Self::read].
     #[veecle_telemetry::instrument]
     pub async fn wait_for_update(&mut self) -> &mut Self {
         self.waiter.wait().await;
-        self.waiter.update_generation();
         self
     }
 }
@@ -127,17 +173,6 @@ where
             marker: PhantomData,
         }
     }
-
-    /// Converts the `Reader` into an [`InitializedReader`].
-    ///
-    /// Pends until a value for `T` is available or resolves immediately if a value is already available.
-    /// This will not mark the value as seen, [`InitializedReader::wait_for_update`] is unaffected by this method.
-    pub async fn wait_init(self) -> InitializedReader<'a, T> {
-        if self.read(|t| t.is_none()) {
-            self.waiter.wait().await;
-        }
-        InitializedReader::new(self.waiter)
-    }
 }
 
 impl<T> super::combined_readers::Sealed for Reader<'_, T> where T: Storable {}
@@ -148,12 +183,17 @@ where
 {
     type ToBeRead = Option<T::DataType>;
 
-    fn borrow(&self) -> Ref<'_, Self::ToBeRead> {
+    fn borrow(&mut self) -> Ref<'_, Self::ToBeRead> {
+        self.waiter.update_generation();
         self.waiter.borrow()
     }
 
-    async fn wait_for_update(&mut self) {
-        self.wait_for_update().await;
+    async fn wait_for_update(&mut self) -> &mut Self {
+        self.wait_for_update().await
+    }
+
+    fn is_updated(&self) -> bool {
+        self.is_updated()
     }
 }
 
@@ -164,6 +204,74 @@ mod tests {
     use futures::FutureExt;
 
     use crate::datastore::{Reader, Slot, Storable, Writer, generational};
+
+    #[test]
+    fn read() {
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor(u8);
+
+        let source = pin!(generational::Source::new());
+        let slot = pin!(Slot::<Sensor>::new());
+
+        let mut reader = Reader::from_slot(slot.as_ref());
+        let mut writer = Writer::new(source.as_ref().waiter(), slot.as_ref());
+
+        assert_eq!(reader.read(|x| x.cloned()), None);
+        assert_eq!(reader.read_cloned(), None);
+
+        source.as_ref().increment_generation();
+        writer.write(Sensor(1)).now_or_never().unwrap();
+
+        assert_eq!(reader.read(|x| x.cloned()), Some(Sensor(1)));
+        assert_eq!(reader.read_cloned(), Some(Sensor(1)));
+    }
+
+    #[test]
+    fn read_updated() {
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor(u8);
+
+        let source = pin!(generational::Source::new());
+        let slot = pin!(Slot::<Sensor>::new());
+
+        let mut reader = Reader::from_slot(slot.as_ref());
+        let mut writer = Writer::new(source.as_ref().waiter(), slot.as_ref());
+
+        assert_eq!(reader.read_updated(|x| x.clone()).now_or_never(), None);
+
+        source.as_ref().increment_generation();
+        writer.write(Sensor(1)).now_or_never().unwrap();
+
+        assert_eq!(
+            reader.read_updated(|x| x.clone()).now_or_never(),
+            Some(Sensor(1))
+        );
+        assert_eq!(reader.read_updated_cloned().now_or_never(), None);
+    }
+
+    #[test]
+    fn is_updated() {
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor(u8);
+
+        let source = pin!(generational::Source::new());
+        let slot = pin!(Slot::<Sensor>::new());
+
+        let mut reader = Reader::from_slot(slot.as_ref());
+        let mut writer = Writer::new(source.as_ref().waiter(), slot.as_ref());
+
+        assert!(!reader.is_updated());
+
+        source.as_ref().increment_generation();
+        writer.write(Sensor(1)).now_or_never().unwrap();
+
+        assert!(reader.is_updated());
+        reader.read(|x| assert_eq!(x, Some(&Sensor(1))));
+        assert!(!reader.is_updated());
+    }
 
     #[test]
     fn wait_for_update() {
@@ -182,10 +290,8 @@ mod tests {
         source.as_ref().increment_generation();
         writer.write(Sensor(1)).now_or_never().unwrap();
 
-        reader
-            .wait_for_update()
-            .now_or_never()
-            .unwrap()
-            .read(|x| assert_eq!(x, Some(&Sensor(1))));
+        reader.wait_for_update().now_or_never().unwrap();
+        reader.read(|x| assert_eq!(x, Some(&Sensor(1))));
+        assert!(reader.wait_for_update().now_or_never().is_none());
     }
 }

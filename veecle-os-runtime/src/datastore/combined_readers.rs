@@ -2,25 +2,27 @@ use core::future::{Future, poll_fn};
 use core::pin::pin;
 use core::task::Poll;
 
-/// Allows combining (nearly) arbitrary amounts of [`Reader`]s, [`ExclusiveReader`]s or [`InitializedReader`]s.
+/// Allows combining (nearly) arbitrary amounts of [`Reader`]s or [`ExclusiveReader`]s.
 ///
 /// [`ExclusiveReader`]: super::ExclusiveReader
-/// [`InitializedReader`]: super::InitializedReader
 /// [`Reader`]: super::Reader
 pub trait CombineReaders {
     /// The (tuple) value that will be read from the combined readers.
     type ToBeRead<'b>;
 
     /// Reads a tuple of values from all combined readers in the provided function.
-    fn read<U>(&self, f: impl FnOnce(Self::ToBeRead<'_>) -> U) -> U;
+    fn read<U>(&mut self, f: impl FnOnce(Self::ToBeRead<'_>) -> U) -> U;
 
     /// Observes the combined readers for updates.
     ///
     /// Will return if **any** of the readers is updated.
     ///
-    /// This returns `&mut Self` to allow chaining a call to [`read`][Self::read`].
+    /// This returns `&mut Self` to allow chaining a call to [`read`][Self::read].
     #[allow(async_fn_in_trait)]
     async fn wait_for_update(&mut self) -> &mut Self;
+
+    /// Returns `true` if **any** of the readers was updated.
+    fn is_updated(&self) -> bool;
 }
 
 pub(super) trait Sealed {}
@@ -35,7 +37,7 @@ pub trait CombinableReader: Sealed {
     ///
     /// Borrows the value of the reader from the slot's internal [`RefCell`][core::cell::RefCell].
     #[doc(hidden)]
-    fn borrow(&self) -> core::cell::Ref<'_, Self::ToBeRead>;
+    fn borrow(&mut self) -> core::cell::Ref<'_, Self::ToBeRead>;
 
     /// Internal implementation details.
     ///
@@ -44,7 +46,14 @@ pub trait CombinableReader: Sealed {
     /// [`Reader::wait_for_update`]: super::Reader::wait_for_update
     #[doc(hidden)]
     #[allow(async_fn_in_trait)]
-    async fn wait_for_update(&mut self);
+    async fn wait_for_update(&mut self) -> &mut Self;
+
+    /// Internal implementation details.
+    ///
+    /// See [`Reader::is_updated`] for more.
+    ///
+    /// [`Reader::is_updated`]: super::Reader::is_updated
+    fn is_updated(&self) -> bool;
 }
 
 /// Implements [`CombineReaders`] for provided types for the various reader types.
@@ -65,7 +74,7 @@ macro_rules! impl_combined_reader_helper {
 
                 #[allow(non_snake_case)]
                 #[veecle_telemetry::instrument]
-                fn read<A>(&self, f: impl FnOnce(Self::ToBeRead<'_>) -> A) -> A {
+                fn read<A>(&mut self, f: impl FnOnce(Self::ToBeRead<'_>) -> A) -> A {
                     let ($($generic_type,)*) = self;
                     let ($($generic_type,)*) = ($({
                         $generic_type.borrow()
@@ -95,6 +104,16 @@ macro_rules! impl_combined_reader_helper {
                         }).await;
                     }
                     self
+                }
+
+                #[allow(non_snake_case)]
+                #[veecle_telemetry::instrument]
+                fn is_updated(&self) -> bool {
+                    let ($($generic_type,)*) = self;
+                    let result = $({
+                        $generic_type.is_updated()
+                    })||*;
+                    result
                 }
             }
         )*
@@ -176,12 +195,6 @@ mod tests {
                 .now_or_never()
                 .is_some()
         );
-        assert!(
-            (&mut reader0, &mut reader1)
-                .wait_for_update()
-                .now_or_never()
-                .is_none()
-        );
     }
 
     #[test]
@@ -208,10 +221,8 @@ mod tests {
         writer0.write(Sensor0(2)).now_or_never().unwrap();
         writer1.write(Sensor1(2)).now_or_never().unwrap();
 
-        let mut reader0 = reader0.wait_init().now_or_never().unwrap();
-        let mut reader1 = reader1.wait_init().now_or_never().unwrap();
-
-        (&mut reader0, &mut reader1).read(|(a, b)| assert_eq!(a.0, b.0));
+        (&mut reader0, &mut reader1)
+            .read(|(a, b)| assert_eq!(a.as_ref().unwrap().0, b.as_ref().unwrap().0));
     }
 
     #[test]
@@ -249,38 +260,6 @@ mod tests {
                 .now_or_never()
                 .is_some()
         );
-        assert!(
-            (&mut reader0, &mut reader1)
-                .wait_for_update()
-                .now_or_never()
-                .is_none()
-        );
-
-        let mut reader0 = reader0.wait_init().now_or_never().unwrap();
-        let mut reader1 = reader1.wait_init().now_or_never().unwrap();
-
-        assert!(
-            (&mut reader0, &mut reader1)
-                .wait_for_update()
-                .now_or_never()
-                .is_none()
-        );
-
-        source.as_ref().increment_generation();
-        writer0.write(Sensor0(3)).now_or_never().unwrap();
-        writer1.write(Sensor1(3)).now_or_never().unwrap();
-
-        (&mut reader0, &mut reader1)
-            .wait_for_update()
-            .now_or_never()
-            .unwrap()
-            .read(|(a, b)| assert_eq!(a.0, b.0));
-        assert!(
-            (&mut reader0, &mut reader1)
-                .wait_for_update()
-                .now_or_never()
-                .is_none()
-        );
     }
 
     #[test]
@@ -306,10 +285,65 @@ mod tests {
         source.as_ref().increment_generation();
         writer0.write(Sensor0(2)).now_or_never().unwrap();
         writer1.write(Sensor1(2)).now_or_never().unwrap();
+    }
 
-        let mut reader0 = reader0.wait_init().now_or_never().unwrap();
+    #[test]
+    fn is_updated() {
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor0(u8);
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor1(u8);
 
-        (&mut reader0, &mut reader1)
-            .read(|(a, b): (&Sensor0, &Option<Sensor1>)| assert_eq!(a.0, b.as_ref().unwrap().0));
+        let source = pin!(generational::Source::new());
+        let slot0 = pin!(Slot::<Sensor0>::new());
+        let slot1 = pin!(Slot::<Sensor1>::new());
+
+        let mut writer0 = Writer::new(source.as_ref().waiter(), slot0.as_ref());
+        let mut reader0 = Reader::from_slot(slot0.as_ref());
+        let mut reader1 = Reader::from_slot(slot1.as_ref());
+
+        assert!(!(&mut reader0, &mut reader1).is_updated());
+
+        source.as_ref().increment_generation();
+        writer0.write(Sensor0(1)).now_or_never().unwrap();
+
+        assert!((&mut reader0, &mut reader1).is_updated());
+
+        (&mut reader0, &mut reader1).read(|(a, b)| {
+            assert_eq!(a.as_ref().unwrap(), &Sensor0(1));
+            assert!(b.is_none());
+        });
+    }
+
+    #[test]
+    fn is_updated_exclusive_reader() {
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor0(u8);
+        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[storable(crate = crate)]
+        struct Sensor1(u8);
+
+        let source = pin!(generational::Source::new());
+        let slot0 = pin!(Slot::<Sensor0>::new());
+        let slot1 = pin!(Slot::<Sensor1>::new());
+
+        let mut writer1 = Writer::new(source.as_ref().waiter(), slot1.as_ref());
+        let mut reader0 = ExclusiveReader::from_slot(slot0.as_ref());
+        let mut reader1 = ExclusiveReader::from_slot(slot1.as_ref());
+
+        assert!(!(&mut reader0, &mut reader1).is_updated());
+
+        source.as_ref().increment_generation();
+        writer1.write(Sensor1(1)).now_or_never().unwrap();
+
+        assert!((&mut reader0, &mut reader1).is_updated());
+
+        (&mut reader0, &mut reader1).read(|(a, b)| {
+            assert!(a.is_none());
+            assert_eq!(b.as_ref().unwrap(), &Sensor1(1));
+        });
     }
 }
