@@ -1,15 +1,15 @@
 //! Writer for single-writer slots.
 
-use core::fmt::Debug;
-use core::marker::PhantomData;
-use core::pin::Pin;
-
 use super::slot::Slot;
 use crate::Sealed;
 use crate::cons::{Cons, Nil};
+use crate::datastore::modify::Modify;
 use crate::datastore::sync::generational;
 use crate::datastore::{Datastore, DatastoreExt};
 use crate::datastore::{DefinesSlot, Storable, StoreRequest};
+use core::fmt::Debug;
+use core::marker::PhantomData;
+use core::pin::Pin;
 
 /// Writer for a [`Storable`] type.
 ///
@@ -52,18 +52,19 @@ use crate::datastore::{DefinesSlot, Storable, StoreRequest};
 /// # use veecle_os_runtime::{Storable, single_writer::Writer};
 /// #
 /// # #[derive(Debug, Default, Storable)]
-/// # pub struct Foo;
+/// # pub struct Foo(usize);
 /// #
 /// #[veecle_os_runtime::actor]
 /// async fn foo_writer(
 ///     mut writer: Writer<'_, Foo>,
 /// ) -> veecle_os_runtime::Never {
 ///     loop {
-///         // This call will yield to any readers needing to read the last value.
+///         // This call will yield to any readers needing to read the last value if the value was accessed mutably.
 ///         // The closure will run after yielding and right before continuing to the rest of the function.
-///         writer.modify(|previous_value: &mut Option<Foo>| {
-///             // Work with value and return `true` if the value was modified, `false` if not.
-///             true
+///         writer.modify(|mut previous_value| {
+///             if let Some(value) = previous_value.as_mut(){
+///                 *value = Foo(value.0 + 1);
+///             }
 ///         }).await;
 ///     }
 /// }
@@ -113,9 +114,8 @@ where
     /// Writes a new value and notifies readers.
     #[veecle_telemetry::instrument]
     pub async fn write(&mut self, item: T::DataType) {
-        self.modify(|slot| {
-            let _ = slot.insert(item);
-            true
+        self.modify(|mut slot| {
+            let _ = *slot.insert(item);
         })
         .await;
     }
@@ -128,28 +128,27 @@ where
         let _ = self.waiter.wait().await;
     }
 
-    /// Updates the value in-place and notifies readers if closure returns `true`.
+    /// Updates the value in-place and notifies readers if the value was modified.
     ///
-    /// The supplied closure should return `true` if the value was modified and `false` if not.
-    /// Returning `true` notifies readers and requires waiting before the next write.
-    /// Returning `false` skips notification and allows an immediate subsequent write.
-    pub async fn modify(&mut self, f: impl FnOnce(&mut Option<T::DataType>) -> bool) {
+    /// Readers are notified that the value was modified if it's mutably accessed via `DerefMut`
+    pub async fn modify(&mut self, f: impl FnOnce(Modify<T::DataType>)) {
         use veecle_telemetry::future::FutureExt;
         let span = veecle_telemetry::span!("modify");
         let span_context = span.context();
         (async move {
             self.ready().await;
+            let mut modified = false;
 
-            let modified = self.slot.modify(
+            self.slot.modify(
                 |value| {
-                    let modified = f(value);
+                    let modify_wrapper = Modify::new(value, &mut modified);
+                    f(modify_wrapper);
                     if modified {
                         veecle_telemetry::trace!(
                             "Slot modified",
                             value = format_args!("{value:?}")
                         );
                     }
-                    modified
                 },
                 span_context,
             );
@@ -204,6 +203,7 @@ mod tests {
     use crate::datastore::single_writer::{Slot, Writer};
     use crate::datastore::sync::generational;
     use core::pin::pin;
+    use std::ops::DerefMut;
 
     #[test]
     fn ready_waits_for_increment() {
@@ -255,9 +255,14 @@ mod tests {
         source.as_ref().increment_generation();
         assert!(writer.ready().now_or_never().is_some());
 
-        // A modify that returns `false` should not consume the readiness,
-        // allowing an immediate subsequent write.
-        assert!(writer.modify(|_| false).now_or_never().is_some());
+        assert!(
+            writer
+                .modify(|value| {
+                    let _ = *value;
+                })
+                .now_or_never()
+                .is_some()
+        );
         assert!(writer.write(Data).now_or_never().is_some());
 
         // After a real write the writer should be blocked again.
@@ -266,9 +271,14 @@ mod tests {
         source.as_ref().increment_generation();
         assert!(writer.ready().now_or_never().is_some());
 
-        // A modify that returns `true` should consume the readiness,
-        // blocking the next write.
-        assert!(writer.modify(|_| true).now_or_never().is_some());
+        assert!(
+            writer
+                .modify(|mut value| {
+                    let _ = value.deref_mut();
+                })
+                .now_or_never()
+                .is_some()
+        );
         assert!(writer.ready().now_or_never().is_none());
     }
 }

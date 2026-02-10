@@ -102,17 +102,13 @@ where
         f(&*self.borrow())
     }
 
-    /// Updates the value in-place and returns the closure's return value.
-    ///
-    /// The supplied closure should return `true` if the value was modified and `false` if not.
-    ///
-    /// Stores the provided `span_context` to connect this write to the next read operation.
+    /// Updates the value in-place and stores the provided `span_context` to connect this write to the next read operation.
     #[veecle_telemetry::instrument]
     pub(crate) fn modify(
         &self,
-        f: impl FnOnce(&mut Option<T::DataType>) -> bool,
+        f: impl FnOnce(&mut Option<T::DataType>),
         span_context: Option<SpanContext>,
-    ) -> bool {
+    ) {
         f(&mut *self.borrow_mut(span_context))
     }
 

@@ -6,6 +6,7 @@
 //! [`Actor`]: crate::actor::Actor
 
 mod combine_readers;
+mod modify;
 pub mod single_writer;
 mod slot;
 mod storable;
@@ -13,6 +14,7 @@ mod store_request;
 pub(crate) mod sync;
 
 pub use self::combine_readers::{CombinableReader, CombineReaders};
+pub use self::modify::Modify;
 pub use self::slot::DefinesSlot;
 pub(crate) use self::slot::{SlotTrait, format_types};
 pub use self::storable::Storable;

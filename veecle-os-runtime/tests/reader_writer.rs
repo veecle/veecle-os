@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
 
 use core::fmt::Debug;
-use veecle_os_runtime::Never;
+use veecle_os_runtime::{Modify, Never};
 
 use futures_test::future::FutureTestExt;
 use veecle_os_runtime::Storable;
@@ -57,6 +57,39 @@ fn outdated_signals_should_be_discarded() {
                     "outdated signal should not be written"
                 );
             });
+        }
+    });
+}
+
+#[test]
+fn modify_notify_reader() {
+    // Tests that the `Modify` type is accessible.
+    fn modification_method(mut value: Modify<Signal>) {
+        *value = Some(Signal(2));
+    }
+
+    veecle_os_test::block_on_future(veecle_os_test::execute! {
+        actors: [],
+
+        validation: async |mut reader: Reader<'_, Signal>, mut writer: Writer<'_, Signal>| {
+            writer.write(Signal(1)).await;
+            reader.read_updated(|value| assert_eq!(value, &Signal(1))).await;
+
+            writer.modify(|value| {
+                assert_eq!(*value, Some(Signal(1)));
+            }).await;
+
+            core::future::ready(()).pending_once().await;
+
+            assert!(!reader.is_updated());
+
+            writer.modify(|value| {
+                modification_method(value);
+            }).await;
+
+            reader.read_updated(|value|{
+                assert_eq!(*value, Signal(2));
+            }).await;
         }
     });
 }
