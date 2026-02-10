@@ -2,7 +2,6 @@
 
 use core::cell::Ref;
 use core::fmt::Debug;
-use core::marker::PhantomData;
 use core::pin::Pin;
 
 use pin_project::pin_project;
@@ -82,8 +81,6 @@ where
 {
     #[pin]
     waiter: Waiter<'a, T>,
-
-    marker: PhantomData<fn(T)>,
 }
 
 impl<T> Reader<'_, T>
@@ -177,7 +174,6 @@ where
     pub(crate) fn from_slot(slot: Pin<&'a Slot<T>>) -> Self {
         Reader {
             waiter: slot.waiter(),
-            marker: PhantomData,
         }
     }
 }
