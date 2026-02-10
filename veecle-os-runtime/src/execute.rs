@@ -16,7 +16,7 @@ use core::any::TypeId;
 use core::pin::Pin;
 
 /// Internal helper to implement [`Datastore::slot`] recursively for a cons-list of slots.
-trait Slots {
+trait SlotAccess {
     /// Attempts to find a slot of the given type.
     /// Returns None if no such slot exists.
     fn try_slot<S>(self: Pin<&Self>) -> Option<Pin<&S>>
@@ -24,7 +24,7 @@ trait Slots {
         S: SlotTrait;
 }
 
-impl Slots for Nil {
+impl SlotAccess for Nil {
     fn try_slot<S>(self: Pin<&Self>) -> Option<Pin<&S>>
     where
         S: SlotTrait,
@@ -33,7 +33,7 @@ impl Slots for Nil {
     }
 }
 
-impl<T> Slots for T
+impl<T> SlotAccess for T
 where
     T: SlotTrait + core::any::Any,
 {
@@ -56,10 +56,10 @@ where
     }
 }
 
-impl<U, R> Slots for Cons<U, R>
+impl<U, R> SlotAccess for Cons<U, R>
 where
-    U: Slots,
-    R: Slots,
+    U: SlotAccess,
+    R: SlotAccess,
 {
     fn try_slot<S>(self: Pin<&Self>) -> Option<Pin<&S>>
     where
@@ -72,12 +72,12 @@ where
 }
 
 /// Internal helper to construct runtime slot instances from a type-level cons list of slots.
-trait IntoSlots {
+trait IntoSlotConsList {
     /// The same cons-list type, used to construct slot instances.
-    type Slots: Slots;
+    type Slots: SlotAccess;
 
     /// Creates a new instance of the slot cons-list with all slots empty.
-    fn make_slots() -> Self::Slots;
+    fn make_slots_cons_list() -> Self::Slots;
 
     /// Validates all slots in this cons-list against the actor access patterns.
     fn validate_all<'a, A>()
@@ -85,10 +85,10 @@ trait IntoSlots {
         A: ActorList<'a>;
 }
 
-impl IntoSlots for Nil {
+impl IntoSlotConsList for Nil {
     type Slots = Nil;
 
-    fn make_slots() -> Self::Slots {
+    fn make_slots_cons_list() -> Self::Slots {
         Nil
     }
 
@@ -99,13 +99,13 @@ impl IntoSlots for Nil {
     }
 }
 
-impl<S> IntoSlots for S
+impl<S> IntoSlotConsList for S
 where
     S: SlotTrait + 'static,
 {
     type Slots = S;
 
-    fn make_slots() -> Self::Slots {
+    fn make_slots_cons_list() -> Self::Slots {
         S::new()
     }
 
@@ -129,15 +129,15 @@ where
     }
 }
 
-impl<S, R> IntoSlots for Cons<S, R>
+impl<S, R> IntoSlotConsList for Cons<S, R>
 where
-    S: IntoSlots,
-    R: IntoSlots,
+    S: IntoSlotConsList,
+    R: IntoSlotConsList,
 {
     type Slots = Cons<S::Slots, R::Slots>;
 
-    fn make_slots() -> Self::Slots {
-        Cons(S::make_slots(), R::make_slots())
+    fn make_slots_cons_list() -> Self::Slots {
+        Cons(S::make_slots_cons_list(), R::make_slots_cons_list())
     }
 
     fn validate_all<'a, A>()
@@ -160,9 +160,9 @@ where
     "
 )]
 /// Given a slot cons-list, combines it with a [`generational::Source`] to implement [`Datastore`].
-impl<S: Slots> Datastore for Cons<generational::Source, S>
+impl<S: SlotAccess> Datastore for Cons<generational::Source, S>
 where
-    S: Slots,
+    S: SlotAccess,
 {
     fn source(self: Pin<&Self>) -> Pin<&generational::Source> {
         let this = self.project_ref();
@@ -186,9 +186,9 @@ where
 /// Given a cons-list of slot types, returns a complete [`Datastore`] that contains those slots.
 pub(crate) fn make_store<T>() -> impl Datastore
 where
-    T: IntoSlots,
+    T: IntoSlotConsList,
 {
-    Cons(generational::Source::new(), T::make_slots())
+    Cons(generational::Source::new(), T::make_slots_cons_list())
 }
 
 /// Internal helper to query how a [`StoreRequest`] type will use a specific type.
@@ -415,7 +415,7 @@ where
 pub fn make_store_and_validate<'a, A, I>(init_contexts: I) -> (impl Datastore + 'a, I)
 where
     A: ActorList<'a, InitContexts = I>,
-    A::AllSlots: IntoSlots,
+    A::AllSlots: IntoSlotConsList,
 {
     let store = make_store::<A::AllSlots>();
 
