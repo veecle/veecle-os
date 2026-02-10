@@ -102,7 +102,7 @@ where
         f(&*self.borrow())
     }
 
-    /// Stores the provided `span_context` to connect this write to the next read operation.
+    /// Updates the value in-place and stores the provided `span_context` to connect this write to the next read operation.
     #[veecle_telemetry::instrument]
     pub(crate) fn modify(
         &self,

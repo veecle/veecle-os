@@ -28,6 +28,9 @@
 * **breaking** Replaced `SpanContext::from_span` with `Span::context` method.
 * **breaking** Telemetry execution id is replaced by separate thread and process ids to uniquely identify thread/task combinations.
 * **breaking** `ConsoleJsonExporter` is no longer a unit struct, replace usage with `ConsoleJsonExporter::DEFAULT`.
+* **breaking** Removed `Writer::read` method.
+* **breaking** `Writer::modify` closure now receives a `Modify` wrapper instead of `&mut Option<T>`.
+  Readers are only notified when the value is mutably accessed via `DerefMut`.
 * **breaking** `Reader`, `Writer`, and `ExclusiveReader` types are now exported from the `single_writer` module.
   * `use veecle_os_runtime::Reader` becomes `use veecle_os_runtime::single_writer::Reader`.
   * `use veecle_os::runtime::Writer` becomes `use veecle_os::runtime::single_writer::Writer`.

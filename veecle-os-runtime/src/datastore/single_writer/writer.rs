@@ -1,15 +1,15 @@
 //! Writer for single-writer slots.
 
-use core::fmt::Debug;
-use core::marker::PhantomData;
-use core::pin::Pin;
-
 use super::slot::Slot;
 use crate::Sealed;
 use crate::cons::{Cons, Nil};
+use crate::datastore::modify::Modify;
 use crate::datastore::sync::generational;
 use crate::datastore::{Datastore, DatastoreExt};
 use crate::datastore::{DefinesSlot, Storable, StoreRequest};
+use core::fmt::Debug;
+use core::marker::PhantomData;
+use core::pin::Pin;
 
 /// Writer for a [`Storable`] type.
 ///
@@ -52,17 +52,19 @@ use crate::datastore::{DefinesSlot, Storable, StoreRequest};
 /// # use veecle_os_runtime::{Storable, single_writer::Writer};
 /// #
 /// # #[derive(Debug, Default, Storable)]
-/// # pub struct Foo;
+/// # pub struct Foo(usize);
 /// #
 /// #[veecle_os_runtime::actor]
 /// async fn foo_writer(
 ///     mut writer: Writer<'_, Foo>,
 /// ) -> veecle_os_runtime::Never {
 ///     loop {
-///         // This call will yield to any readers needing to read the last value.
+///         // This call will yield to any readers needing to read the last value if the value was accessed mutably.
 ///         // The closure will run after yielding and right before continuing to the rest of the function.
-///         writer.modify(|previous_value: &mut Option<Foo>| {
-///             // mutate the previous value
+///         writer.modify(|mut previous_value| {
+///             if let Some(value) = previous_value.as_mut(){
+///                 *value = Foo(value.0 + 1);
+///             }
 ///         }).await;
 ///     }
 /// }
@@ -112,8 +114,8 @@ where
     /// Writes a new value and notifies readers.
     #[veecle_telemetry::instrument]
     pub async fn write(&mut self, item: T::DataType) {
-        self.modify(|slot| {
-            let _ = slot.insert(item);
+        self.modify(|mut slot| {
+            let _ = *slot.insert(item);
         })
         .await;
     }
@@ -126,41 +128,39 @@ where
         let _ = self.waiter.wait().await;
     }
 
-    /// Updates the value in-place and notifies readers.
-    pub async fn modify(&mut self, f: impl FnOnce(&mut Option<T::DataType>)) {
+    /// Updates the value in-place and notifies readers if the value was modified.
+    ///
+    /// Readers are notified that the value was modified if it's mutably accessed via `DerefMut`
+    pub async fn modify(&mut self, f: impl FnOnce(Modify<T::DataType>)) {
         use veecle_telemetry::future::FutureExt;
         let span = veecle_telemetry::span!("modify");
         let span_context = span.context();
         (async move {
             self.ready().await;
-            self.waiter.update_generation();
+            let mut modified = false;
 
             self.slot.modify(
                 |value| {
-                    f(value);
-
-                    veecle_telemetry::trace!("Slot modified", value = format_args!("{value:?}"));
+                    let modify_wrapper = Modify::new(value, &mut modified);
+                    f(modify_wrapper);
+                    if modified {
+                        veecle_telemetry::trace!(
+                            "Slot modified",
+                            value = format_args!("{value:?}")
+                        );
+                    }
                 },
                 span_context,
             );
-            self.slot.increment_generation();
+
+            // Only block writes and notify readers if the value was modified.
+            if modified {
+                self.waiter.update_generation();
+                self.slot.increment_generation();
+            }
         })
         .with_span(span)
         .await;
-    }
-
-    /// Reads the current value of a type.
-    ///
-    /// This method takes a closure to ensure the reference is not held across await points.
-    #[veecle_telemetry::instrument]
-    pub fn read<U>(&self, f: impl FnOnce(Option<&T::DataType>) -> U) -> U {
-        self.slot.read(|value| {
-            let value = value.as_ref();
-
-            veecle_telemetry::trace!("Slot read", value = format_args!("{value:?}"));
-
-            f(value)
-        })
     }
 }
 
@@ -203,6 +203,7 @@ mod tests {
     use crate::datastore::single_writer::{Slot, Writer};
     use crate::datastore::sync::generational;
     use core::pin::pin;
+    use std::ops::DerefMut;
 
     #[test]
     fn ready_waits_for_increment() {
@@ -238,10 +239,11 @@ mod tests {
     }
 
     #[test]
-    fn read_reads_latest_written_value() {
+    fn modify_only_blocks_next_write_when_returning_true() {
         use futures::FutureExt;
-        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-        pub struct Data(usize);
+
+        #[derive(Debug)]
+        pub struct Data;
         impl Storable for Data {
             type DataType = Self;
         }
@@ -250,18 +252,33 @@ mod tests {
         let slot = pin!(Slot::<Data>::new());
         let mut writer = Writer::new(source.as_ref().waiter(), slot.as_ref());
 
-        writer.read(|current_data| assert!(current_data.is_none()));
+        source.as_ref().increment_generation();
+        assert!(writer.ready().now_or_never().is_some());
+
+        assert!(
+            writer
+                .modify(|value| {
+                    let _ = *value;
+                })
+                .now_or_never()
+                .is_some()
+        );
+        assert!(writer.write(Data).now_or_never().is_some());
+
+        // After a real write the writer should be blocked again.
+        assert!(writer.ready().now_or_never().is_none());
 
         source.as_ref().increment_generation();
+        assert!(writer.ready().now_or_never().is_some());
 
-        let want = Data(1);
-        writer.write(want).now_or_never().unwrap();
-        writer.read(|got| assert_eq!(got, Some(&want)));
-
-        source.as_ref().increment_generation();
-
-        let want = Data(2);
-        writer.write(want).now_or_never().unwrap();
-        writer.read(|got| assert_eq!(got, Some(&want)));
+        assert!(
+            writer
+                .modify(|mut value| {
+                    let _ = value.deref_mut();
+                })
+                .now_or_never()
+                .is_some()
+        );
+        assert!(writer.ready().now_or_never().is_none());
     }
 }
