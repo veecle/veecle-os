@@ -21,6 +21,7 @@
 ///         trigger.wait_for_update().await;
 ///         writer.modify(|data| {
 ///             *data = Some(data.map_or(Data(0), |data| Data(data.0 + 1)));
+///             true
 ///         }).await;
 ///     }
 /// }
