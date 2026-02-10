@@ -7,6 +7,7 @@
 
 mod combine_readers;
 mod modify;
+pub mod mpsc;
 pub mod single_writer;
 mod slot;
 mod storable;
@@ -26,6 +27,8 @@ use crate::datastore::sync::generational;
 use crate::single_writer::{ExclusiveReader, Reader, Slot, Writer};
 
 use core::pin::Pin;
+
+use self::mpsc::Slot as MpscSlot;
 
 #[doc(hidden)]
 /// Internal trait to abstract out type-erased and concrete data stores.
@@ -87,6 +90,30 @@ pub(crate) trait DatastoreExt<'a>: Copy {
     fn writer<T>(self, requestor: &'static str) -> Writer<'a, T>
     where
         T: Storable + 'static;
+
+    /// Returns an [`mpsc::Writer`] for a specific mpsc slot.
+    ///
+    /// # Panics
+    ///
+    /// * If writer capacity `N` is exceeded.
+    ///
+    /// * If there is no [`MpscSlot`] for `T` in the [`Datastore`].
+    ///
+    /// `requestor` will be included in the panic message for context.
+    fn mpsc_writer<T, const N: usize>(self, requestor: &'static str) -> mpsc::Writer<'a, T, N>
+    where
+        T: Storable + 'static;
+
+    /// Returns an [`mpsc::Reader`] for a specific mpsc slot.
+    ///
+    /// # Panics
+    ///
+    /// * If there is no [`MpscSlot`] for `T` in the [`Datastore`].
+    ///
+    /// `requestor` will be included in the panic message for context.
+    fn mpsc_reader<T, const N: usize>(self, requestor: &'static str) -> mpsc::Reader<'a, T, N>
+    where
+        T: Storable + 'static;
 }
 
 impl<'a, S> DatastoreExt<'a> for Pin<&'a S>
@@ -112,5 +139,22 @@ where
         T: Storable + 'static,
     {
         Writer::new(self.source().waiter(), self.slot::<Slot<T>>(requestor))
+    }
+
+    fn mpsc_writer<T, const N: usize>(self, requestor: &'static str) -> mpsc::Writer<'a, T, N>
+    where
+        T: Storable + 'static,
+    {
+        mpsc::Writer::new(
+            self.source().waiter(),
+            self.slot::<MpscSlot<T, N>>(requestor),
+        )
+    }
+
+    fn mpsc_reader<T, const N: usize>(self, requestor: &'static str) -> mpsc::Reader<'a, T, N>
+    where
+        T: Storable + 'static,
+    {
+        mpsc::Reader::from_slot(self.slot::<MpscSlot<T, N>>(requestor))
     }
 }

@@ -4,7 +4,7 @@
 //! Veecle OS applications are composed of [`Actor`]s that communicate with each other through
 //! slots.
 //! Slots come in different implementations; see [`single_writer`] for a slot implementation
-//! with one writer and multiple readers.
+//! with one writer and multiple readers, and [`mpsc`] for multiple writers with a single reader.
 //!
 //! This crate is meant to be used with asynchronous programming, which means that actors are expected to be async
 //! functions.
@@ -112,6 +112,7 @@ mod executor;
 pub mod memory_pool;
 
 pub use self::actor::{Actor, StoreRequest, actor};
+pub use self::datastore::mpsc;
 pub use self::datastore::single_writer;
 pub use self::datastore::{CombinableReader, CombineReaders, Modify, Storable};
 

@@ -2,6 +2,7 @@
 
 ## Veecle OS
 
+* Added MPSC (multiple-producer, single-consumer) slot with `mpsc::Writer` and `mpsc::Reader` types.
 * **breaking** Removed `InitializedReader`.
   Use `Reader` with the new `read_updated` method instead.
   * `reader.wait_init().await` is no longer needed.
