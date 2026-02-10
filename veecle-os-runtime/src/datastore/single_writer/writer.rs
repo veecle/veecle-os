@@ -8,7 +8,6 @@ use crate::datastore::sync::generational;
 use crate::datastore::{Datastore, DatastoreExt};
 use crate::datastore::{DefinesSlot, Storable, StoreRequest};
 use core::fmt::Debug;
-use core::marker::PhantomData;
 use core::pin::Pin;
 
 /// Writer for a [`Storable`] type.
@@ -104,7 +103,6 @@ where
 {
     slot: Pin<&'a Slot<T>>,
     waiter: generational::Waiter<'a>,
-    marker: PhantomData<fn(T)>,
 }
 
 impl<T> Writer<'_, T>
@@ -170,11 +168,7 @@ where
 {
     pub(crate) fn new(waiter: generational::Waiter<'a>, slot: Pin<&'a Slot<T>>) -> Self {
         slot.take_writer();
-        Self {
-            slot,
-            waiter,
-            marker: PhantomData,
-        }
+        Self { slot, waiter }
     }
 }
 

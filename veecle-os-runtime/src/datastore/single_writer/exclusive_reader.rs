@@ -2,7 +2,6 @@
 
 use core::cell::Ref;
 use core::fmt::Debug;
-use core::marker::PhantomData;
 use core::pin::Pin;
 
 use super::slot::Slot;
@@ -77,8 +76,6 @@ where
     T: Storable + 'static,
 {
     waiter: Waiter<'a, T>,
-
-    marker: PhantomData<fn(T)>,
 }
 
 impl<T> ExclusiveReader<'_, T>
@@ -205,7 +202,6 @@ where
     pub(crate) fn from_slot(slot: Pin<&'a Slot<T>>) -> Self {
         ExclusiveReader {
             waiter: slot.waiter(),
-            marker: PhantomData,
         }
     }
 }
