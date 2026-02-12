@@ -54,10 +54,6 @@ where
     }
 
     /// Returns the type name of the value stored in this slot.
-    ///
-    /// # Panics
-    ///
-    /// If called while the [`Self::borrow_mut`] guard is held.
     pub(crate) fn inner_type_name(&self) -> &'static str {
         core::any::type_name::<T>()
     }
