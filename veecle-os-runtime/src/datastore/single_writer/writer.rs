@@ -3,9 +3,9 @@
 use super::slot::Slot;
 use crate::Sealed;
 use crate::cons::{Cons, Nil};
+use crate::datastore::Datastore;
 use crate::datastore::modify::Modify;
 use crate::datastore::sync::generational;
-use crate::datastore::{Datastore, DatastoreExt};
 use crate::datastore::{DefinesSlot, Storable, StoreRequest};
 use core::fmt::Debug;
 use core::pin::Pin;
@@ -186,7 +186,7 @@ where
     T: Storable + 'static,
 {
     async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self {
-        datastore.writer(requestor)
+        Writer::new(datastore.source().waiter(), datastore.slot(requestor))
     }
 }
 

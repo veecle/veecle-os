@@ -8,9 +8,7 @@ use super::slot::Slot;
 use super::waiter::Waiter;
 use crate::Sealed;
 use crate::cons::Nil;
-use crate::datastore::{
-    CombinableReader, Datastore, DatastoreExt, DefinesSlot, Storable, StoreRequest,
-};
+use crate::datastore::{CombinableReader, Datastore, DefinesSlot, Storable, StoreRequest};
 
 /// Exclusive reader for a [`Storable`] type.
 ///
@@ -240,7 +238,7 @@ where
     T: Storable + 'static,
 {
     async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self {
-        datastore.exclusive_reader(requestor)
+        Self::from_slot(datastore.slot(requestor))
     }
 }
 

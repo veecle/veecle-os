@@ -54,7 +54,7 @@ pub trait CombinableReader: Sealed {
     ///
     /// See [`Reader::is_updated`] for more.
     ///
-    /// [`Reader::is_updated`]: super::Reader::is_updated
+    /// [`Reader::is_updated`]: crate::datastore::single_writer::Reader::is_updated
     fn is_updated(&self) -> bool;
 }
 
