@@ -11,27 +11,12 @@ error[E0277]: invalid actor parameter type
   = help: the trait `DefinesSlot` is not implemented for `u32`
   = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
   = note: parameters passed as initialization context need to be marked with `#[init_context]`
-help: the following other types implement trait `DefinesSlot`
-  |
- ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/writer.rs
-  |
-  | / impl<'a, T> DefinesSlot for Writer<'a, T>
-  | | where
-  | |     T: Storable,
-  | |________________^ `Writer<'a, T>`
- --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
-  |
-  | / impl<T> DefinesSlot for Reader<'_, T>
-  | | where
-  | |     T: Storable,
-  | |________________^ `Reader<'_, T>`
-  |
- ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/exclusive_reader.rs
-  |
-  | / impl<T> DefinesSlot for ExclusiveReader<'_, T>
-  | | where
-  | |     T: Storable,
-  | |________________^ `ExclusiveReader<'_, T>`
+  = help: the following other types implement trait `DefinesSlot`:
+            ExclusiveReader<'_, T>
+            veecle_os_runtime::mpsc::Reader<'_, T, N>
+            veecle_os_runtime::mpsc::Writer<'_, T, N>
+            veecle_os_runtime::single_writer::Reader<'_, T>
+            veecle_os_runtime::single_writer::Writer<'a, T>
 
 error[E0277]: invalid actor parameter type
  --> tests/ui/actor/unexpected_argument.rs:5:27
@@ -43,30 +28,15 @@ error[E0277]: invalid actor parameter type
 8 | | ) -> veecle_os_runtime::Never {
   | |_^ the function signature contains parameters that are neither init_context nor reader/writers
   |
-  = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `(u32, (Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>, ()))`
+  = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `(u32, (veecle_os_runtime::single_writer::Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>, ()))`
   = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
   = note: parameters passed as initialization context need to be marked with `#[init_context]`
-help: the following other types implement trait `StoreRequest<'a>`
-  |
- ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/writer.rs
-  |
-  | / impl<'a, T> StoreRequest<'a> for Writer<'a, T>
-  | | where
-  | |     T: Storable + 'static,
-  | |__________________________^ `Writer<'a, T>`
- --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
-  |
-  | / impl<'a, T> StoreRequest<'a> for Reader<'a, T>
-  | | where
-  | |     T: Storable + 'static,
-  | |__________________________^ `Reader<'a, T>`
-  |
- ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/exclusive_reader.rs
-  |
-  | / impl<'a, T> StoreRequest<'a> for ExclusiveReader<'a, T>
-  | | where
-  | |     T: Storable + 'static,
-  | |__________________________^ `ExclusiveReader<'a, T>`
+  = help: the following other types implement trait `StoreRequest<'a>`:
+            ExclusiveReader<'a, T>
+            veecle_os_runtime::mpsc::Reader<'a, T, N>
+            veecle_os_runtime::mpsc::Writer<'a, T, N>
+            veecle_os_runtime::single_writer::Reader<'a, T>
+            veecle_os_runtime::single_writer::Writer<'a, T>
 note: required by a bound in `veecle_os_runtime::Actor::StoreRequest`
  --> $WORKSPACE/veecle-os-runtime/src/actor.rs
   |
@@ -82,27 +52,12 @@ error[E0277]: invalid actor parameter type
    = help: the trait `DefinesSlot` is not implemented for `u32`
    = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
    = note: parameters passed as initialization context need to be marked with `#[init_context]`
-help: the following other types implement trait `DefinesSlot`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/writer.rs
-   |
-   | / impl<'a, T> DefinesSlot for Writer<'a, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `Writer<'a, T>`
-  --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
-   |
-   | / impl<T> DefinesSlot for Reader<'_, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `Reader<'_, T>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/exclusive_reader.rs
-   |
-   | / impl<T> DefinesSlot for ExclusiveReader<'_, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `ExclusiveReader<'_, T>`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'_, T>
+             veecle_os_runtime::mpsc::Reader<'_, T, N>
+             veecle_os_runtime::mpsc::Writer<'_, T, N>
+             veecle_os_runtime::single_writer::Reader<'_, T>
+             veecle_os_runtime::single_writer::Writer<'a, T>
 
 error[E0277]: invalid actor parameter type
   --> tests/ui/actor/unexpected_argument.rs:13:27
@@ -113,27 +68,12 @@ error[E0277]: invalid actor parameter type
    = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `(u32, ())`
    = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
    = note: parameters passed as initialization context need to be marked with `#[init_context]`
-help: the following other types implement trait `StoreRequest<'a>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/writer.rs
-   |
-   | / impl<'a, T> StoreRequest<'a> for Writer<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `Writer<'a, T>`
-  --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
-   |
-   | / impl<'a, T> StoreRequest<'a> for Reader<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `Reader<'a, T>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/exclusive_reader.rs
-   |
-   | / impl<'a, T> StoreRequest<'a> for ExclusiveReader<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `ExclusiveReader<'a, T>`
+   = help: the following other types implement trait `StoreRequest<'a>`:
+             ExclusiveReader<'a, T>
+             veecle_os_runtime::mpsc::Reader<'a, T, N>
+             veecle_os_runtime::mpsc::Writer<'a, T, N>
+             veecle_os_runtime::single_writer::Reader<'a, T>
+             veecle_os_runtime::single_writer::Writer<'a, T>
 note: required by a bound in `veecle_os_runtime::Actor::StoreRequest`
   --> $WORKSPACE/veecle-os-runtime/src/actor.rs
    |
@@ -149,27 +89,12 @@ error[E0277]: invalid actor parameter type
    = help: the trait `DefinesSlot` is not implemented for `()`
    = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
    = note: parameters passed as initialization context need to be marked with `#[init_context]`
-help: the following other types implement trait `DefinesSlot`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/writer.rs
-   |
-   | / impl<'a, T> DefinesSlot for Writer<'a, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `Writer<'a, T>`
-  --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
-   |
-   | / impl<T> DefinesSlot for Reader<'_, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `Reader<'_, T>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/exclusive_reader.rs
-   |
-   | / impl<T> DefinesSlot for ExclusiveReader<'_, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `ExclusiveReader<'_, T>`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'_, T>
+             veecle_os_runtime::mpsc::Reader<'_, T, N>
+             veecle_os_runtime::mpsc::Writer<'_, T, N>
+             veecle_os_runtime::single_writer::Reader<'_, T>
+             veecle_os_runtime::single_writer::Writer<'a, T>
 
 error[E0277]: invalid actor parameter type
   --> tests/ui/actor/unexpected_argument.rs:31:27
@@ -180,27 +105,12 @@ error[E0277]: invalid actor parameter type
    = help: the trait `DefinesSlot` is not implemented for `[u32; 0]`
    = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
    = note: parameters passed as initialization context need to be marked with `#[init_context]`
-help: the following other types implement trait `DefinesSlot`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/writer.rs
-   |
-   | / impl<'a, T> DefinesSlot for Writer<'a, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `Writer<'a, T>`
-  --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
-   |
-   | / impl<T> DefinesSlot for Reader<'_, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `Reader<'_, T>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/exclusive_reader.rs
-   |
-   | / impl<T> DefinesSlot for ExclusiveReader<'_, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `ExclusiveReader<'_, T>`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'_, T>
+             veecle_os_runtime::mpsc::Reader<'_, T, N>
+             veecle_os_runtime::mpsc::Writer<'_, T, N>
+             veecle_os_runtime::single_writer::Reader<'_, T>
+             veecle_os_runtime::single_writer::Writer<'a, T>
 
 error[E0277]: invalid actor parameter type
   --> tests/ui/actor/unexpected_argument.rs:31:27
@@ -211,27 +121,12 @@ error[E0277]: invalid actor parameter type
    = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `([u32; 0], ())`
    = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
    = note: parameters passed as initialization context need to be marked with `#[init_context]`
-help: the following other types implement trait `StoreRequest<'a>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/writer.rs
-   |
-   | / impl<'a, T> StoreRequest<'a> for Writer<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `Writer<'a, T>`
-  --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
-   |
-   | / impl<'a, T> StoreRequest<'a> for Reader<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `Reader<'a, T>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/exclusive_reader.rs
-   |
-   | / impl<'a, T> StoreRequest<'a> for ExclusiveReader<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `ExclusiveReader<'a, T>`
+   = help: the following other types implement trait `StoreRequest<'a>`:
+             ExclusiveReader<'a, T>
+             veecle_os_runtime::mpsc::Reader<'a, T, N>
+             veecle_os_runtime::mpsc::Writer<'a, T, N>
+             veecle_os_runtime::single_writer::Reader<'a, T>
+             veecle_os_runtime::single_writer::Writer<'a, T>
 note: required by a bound in `veecle_os_runtime::Actor::StoreRequest`
   --> $WORKSPACE/veecle-os-runtime/src/actor.rs
    |
@@ -251,27 +146,12 @@ error[E0277]: invalid actor parameter type
    = help: the trait `DefinesSlot` is not implemented for `u32`
    = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
    = note: parameters passed as initialization context need to be marked with `#[init_context]`
-help: the following other types implement trait `DefinesSlot`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/writer.rs
-   |
-   | / impl<'a, T> DefinesSlot for Writer<'a, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `Writer<'a, T>`
-  --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
-   |
-   | / impl<T> DefinesSlot for Reader<'_, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `Reader<'_, T>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/exclusive_reader.rs
-   |
-   | / impl<T> DefinesSlot for ExclusiveReader<'_, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `ExclusiveReader<'_, T>`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'_, T>
+             veecle_os_runtime::mpsc::Reader<'_, T, N>
+             veecle_os_runtime::mpsc::Writer<'_, T, N>
+             veecle_os_runtime::single_writer::Reader<'_, T>
+             veecle_os_runtime::single_writer::Writer<'a, T>
 
 error[E0277]: invalid actor parameter type
   --> tests/ui/actor/unexpected_argument.rs:36:27
@@ -283,30 +163,15 @@ error[E0277]: invalid actor parameter type
 39 | | ) -> veecle_os_runtime::Never {
    | |_^ the function signature contains parameters that are neither init_context nor reader/writers
    |
-   = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `(Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>, (u32, ()))`
+   = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `(veecle_os_runtime::single_writer::Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>, (u32, ()))`
    = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
    = note: parameters passed as initialization context need to be marked with `#[init_context]`
-help: the following other types implement trait `StoreRequest<'a>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/writer.rs
-   |
-   | / impl<'a, T> StoreRequest<'a> for Writer<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `Writer<'a, T>`
-  --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
-   |
-   | / impl<'a, T> StoreRequest<'a> for Reader<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `Reader<'a, T>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/exclusive_reader.rs
-   |
-   | / impl<'a, T> StoreRequest<'a> for ExclusiveReader<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `ExclusiveReader<'a, T>`
+   = help: the following other types implement trait `StoreRequest<'a>`:
+             ExclusiveReader<'a, T>
+             veecle_os_runtime::mpsc::Reader<'a, T, N>
+             veecle_os_runtime::mpsc::Writer<'a, T, N>
+             veecle_os_runtime::single_writer::Reader<'a, T>
+             veecle_os_runtime::single_writer::Writer<'a, T>
 note: required by a bound in `veecle_os_runtime::Actor::StoreRequest`
   --> $WORKSPACE/veecle-os-runtime/src/actor.rs
    |
@@ -327,27 +192,12 @@ error[E0277]: invalid actor parameter type
    = help: the trait `DefinesSlot` is not implemented for `usize`
    = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
    = note: parameters passed as initialization context need to be marked with `#[init_context]`
-help: the following other types implement trait `DefinesSlot`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/writer.rs
-   |
-   | / impl<'a, T> DefinesSlot for Writer<'a, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `Writer<'a, T>`
-  --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
-   |
-   | / impl<T> DefinesSlot for Reader<'_, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `Reader<'_, T>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/exclusive_reader.rs
-   |
-   | / impl<T> DefinesSlot for ExclusiveReader<'_, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `ExclusiveReader<'_, T>`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'_, T>
+             veecle_os_runtime::mpsc::Reader<'_, T, N>
+             veecle_os_runtime::mpsc::Writer<'_, T, N>
+             veecle_os_runtime::single_writer::Reader<'_, T>
+             veecle_os_runtime::single_writer::Writer<'a, T>
 
 error[E0277]: invalid actor parameter type
   --> tests/ui/actor/unexpected_argument.rs:44:27
@@ -363,27 +213,12 @@ error[E0277]: invalid actor parameter type
    = help: the trait `DefinesSlot` is not implemented for `u32`
    = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
    = note: parameters passed as initialization context need to be marked with `#[init_context]`
-help: the following other types implement trait `DefinesSlot`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/writer.rs
-   |
-   | / impl<'a, T> DefinesSlot for Writer<'a, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `Writer<'a, T>`
-  --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
-   |
-   | / impl<T> DefinesSlot for Reader<'_, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `Reader<'_, T>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/exclusive_reader.rs
-   |
-   | / impl<T> DefinesSlot for ExclusiveReader<'_, T>
-   | | where
-   | |     T: Storable,
-   | |________________^ `ExclusiveReader<'_, T>`
+   = help: the following other types implement trait `DefinesSlot`:
+             ExclusiveReader<'_, T>
+             veecle_os_runtime::mpsc::Reader<'_, T, N>
+             veecle_os_runtime::mpsc::Writer<'_, T, N>
+             veecle_os_runtime::single_writer::Reader<'_, T>
+             veecle_os_runtime::single_writer::Writer<'a, T>
 
 error[E0277]: invalid actor parameter type
   --> tests/ui/actor/unexpected_argument.rs:44:27
@@ -396,30 +231,15 @@ error[E0277]: invalid actor parameter type
 48 | | ) -> veecle_os_runtime::Never {
    | |_^ the function signature contains parameters that are neither init_context nor reader/writers
    |
-   = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `(usize, (Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>, (u32, ())))`
+   = help: the trait `StoreRequest<'__dont_use_internal_actor_macro_lifetime>` is not implemented for `(usize, (veecle_os_runtime::single_writer::Reader<'__dont_use_internal_actor_macro_lifetime, Sensor>, (u32, ())))`
    = note: only the init_context and readers/writers provided by the Veecle OS runtime may be used as actor parameters
    = note: parameters passed as initialization context need to be marked with `#[init_context]`
-help: the following other types implement trait `StoreRequest<'a>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/writer.rs
-   |
-   | / impl<'a, T> StoreRequest<'a> for Writer<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `Writer<'a, T>`
-  --> $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/reader.rs
-   |
-   | / impl<'a, T> StoreRequest<'a> for Reader<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `Reader<'a, T>`
-   |
-  ::: $WORKSPACE/veecle-os-runtime/src/datastore/single_writer/exclusive_reader.rs
-   |
-   | / impl<'a, T> StoreRequest<'a> for ExclusiveReader<'a, T>
-   | | where
-   | |     T: Storable + 'static,
-   | |__________________________^ `ExclusiveReader<'a, T>`
+   = help: the following other types implement trait `StoreRequest<'a>`:
+             ExclusiveReader<'a, T>
+             veecle_os_runtime::mpsc::Reader<'a, T, N>
+             veecle_os_runtime::mpsc::Writer<'a, T, N>
+             veecle_os_runtime::single_writer::Reader<'a, T>
+             veecle_os_runtime::single_writer::Writer<'a, T>
 note: required by a bound in `veecle_os_runtime::Actor::StoreRequest`
   --> $WORKSPACE/veecle-os-runtime/src/actor.rs
    |

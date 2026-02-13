@@ -92,7 +92,7 @@ help: indicate the anonymous lifetime
 27 | async fn macro_test_actor5(_reader: veecle_os_runtime::single_writer::Reader<'_>) -> veecle_os_runtime::Never {
    |                                                                             ++++
 
-error[E0107]: missing generics for struct `Reader`
+error[E0107]: missing generics for struct `veecle_os_runtime::single_writer::Reader`
  --> tests/ui/actor/missing_lifetime.rs:5:70
   |
 5 | async fn macro_test_actor(_reader: veecle_os_runtime::single_writer::Reader) -> veecle_os_runtime::Never {
@@ -108,7 +108,7 @@ help: add missing generic argument
 5 | async fn macro_test_actor(_reader: veecle_os_runtime::single_writer::Reader<T>) -> veecle_os_runtime::Never {
   |                                                                            +++
 
-error[E0107]: missing generics for struct `Reader`
+error[E0107]: missing generics for struct `veecle_os_runtime::single_writer::Reader`
   --> tests/ui/actor/missing_lifetime.rs:10:71
    |
 10 | async fn macro_test_actor2(_reader: veecle_os_runtime::single_writer::Reader) -> veecle_os_runtime::Never {
@@ -124,7 +124,7 @@ help: add missing generic argument
 10 | async fn macro_test_actor2(_reader: veecle_os_runtime::single_writer::Reader<T>) -> veecle_os_runtime::Never {
    |                                                                             +++
 
-error[E0107]: missing generics for struct `Reader`
+error[E0107]: missing generics for struct `veecle_os_runtime::single_writer::Reader`
   --> tests/ui/actor/missing_lifetime.rs:27:71
    |
 27 | async fn macro_test_actor5(_reader: veecle_os_runtime::single_writer::Reader) -> veecle_os_runtime::Never {

@@ -9,6 +9,7 @@
 use crate::Never;
 use crate::actor::Actor;
 use crate::cons::{Cons, Nil, TupleConsToCons};
+use crate::datastore::mpsc;
 use crate::datastore::single_writer::{ExclusiveReader, Reader, Writer};
 use crate::datastore::sync::generational;
 use crate::datastore::{Datastore, SlotTrait, Storable, StoreRequest};
@@ -228,6 +229,28 @@ where
 }
 
 impl<T> AccessKind for ExclusiveReader<'_, T>
+where
+    T: Storable + 'static,
+{
+    fn reader(type_id: TypeId) -> bool {
+        type_id == TypeId::of::<T>()
+    }
+
+    fn exclusive_reader(type_id: TypeId) -> bool {
+        type_id == TypeId::of::<T>()
+    }
+}
+
+impl<T, const N: usize> AccessKind for mpsc::Writer<'_, T, N>
+where
+    T: Storable + 'static,
+{
+    fn writer(type_id: TypeId) -> bool {
+        type_id == TypeId::of::<T>()
+    }
+}
+
+impl<T, const N: usize> AccessKind for mpsc::Reader<'_, T, N>
 where
     T: Storable + 'static,
 {
