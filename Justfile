@@ -75,6 +75,7 @@ validate-lockfiles: update-lockfiles
 # Update generated test outputs
 bless:
     BLESS=1 cargo test -p veecle-os-data-support-can-codegen --test generate
+    TRYBUILD=overwrite cargo test -p veecle-os-runtime --test trybuild
     TRYBUILD=overwrite cargo test -p veecle-os-runtime-macros --test trybuild
     TRYBUILD=overwrite cargo test -p veecle-osal-std-macros --test trybuild
     TRYBUILD=overwrite cargo test -p veecle-osal-api --test trybuild
