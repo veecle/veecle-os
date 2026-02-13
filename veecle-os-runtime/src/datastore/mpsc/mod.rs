@@ -5,5 +5,4 @@ mod slot;
 mod writer;
 
 pub use self::reader::Reader;
-pub(crate) use self::slot::Slot;
 pub use self::writer::Writer;

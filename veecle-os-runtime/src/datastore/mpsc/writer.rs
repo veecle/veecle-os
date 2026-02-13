@@ -7,7 +7,7 @@ use super::slot::Slot;
 use crate::Sealed;
 use crate::cons::Nil;
 use crate::datastore::sync::generational;
-use crate::datastore::{Datastore, DatastoreExt, DefinesSlot, Storable, StoreRequest};
+use crate::datastore::{Datastore, DefinesSlot, Storable, StoreRequest};
 
 /// Writer for an mpsc [`Storable`] type.
 ///
@@ -131,7 +131,7 @@ where
     T: Storable + 'static,
 {
     async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self {
-        datastore.mpsc_writer(requestor)
+        Self::new(datastore.source().waiter(), datastore.slot(requestor))
     }
 }
 
@@ -139,8 +139,9 @@ where
 #[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use crate::datastore::Storable;
-    use crate::datastore::mpsc::{Slot, Writer};
+    use crate::datastore::mpsc::Writer;
     use crate::datastore::sync::generational;
+    use crate::mpsc::slot::Slot;
     use core::pin::pin;
 
     #[test]

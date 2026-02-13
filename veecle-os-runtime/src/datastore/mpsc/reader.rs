@@ -6,7 +6,7 @@ use super::slot::Slot;
 use crate::Sealed;
 use crate::cons::{Cons, Nil};
 use crate::datastore::sync::generational;
-use crate::datastore::{Datastore, DatastoreExt, DefinesSlot, Storable, StoreRequest};
+use crate::datastore::{Datastore, DefinesSlot, Storable, StoreRequest};
 
 /// Exclusive reader for [`Storable`] types from an mpsc slot.
 ///
@@ -194,7 +194,7 @@ where
     T: Storable + 'static,
 {
     async fn request(datastore: Pin<&'a impl Datastore>, requestor: &'static str) -> Self {
-        datastore.mpsc_reader(requestor)
+        Self::from_slot(datastore.slot(requestor))
     }
 }
 
@@ -206,8 +206,9 @@ mod tests {
     use std::cell::Cell;
 
     use crate::datastore::Storable;
-    use crate::datastore::mpsc::{Reader, Slot, Writer};
+    use crate::datastore::mpsc::{Reader, Writer};
     use crate::datastore::sync::generational;
+    use crate::mpsc::slot::Slot;
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     struct Data(usize);
