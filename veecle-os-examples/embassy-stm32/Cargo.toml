@@ -17,24 +17,24 @@ name = "veecle-os-examples-embassy-stm32"
 test = false
 
 [[bin]]
+bench = false
 name = "tcp-client"
 test = false
-bench = false
 
 [[bin]]
+bench = false
 name = "tcp-server"
 test = false
-bench = false
 
 [[bin]]
+bench = false
 name = "udp-client"
 test = false
-bench = false
 
 [[bin]]
+bench = false
 name = "udp-server"
 test = false
-bench = false
 
 [dependencies]
 cortex-m = { version = "0.7.7", default-features = false, features = [

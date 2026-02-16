@@ -14,16 +14,16 @@ path = "src/bin/alloc.rs"
 test = false
 
 [[bin]]
+bench = false
 name = "time"
 path = "src/bin/time.rs"
 test = false
-bench = false
 
 [[bin]]
+bench = false
 name = "queues"
 path = "src/bin/queues.rs"
 test = false
-bench = false
 
 [dependencies]
 veecle-freertos-integration = { version = "0.1.2", default-features = false, features = [
