@@ -45,11 +45,11 @@ runs:
       id: cache-cargo-about
       with:
         path: ~/.cargo/bin/cargo-about
-        key: cargo-about-0.7.1-${{ runner.os }}-${{ runner.arch }}
+        key: cargo-about-0.8.4-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
       if: inputs.cargo-about == 'true' && steps.cache-cargo-about.outputs.cache-hit != 'true'
       run: |
-        cargo install cargo-about --version 0.7.1 --locked
+        cargo install cargo-about --version 0.8.4 --locked
 
     # Cache and install cargo-deny
     - uses: actions/cache@v4
@@ -57,11 +57,11 @@ runs:
       id: cache-cargo-deny
       with:
         path: ~/.cargo/bin/cargo-deny
-        key: cargo-deny-0.18.9-${{ runner.os }}-${{ runner.arch }}
+        key: cargo-deny-0.19.0-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
       if: inputs.cargo-deny == 'true' && steps.cache-cargo-deny.outputs.cache-hit != 'true'
       run: |
-        cargo install cargo-deny --version 0.18.9 --locked
+        cargo install cargo-deny --version 0.19.0 --locked
 
     # Cache and install cargo-llvm-cov
     - uses: actions/cache@v4
@@ -69,11 +69,11 @@ runs:
       id: cache-cargo-llvm-cov
       with:
         path: ~/.cargo/bin/cargo-llvm-cov
-        key: cargo-llvm-cov-0.6.18-${{ runner.os }}-${{ runner.arch }}
+        key: cargo-llvm-cov-0.8.4-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
       if: inputs.cargo-llvm-cov == 'true' && steps.cache-cargo-llvm-cov.outputs.cache-hit != 'true'
       run: |
-        cargo install cargo-llvm-cov --version 0.6.18 --locked
+        cargo install cargo-llvm-cov --version 0.8.4 --locked
 
     # Cache and install cargo-nextest
     - uses: actions/cache@v4
@@ -81,11 +81,11 @@ runs:
       id: cache-cargo-nextest
       with:
         path: ~/.cargo/bin/cargo-nextest
-        key: cargo-nextest-0.9.103-${{ runner.os }}-${{ runner.arch }}
+        key: cargo-nextest-0.9.127-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
       if: inputs.cargo-nextest == 'true' && steps.cache-cargo-nextest.outputs.cache-hit != 'true'
       run: |
-        cargo install cargo-nextest --version 0.9.103 --locked
+        cargo install cargo-nextest --version 0.9.127 --locked
 
     # Cache and install cargo-workspaces
     - uses: actions/cache@v4
@@ -95,11 +95,11 @@ runs:
         path: |
           ~/.cargo/bin/cargo-workspaces
           ~/.cargo/bin/cargo-ws
-        key: cargo-workspaces-0.4.0-${{ runner.os }}-${{ runner.arch }}
+        key: cargo-workspaces-0.4.2-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
       if: inputs.cargo-workspaces == 'true' && steps.cache-cargo-workspaces.outputs.cache-hit != 'true'
       run: |
-        cargo install cargo-workspaces --version 0.4.0 --locked
+        cargo install cargo-workspaces --version 0.4.2 --locked
 
     # Cache and install convco
     - uses: actions/cache@v4
@@ -119,11 +119,11 @@ runs:
       id: cache-editorconfig-checker
       with:
         path: ~/go/bin/editorconfig-checker
-        key: editorconfig-checker-3.4.1-${{ runner.os }}-${{ runner.arch }}
+        key: editorconfig-checker-3.6.1-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
       if: inputs.editorconfig-checker == 'true' && steps.cache-editorconfig-checker.outputs.cache-hit != 'true'
       run: |
-        go install github.com/editorconfig-checker/editorconfig-checker/v3/cmd/editorconfig-checker@v3.4.1
+        go install github.com/editorconfig-checker/editorconfig-checker/v3/cmd/editorconfig-checker@v3.6.1
     - shell: bash
       run: echo ~/go/bin | tee -a "$GITHUB_PATH"
 
@@ -133,11 +133,11 @@ runs:
       id: cache-tombi
       with:
         path: ~/.cargo/bin/tombi
-        key: tombi-0.6.11-${{ runner.os }}-${{ runner.arch }}
+        key: tombi-0.7.29-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
       if: inputs.tombi == 'true' && steps.cache-tombi.outputs.cache-hit != 'true'
       run: |
-        cargo install tombi-cli --git https://github.com/tombi-toml/tombi --locked --rev df223791d79a45ee5e32ef6535103f23d5609e11 # --tag v0.6.11
+        cargo install tombi-cli --git https://github.com/tombi-toml/tombi --locked --rev 50e9643859c8611fd0455987dd585cc61b4e242c # --tag v0.7.29
 
     # Cache and install trunk
     - uses: actions/cache@v4
@@ -157,11 +157,11 @@ runs:
       id: cache-mdbook
       with:
         path: ~/.cargo/bin/mdbook
-        key: mdbook-0.4.52-${{ runner.os }}-${{ runner.arch }}
+        key: mdbook-0.5.2-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
       if: inputs.mdbook == 'true' && steps.cache-mdbook.outputs.cache-hit != 'true'
       run: |
-        cargo install mdbook --version 0.4.52 --locked
+        cargo install mdbook --version 0.5.2 --locked
 
     # Cache and install just
     - uses: actions/cache@v4
@@ -169,11 +169,11 @@ runs:
       id: cache-just
       with:
         path: ~/.cargo/bin/just
-        key: just-1.42.4-${{ runner.os }}-${{ runner.arch }}
+        key: just-1.46.0-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
       if: inputs.just == 'true' && steps.cache-just.outputs.cache-hit != 'true'
       run: |
-        cargo install just --version 1.42.4 --locked
+        cargo install just --version 1.46.0 --locked
 
     # Cache and install wasm-pack
     - uses: actions/cache@v4
@@ -181,8 +181,8 @@ runs:
       id: cache-wasm-pack
       with:
         path: ~/.cargo/bin/wasm-pack
-        key: wasm-pack-0.13.1-${{ runner.os }}-${{ runner.arch }}
+        key: wasm-pack-0.14.0-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
       if: inputs.wasm-pack == 'true' && steps.cache-wasm-pack.outputs.cache-hit != 'true'
       run: |
-        cargo install wasm-pack --version 0.13.1 --locked
+        cargo install wasm-pack --version 0.14.0 --locked
