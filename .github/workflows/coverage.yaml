@@ -58,6 +58,12 @@ jobs:
             codecov.json
           retention-days: 1
 
+      - uses: actions/upload-artifact@v6
+        with:
+          name: coverage-html
+          path: target/llvm-cov/html
+          retention-days: 1
+
   llvm-cov-someip:
     runs-on: ubuntu-latest
     steps:
