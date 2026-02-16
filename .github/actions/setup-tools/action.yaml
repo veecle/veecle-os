@@ -69,11 +69,11 @@ runs:
       id: cache-cargo-llvm-cov
       with:
         path: ~/.cargo/bin/cargo-llvm-cov
-        key: cargo-llvm-cov-0.6.18-${{ runner.os }}-${{ runner.arch }}
+        key: cargo-llvm-cov-0.8.4-${{ runner.os }}-${{ runner.arch }}
     - shell: bash
       if: inputs.cargo-llvm-cov == 'true' && steps.cache-cargo-llvm-cov.outputs.cache-hit != 'true'
       run: |
-        cargo install cargo-llvm-cov --version 0.6.18 --locked
+        cargo install cargo-llvm-cov --version 0.8.4 --locked
 
     # Cache and install cargo-nextest
     - uses: actions/cache@v4
