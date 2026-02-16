@@ -65,7 +65,6 @@ where
     /// or similar read methods.
     ///
     /// May return `true` after a reading method if more unseen values are available.
-    #[veecle_telemetry::instrument]
     pub fn is_updated(&self) -> bool {
         self.waiter.is_updated()
     }
@@ -76,7 +75,6 @@ where
     /// [`Writer`][super::Writer] has written a value of `T` since the last read operation.
     ///
     /// Returns `&mut Self` to allow chaining method calls.
-    #[veecle_telemetry::instrument]
     pub async fn wait_for_update(&mut self) -> &mut Self {
         loop {
             if self.is_updated() {
@@ -89,7 +87,6 @@ where
     }
 
     /// Takes the next available value, returns `None` if none are available.
-    #[veecle_telemetry::instrument]
     pub fn take_one(&mut self) -> Option<T::DataType> {
         for index in 0..self.slot.writer_count() {
             if let Some(value) = self.slot.take(index) {
@@ -110,7 +107,6 @@ where
     /// Reads all available values.
     ///
     /// Takes ownership of each value and passes it to `f`.
-    #[veecle_telemetry::instrument]
     pub fn take_all(&mut self, mut f: impl FnMut(T::DataType)) {
         for index in 0..self.slot.writer_count() {
             if let Some(value) = self.slot.take(index) {
@@ -131,7 +127,6 @@ where
     ///
     /// Takes ownership of each value and passes it to `f`.
     /// When no values are available, waits for new writes and returns after reading at least one value.
-    #[veecle_telemetry::instrument]
     pub async fn take_all_updated(&mut self, mut f: impl FnMut(T::DataType)) {
         loop {
             let mut wait_for_update = true;
