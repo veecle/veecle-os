@@ -95,8 +95,6 @@ pub mod future;
 pub mod id;
 #[doc(hidden)]
 pub mod log;
-#[doc(hidden)]
-pub mod macro_helpers;
 mod macros;
 pub mod protocol;
 mod span;

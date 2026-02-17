@@ -1,3 +1,28 @@
+/// Returns the full path of the calling function.
+///
+/// Uses `type_name_of_val` on a closure to capture the nesting path, then strips the
+/// `::{{closure}}` suffix (and an extra one for async contexts).
+/// This is a declarative macro so the closure tokens originate from the compiler's own
+/// macro expansion rather than from a proc macro, which preserves LLVM coverage mapping
+/// on the function's signature line.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __private_function_path {
+    ($input:literal) => {{
+        let name = core::any::type_name_of_val(&|| ());
+        let suffix_len = if $input {
+            // Async contexts produce two `::{{closure}}` suffixes — one from the closure above,
+            // one from async desugaring.
+            26
+        } else {
+            // Sync contexts produce one `::{{closure}}` suffix from the closure above.
+            13
+        };
+
+        name.split_at(name.len() - suffix_len).0
+    }};
+}
+
 /// Creates a new span.
 ///
 /// A span represents a unit of work or operation that has a beginning and end.

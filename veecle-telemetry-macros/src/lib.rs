@@ -201,15 +201,14 @@ pub fn instrument(
 
     let function_name = &input.sig.ident;
 
-    // Check for async_trait-like patterns in the block, and instrument the future instead of the wrapper.
-    let function_body = match generate_block(
+    let block = match generate_block(
         function_name,
         &input.block,
         input.sig.asyncness.is_some(),
         &arguments,
         &veecle_telemetry_crate,
     ) {
-        Ok(body) => body,
+        Ok(block) => block,
         Err(error) => return error.to_compile_error().into(),
     };
 
@@ -217,38 +216,30 @@ pub fn instrument(
         attrs, vis, sig, ..
     } = input;
 
-    let Signature {
-        output: return_type,
-        inputs: params,
-        unsafety,
-        constness,
-        abi,
-        ident,
-        asyncness,
-        generics:
-            Generics {
-                params: gen_params,
-                where_clause,
-                ..
-            },
-        ..
-    } = sig;
-
-    quote::quote!(
+    // Interpolate `#sig` so that all signature tokens (including `fn`, parens, etc.) preserve
+    // their original source spans for correct LLVM coverage of the first line.
+    // Interpolate `#block` (a `Block` with the original brace token) so that the body braces
+    // retain the user's source spans; braces from `quote!()` carry a macro-expansion
+    // `SyntaxContext` that causes Rust's coverage instrumentor to skip the function entirely.
+    quote!(
         #(#attrs) *
-        #vis #constness #unsafety #asyncness #abi fn #ident<#gen_params>(#params) #return_type
-        #where_clause
-        {
-            #function_body
-        }
+        #vis #sig
+        #block
     )
     .into()
 }
 
+/// Returns the span name expression.
+///
+/// Uses `type_name_of_val(&|| ())` via a declarative macro helper to capture the
+/// full nesting path of the function.
+/// The closure must come from a declarative macro (not directly from the proc macro) because
+/// proc-macro-generated closure tokens cause rustc's coverage instrumentor to drop the function
+/// signature's coverage region.
 fn generate_name(
     function_name: &Ident,
     arguments: &Arguments,
-    async_closure: bool,
+    async_context: bool,
     veecle_telemetry_crate: &syn::Path,
 ) -> syn::Result<proc_macro2::TokenStream> {
     let span = function_name.span();
@@ -264,17 +255,15 @@ fn generate_name(
             ));
         }
 
-        Ok(quote_spanned!(span=>
-            #name
-        ))
+        Ok(quote_spanned!(span=> #name))
     } else if arguments.short_name {
         let function_name = function_name.to_string();
-        Ok(quote_spanned!(span=>
-            #function_name
-        ))
+        Ok(quote_spanned!(span=> #function_name))
     } else {
+        // Route through a declarative macro so the closure tokens originate from the
+        // compiler's own expansion, preserving LLVM coverage on function signatures.
         Ok(quote_spanned!(span=>
-            #veecle_telemetry_crate::macro_helpers::strip_closure_suffix(core::any::type_name_of_val(&|| {}), #async_closure)
+            #veecle_telemetry_crate::__private_function_path!(#async_context)
         ))
     }
 }
@@ -302,33 +291,60 @@ fn generate_properties(
     )
 }
 
-/// Instrument a block
+/// Generates the instrumented function body as a [`Block`] reusing the original brace tokens.
+///
+/// For async functions, wraps the body in `veecle_telemetry::future::FutureExt::with_span`.
+/// For sync functions, enters a span guard before the body.
+///
+/// The returned [`Block`] preserves the original brace token spans from the user's source.
+/// This is critical for LLVM coverage: braces produced by `quote!()` carry a macro-expansion
+/// `SyntaxContext` that causes `rustc`'s coverage instrumentor to skip the function entirely.
+/// Original statements are spliced via `#(#stmts)*` to preserve their source spans for
+/// correct LLVM coverage mapping (see <https://github.com/veecle/veecle-os/issues/262>).
 fn generate_block(
     func_name: &Ident,
     block: &Block,
     async_context: bool,
     arguments: &Arguments,
     veecle_telemetry_crate: &syn::Path,
-) -> syn::Result<proc_macro2::TokenStream> {
+) -> syn::Result<Block> {
     let name = generate_name(func_name, arguments, async_context, veecle_telemetry_crate)?;
     let properties = generate_properties(arguments, veecle_telemetry_crate);
+    let stmts = &block.stmts;
+    let span = func_name.span();
 
-    // Generate the instrumented function body.
-    // If the function is an `async fn`, this will wrap it in an async block.
-    // Otherwise, this will enter the span and then perform the rest of the body.
-    if async_context {
-        Ok(quote!(
+    let wrapper: Block = if async_context {
+        // Build `async move { ... }` manually so the block's brace tokens carry the original
+        // source spans.  The `async move` block is a separate closure/generator from `rustc`'s
+        // perspective, so its body span is subject to the same `eq_ctxt` coverage filter as the
+        // outer function body.
+        let async_block = Expr::Async(ExprAsync {
+            attrs: Vec::new(),
+            async_token: token::Async { span },
+            capture: Some(token::Move { span }),
+            block: Block {
+                brace_token: block.brace_token,
+                stmts: block.stmts.clone(),
+            },
+        });
+
+        syn::parse2(quote_spanned!(span=> {
             #veecle_telemetry_crate::future::FutureExt::with_span(
-                async move { #block },
+                #async_block,
                 #veecle_telemetry_crate::Span::new(#name, #properties),
             ).await
-        ))
+        }))?
     } else {
-        Ok(quote!(
-            let __guard__= #veecle_telemetry_crate::Span::new(#name, #properties).entered();
-            #block
-        ))
-    }
+        syn::parse2(quote_spanned!(span=> {
+            let __guard__ = #veecle_telemetry_crate::Span::new(#name, #properties).entered();
+            #(#stmts)*
+        }))?
+    };
+
+    Ok(Block {
+        brace_token: block.brace_token,
+        stmts: wrapper.stmts,
+    })
 }
 
 /// Returns a path to the `veecle_telemetry` crate for use when macro users don't set it explicitly.
