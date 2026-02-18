@@ -1,0 +1,21 @@
+[package]
+name = "examples-std"
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+
+[workspace]
+
+[dependencies]
+examples-common = { path = "../common", default-features = false, features = [
+  "alloc",
+] }
+stats_alloc = { version = "0.1.10", default-features = false }
+veecle-os = { path = "../../veecle-os", default-features = false, features = [
+  "osal-std",
+  "telemetry-enable",
+] }
+
+[dev-dependencies]
+tokio = { version = "1.49.0", features = ["macros", "rt"] }

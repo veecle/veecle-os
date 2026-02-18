@@ -30,7 +30,7 @@ component_management:
         - "veecle-os-data-support-someip-macros"
     - component_id: "support"
       paths:
-        - "veecle-os-examples"
+        - "examples"
         - "veecle-os-test"
         - "veecle-telemetry-ui"
         - "veecle-telemetry-server"
