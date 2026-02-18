@@ -7,7 +7,7 @@ Veecle OS uses features from the Rust programming language to help software deve
 Refer to the [user manual](https://veecle.github.io/veecle-os/user-manual/) to learn about Veecle OS usage.
 
 Refer to [CONTRIBUTING](CONTRIBUTING.md) for build instructions and other development material.
-After completing the setup instructions, go to [the examples](veecle-os-examples/) to run some Veecle OS example programs.
+After completing the setup instructions, go to [the examples](examples/) to run some Veecle OS example programs.
 
 ## Example
 
@@ -114,7 +114,7 @@ This will generally closely track the latest released version and updating is no
 
 * [`docs`](docs/): source for the documentation.
 * [`veecle-os`](veecle-os/): the main Veecle OS facade, exposing various components such as the runtime and OSAL.
-* [`veecle-os-examples`](veecle-os-examples/): example code that uses Veecle OS.
+* [`examples`](examples/): example code that uses Veecle OS.
   Check this directory to get started running some Veecle OS code.
 * [`veecle-os-runtime`](veecle-os-runtime/) and [macros](veecle-os-runtime-macros): the Veecle OS runtime library with basic infrastructure, such as the store implementation.
 * [`veecle-os-test`](veecle-os-test/): tools for testing Veecle OS actors.

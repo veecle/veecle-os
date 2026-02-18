@@ -26,8 +26,8 @@ Then in another terminal use the `veecle-orchestrator-cli` to interact with it:
 > cargo run -p veecle-orchestrator-cli -- version
 server version: 0.1.0
 
-# Previously built with `(cd veecle-os-examples/std && cargo build --bin ping_pong)`, any Veecle OS Runtime based binary should be usable.
-> cargo run -p veecle-orchestrator-cli -- runtime add veecle-os-examples/std/target/debug/ping_pong
+# Previously built with `(cd examples/std && cargo build --bin ping_pong)`, any Veecle OS Runtime based binary should be usable.
+> cargo run -p veecle-orchestrator-cli -- runtime add examples/std/target/debug/ping_pong
 added instance 0195fc7b-33e6-70e3-bee1-ac515185fac7
 
 > cargo run -p veecle-orchestrator-cli -- runtime start 0195fc7b-33e6-70e3-bee1-ac515185fac7
@@ -57,6 +57,7 @@ This controls the Linux process nice value and affects CPU scheduling priority.
 ```
 
 Available priority levels:
+
 - `high`: Nice value -10 (higher CPU priority)
 - `normal`: Nice value 0 (default OS priority)
 - `low`: Nice value 10 (lower CPU priority)
@@ -82,7 +83,7 @@ You should see logs from these actions in the orchestrator as well
 
 ### Linking example
 
-You can use the binaries from `veecle-os-examples/orchestrator-ipc` to test the IPC linking:
+You can use the binaries from `examples/orchestrator-ipc` to test the IPC linking:
 
 ```console
 # Add the ipc examples to the orchestrator, recording their ids for later use.
@@ -92,8 +93,8 @@ $ cargo run -p veecle-orchestrator-cli runtime add .../pong
 $ pong=...the instance id...
 
 # Define the links between the instances to route their data.
-$ cargo run -p veecle-orchestrator-cli link add --from $ping --type veecle_os_examples_common::actors::ping_pong::Ping --to $pong
-$ cargo run -p veecle-orchestrator-cli link add --from $pong --type veecle_os_examples_common::actors::ping_pong::Pong --to $ping
+$ cargo run -p veecle-orchestrator-cli link add --from $ping --type examples_common::actors::ping_pong::Ping --to $pong
+$ cargo run -p veecle-orchestrator-cli link add --from $pong --type examples_common::actors::ping_pong::Pong --to $ping
 
 # In other terminals you can view the instance's logs.
 $ cargo run -p veecle-orchestrator-cli runtime stdout $ping
@@ -104,4 +105,4 @@ $ cargo run -p veecle-orchestrator-cli runtime start $pong
 $ cargo run -p veecle-orchestrator-cli runtime start $ping
 ```
 
-The `veecle-os-examples/orchestrator-ipc/run.sh` script will perform this whole process for you, running the binaries within a pair of orchestrators.
+The `examples/orchestrator-ipc/run.sh` script will perform this whole process for you, running the binaries within a pair of orchestrators.

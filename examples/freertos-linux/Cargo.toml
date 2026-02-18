@@ -1,0 +1,50 @@
+[package]
+name = "examples-freertos-linux"
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+
+[workspace]
+
+[[bin]]
+bench = false
+name = "alloc"
+path = "src/bin/alloc.rs"
+test = false
+
+[[bin]]
+bench = false
+name = "time"
+path = "src/bin/time.rs"
+test = false
+
+[[bin]]
+bench = false
+name = "queues"
+path = "src/bin/queues.rs"
+test = false
+
+[dependencies]
+examples-common = { path = "../common", default-features = false, features = [
+  "alloc",
+] }
+veecle-freertos-integration = { version = "0.1.2", default-features = false, features = [
+  "link-freertos",
+  # SAFETY: we use the same prototype in `FreeRTOSConfig.h` as required by this feature.
+  "unsafe-hooks-assert",
+] }
+veecle-os = { path = "../../veecle-os", default-features = false, features = [
+  "osal-freertos",
+  # TODO: Necessary for thread ids.
+  "osal-std",
+  "telemetry-enable",
+] }
+veecle-telemetry = { path = "../../veecle-telemetry", default-features = false, features = [
+  # Used for printing to `stdout`.
+  "std",
+] }
+
+[dev-dependencies]
+assert_cmd = { version = "2.1.2", default-features = false }
+predicates = { version = "3.1.4", default-features = false }
