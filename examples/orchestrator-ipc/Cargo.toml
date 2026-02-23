@@ -1,0 +1,21 @@
+[package]
+name = "examples-orchestrator-ipc"
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+
+[workspace]
+
+[dependencies]
+examples-common = { path = "../common", default-features = false, features = [
+  "alloc",
+] }
+rand = { version = "0.10.0", default-features = false, features = ["std_rng"] }
+veecle-ipc = { path = "../../veecle-ipc", default-features = false }
+veecle-os = { path = "../../veecle-os", default-features = false, features = [
+  "osal-std",
+] }
+veecle-telemetry = { path = "../../veecle-telemetry", default-features = false, features = [
+  "enable",
+] }

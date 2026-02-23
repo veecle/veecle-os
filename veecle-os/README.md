@@ -65,7 +65,7 @@ The following feature flags enable specific functionality:
 
 ## Examples
 
-See the [repository](https://github.com/veecle/veecle-os/tree/main/veecle-os-examples) for examples.
+See the [repository](https://github.com/veecle/veecle-os/tree/main/examples) for examples.
 
 ## Platform Support
 

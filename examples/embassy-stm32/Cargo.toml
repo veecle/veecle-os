@@ -1,0 +1,70 @@
+[package]
+name = "examples-embassy-stm32"
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+
+[workspace]
+
+[lib]
+bench = false
+test = false
+
+[[bin]]
+bench = false
+name = "examples-embassy-stm32"
+test = false
+
+[[bin]]
+bench = false
+name = "tcp-client"
+test = false
+
+[[bin]]
+bench = false
+name = "tcp-server"
+test = false
+
+[[bin]]
+bench = false
+name = "udp-client"
+test = false
+
+[[bin]]
+bench = false
+name = "udp-server"
+test = false
+
+[dependencies]
+cortex-m = { version = "0.7.7", default-features = false, features = [
+  "critical-section-single-core",
+] }
+cortex-m-rt = { version = "0.7.5", default-features = false }
+critical-section = { version = "1.2.0", default-features = false }
+embassy-executor = { version = "0.9.1", default-features = false, features = [
+  "arch-cortex-m",
+  "executor-thread",
+] }
+embassy-net = { version = "0.8.0", default-features = false, features = [
+  "medium-ethernet",
+  "proto-ipv4",
+] }
+embassy-stm32 = { version = "0.5.0", default-features = false, features = [
+  "memory-x",
+  "rt",
+  "single-bank",
+  "stm32f767zi",
+  "time-driver-any",
+] }
+embassy-time = { version = "0.5.0", default-features = false, features = [
+  "generic-queue-32",
+] }
+embedded-io-async = { version = "0.7.0", default-features = false }
+examples-common = { path = "../common", default-features = false }
+heapless = { version = "0.8.0", default-features = false }
+panic-halt = { version = "1.0.0", default-features = false }
+static_cell = { version = "2.1.1", default-features = false }
+veecle-os = { path = "../../veecle-os", default-features = false, features = [
+  "osal-embassy",
+] }

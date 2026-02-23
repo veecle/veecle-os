@@ -1,0 +1,29 @@
+[package]
+name = "examples-embassy-std"
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+
+[workspace]
+
+[dependencies]
+embassy-executor = { version = "0.9.1", features = [
+  "arch-std",
+  "executor-thread",
+  "log",
+] }
+embassy-sync = { version = "0.7.2", features = ["log"] }
+embassy-time = { version = "0.5.0", features = ["generic-queue-32", "std"] }
+examples-common = { path = "../common", default-features = false, features = [
+  "alloc",
+] }
+veecle-os = { path = "../../veecle-os", default-features = false, features = [
+  "osal-embassy",
+  # TODO: used for thread ids.
+  "osal-std",
+  "telemetry-enable",
+] }
+veecle-telemetry = { path = "../../veecle-telemetry", default-features = false, features = [
+  "std",
+] }
