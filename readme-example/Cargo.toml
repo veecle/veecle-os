@@ -10,7 +10,7 @@ publish = false
 
 [dev-dependencies]
 # Must be kept in sync with the root README.md.
-tokio = "1.49.0"
+tokio = "1.50.0"
 # TODO(#161): Use released version when `ConsolePrettyExporter` is released.
 veecle-os = { path = "../veecle-os", features = [
   "osal-std",
