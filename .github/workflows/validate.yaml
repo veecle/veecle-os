@@ -60,7 +60,7 @@ jobs:
           cargo-nextest: true
           tombi: true
 
-      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4
         with:
           cache-bin: "false"
           save-if: ${{ github.ref == 'refs/heads/main' }}
@@ -107,7 +107,7 @@ jobs:
         with:
           cargo-nextest: true
 
-      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4
         with:
           cache-bin: "false"
           save-if: ${{ github.ref == 'refs/heads/main' }}
@@ -129,7 +129,7 @@ jobs:
           cargo-nextest: true
           tombi: true
 
-      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4
         with:
           cache-bin: "false"
           save-if: ${{ github.ref == 'refs/heads/main' }}
@@ -166,7 +166,7 @@ jobs:
           cargo-nextest: true
           tombi: true
 
-      - uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4
         with:
           cache-bin: "false"
           save-if: ${{ github.ref == 'refs/heads/main' }}
