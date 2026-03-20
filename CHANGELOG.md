@@ -37,7 +37,7 @@
   * `use veecle_os::runtime::Writer` becomes `use veecle_os::runtime::single_writer::Writer`.
 * Added custom serialization for telemetry ids with hex-encoded string format.
 * Added `ThreadAbstraction` trait to OSAL for querying current thread id.
-* Updated MSRV to 1.93.
+* Updated MSRV to 1.94.
 * Fixed `veecle_os::telemetry::instrument` macro to automatically resolve correct crate paths for the facade.
 * Implemented `stable_deref_trait::StableDeref` for `Chunk` to allow usage in `yoke`.
 
