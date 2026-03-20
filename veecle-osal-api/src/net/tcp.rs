@@ -178,7 +178,6 @@ impl embedded_io_async::Error for Error {
 #[cfg(feature = "test-suites")]
 #[cfg_attr(coverage_nightly, coverage(off))]
 pub mod test_suite {
-    #![expect(missing_docs, reason = "tests")]
     //! Test suite for TCP sockets.
 
     use crate::net::tcp::{Error, TcpConnection, TcpSocket};

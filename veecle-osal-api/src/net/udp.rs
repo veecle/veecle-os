@@ -135,7 +135,6 @@ impl core::error::Error for Error {}
 #[cfg(feature = "test-suites")]
 #[cfg_attr(coverage_nightly, coverage(off))]
 pub mod test_suite {
-    #![expect(missing_docs, reason = "tests")]
     //! Test suite for UDP sockets.
 
     use crate::net::udp::{Error, UdpSocket};
