@@ -13,8 +13,8 @@ embassy-executor = { version = "0.9.1", features = [
   "executor-thread",
   "log",
 ] }
-embassy-sync = { version = "0.7.2", features = ["log"] }
-embassy-time = { version = "0.5.0", features = ["generic-queue-32", "std"] }
+embassy-sync = { version = "0.8.0", features = ["log"] }
+embassy-time = { version = "0.5.1", features = ["generic-queue-32", "std"] }
 examples-common = { path = "../common", default-features = false, features = [
   "alloc",
 ] }
