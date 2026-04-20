@@ -18,4 +18,4 @@ veecle-os = { path = "../../veecle-os", default-features = false, features = [
 ] }
 
 [dev-dependencies]
-tokio = { version = "1.50.0", features = ["macros", "rt"] }
+tokio = { version = "1.51.0", features = ["macros", "rt"] }
