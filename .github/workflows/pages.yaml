@@ -36,7 +36,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - name: Extract release archive
         run: unzip release-archive.zip
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: 'release-archive'
       - id: deployment
