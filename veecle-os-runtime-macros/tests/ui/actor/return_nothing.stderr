@@ -10,6 +10,34 @@ error[E0425]: cannot find type `MacroTestActor` in this scope
 14 |         actors: [MacroTestActor],
    |                  ^^^^^^^^^^^^^^ not found in this scope
 
+error[E0277]: the trait bound `Sensor: veecle_os_runtime::Flatten` is not satisfied
+ --> tests/ui/actor/return_nothing.rs:1:44
+  |
+1 | #[derive(Debug, PartialEq, Clone, Default, veecle_os_runtime::Storable)]
+  |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+  |
+help: the trait `veecle_os_runtime::Flatten` is not implemented for `Sensor`
+ --> tests/ui/actor/return_nothing.rs:2:1
+  |
+2 | pub struct Sensor(pub u8);
+  | ^^^^^^^^^^^^^^^^^
+  = help: the following other types implement trait `veecle_os_runtime::Flatten`:
+            Chunk<'_, T>
+            bool
+            f32
+            f64
+            i16
+            i32
+            i64
+            i8
+          and $N others
+note: required by a bound in `veecle_os_runtime::Storable::DataType`
+ --> $WORKSPACE/veecle-os-runtime/src/datastore/storable.rs
+  |
+  |     type DataType: Flatten;
+  |                    ^^^^^^^ required by this bound in `Storable::DataType`
+  = note: this error originates in the derive macro `veecle_os_runtime::Storable` (in Nightly builds, run with -Z macro-backtrace for more info)
+
 error[E0282]: type annotations needed
   --> tests/ui/actor/return_nothing.rs:13:13
    |

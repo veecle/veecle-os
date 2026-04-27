@@ -27,6 +27,10 @@ const BUFFER_SIZE: usize = 16;
 #[derive(Debug, Default, Storable)]
 pub struct PipeMessage(pub [u8; BUFFER_SIZE]);
 
+impl veecle_os_runtime::Flatten for PipeMessage {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 #[veecle_os_runtime::actor]
 async fn write_pipe_runtime_actor(#[init_context] pipe_tx_fd: RawFd) -> veecle_os_runtime::Never {
     let (pipe_message_channel_tx, mut pipe_message_channel_rx) = mpsc::channel::<PipeMessage>(100);

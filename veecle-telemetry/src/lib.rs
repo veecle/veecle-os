@@ -91,6 +91,7 @@ extern crate std;
 extern crate alloc;
 
 pub mod collector;
+pub mod flatten;
 pub mod future;
 pub mod id;
 #[doc(hidden)]
@@ -102,6 +103,7 @@ mod span;
 #[doc(hidden)]
 pub mod test_helpers;
 
+pub use flatten::{Flatten, MetricBuffer};
 pub use id::{ProcessId, SpanContext, SpanId};
 pub use span::{CurrentSpan, Span, SpanGuard, SpanGuardRef};
 pub use veecle_telemetry_macros::instrument;

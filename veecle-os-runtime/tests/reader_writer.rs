@@ -10,8 +10,16 @@ use veecle_os_runtime::single_writer::{Reader, Writer};
 #[derive(Debug, Default, Clone, Copy, PartialEq, PartialOrd, Storable)]
 pub struct Signal(usize);
 
+impl veecle_os_runtime::Flatten for Signal {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 #[derive(Debug, Default, Clone, Storable)]
 pub struct UpToDateSignal(Signal);
+
+impl veecle_os_runtime::Flatten for UpToDateSignal {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
 
 #[veecle_os_runtime::actor]
 async fn filter_actor(

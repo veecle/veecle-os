@@ -37,9 +37,15 @@ pub use veecle_os_runtime_macros::actor;
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
+/// # impl veecle_os_runtime::Flatten for Foo {
+/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+/// # }
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Bar;
+/// # impl veecle_os_runtime::Flatten for Bar {
+/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+/// # }
 /// #
 /// # pub struct Ctx;
 ///
@@ -70,9 +76,15 @@ pub use veecle_os_runtime_macros::actor;
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
+/// # impl veecle_os_runtime::Flatten for Foo {
+/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+/// # }
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Bar;
+/// # impl veecle_os_runtime::Flatten for Bar {
+/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+/// # }
 /// #
 /// # pub struct Ctx;
 ///

@@ -33,6 +33,9 @@ use crate::datastore::{Datastore, DefinesSlot, Storable, StoreRequest};
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Command(usize);
+/// # impl veecle_os_runtime::Flatten for Command {
+/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+/// # }
 /// #
 /// #[veecle_os_runtime::actor]
 /// async fn command_sender<const N: usize>(mut writer: Writer<'_, Command, N>) -> veecle_os_runtime::Never {
@@ -72,8 +75,7 @@ where
 
             veecle_telemetry::trace!(
                 "Slot written",
-                index = format_args!("{:?}", self.index),
-                value = format_args!("{item:?}")
+                index = format_args!("{:?}", self.index)
             );
             let had_unseen_value = self.slot.write(self.index, item, span_context);
 
@@ -149,6 +151,9 @@ mod tests {
         use futures::FutureExt;
         #[derive(Debug)]
         pub struct Data();
+        impl veecle_telemetry::Flatten for Data {
+            fn flatten(&self, _buffer: &mut impl veecle_telemetry::MetricBuffer) {}
+        }
         impl Storable for Data {
             type DataType = Self;
         }
@@ -172,6 +177,9 @@ mod tests {
     fn multiple_writers_get_unique_indices() {
         #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         pub struct Data(usize);
+        impl veecle_telemetry::Flatten for Data {
+            fn flatten(&self, _buffer: &mut impl veecle_telemetry::MetricBuffer) {}
+        }
         impl Storable for Data {
             type DataType = Self;
         }
@@ -193,6 +201,9 @@ mod tests {
         use futures::FutureExt;
         #[derive(Debug)]
         pub struct Data();
+        impl veecle_telemetry::Flatten for Data {
+            fn flatten(&self, _buffer: &mut impl veecle_telemetry::MetricBuffer) {}
+        }
         impl Storable for Data {
             type DataType = Self;
         }

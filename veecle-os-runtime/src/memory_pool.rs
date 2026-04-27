@@ -270,6 +270,10 @@ where
     }
 }
 
+impl<T> veecle_telemetry::Flatten for Chunk<'_, T> {
+    fn flatten(&self, _buffer: &mut impl veecle_telemetry::MetricBuffer) {}
+}
+
 impl<'a, T> Chunk<'a, T> {
     /// Creates a new [`Chunk`].
     ///

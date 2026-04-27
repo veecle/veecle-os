@@ -175,6 +175,9 @@ mod tests {
 
     #[derive(Debug)]
     struct Data(usize);
+    impl veecle_telemetry::Flatten for Data {
+        fn flatten(&self, _buffer: &mut impl veecle_telemetry::MetricBuffer) {}
+    }
     impl Storable for Data {
         type DataType = Self;
     }

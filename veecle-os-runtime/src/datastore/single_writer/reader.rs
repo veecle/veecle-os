@@ -59,6 +59,9 @@ use crate::datastore::{CombinableReader, Datastore, DefinesSlot, Storable, Store
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
+/// # impl veecle_os_runtime::Flatten for Foo {
+/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+/// # }
 /// #
 /// #[veecle_os_runtime::actor]
 /// async fn foo_reader(mut reader: Reader<'_, Foo>) -> veecle_os_runtime::Never {
@@ -95,7 +98,7 @@ where
         self.waiter.read(|value| {
             let value = value.as_ref();
 
-            veecle_telemetry::trace!("Slot read", value = format_args!("{value:?}"));
+            veecle_telemetry::trace!("Slot read");
             f(value)
         })
     }
@@ -112,7 +115,7 @@ where
         self.waiter.read(|value| {
             let value = value.as_ref().unwrap();
 
-            veecle_telemetry::trace!("Slot read", value = format_args!("{value:?}"));
+            veecle_telemetry::trace!("Slot read");
             f(value)
         })
     }
@@ -229,6 +232,9 @@ mod tests {
         #[derive(Eq, PartialEq, Debug, Clone, Storable)]
         #[storable(crate = crate)]
         struct Sensor(u8);
+        impl crate::Flatten for Sensor {
+            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
+        }
 
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());
@@ -251,6 +257,9 @@ mod tests {
         #[derive(Eq, PartialEq, Debug, Clone, Storable)]
         #[storable(crate = crate)]
         struct Sensor(u8);
+        impl crate::Flatten for Sensor {
+            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
+        }
 
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());
@@ -275,6 +284,9 @@ mod tests {
         #[derive(Eq, PartialEq, Debug, Clone, Storable)]
         #[storable(crate = crate)]
         struct Sensor(u8);
+        impl crate::Flatten for Sensor {
+            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
+        }
 
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());
@@ -297,6 +309,9 @@ mod tests {
         #[derive(Eq, PartialEq, Debug, Clone, Storable)]
         #[storable(crate = crate)]
         struct Sensor(u8);
+        impl crate::Flatten for Sensor {
+            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
+        }
 
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());

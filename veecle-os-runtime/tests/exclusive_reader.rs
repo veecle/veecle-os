@@ -13,6 +13,10 @@ static READ_COUNTER: AtomicUsize = AtomicUsize::new(0);
 #[derive(Debug, PartialEq, Clone, Storable)]
 pub struct Sensor(pub u8);
 
+impl veecle_os_runtime::Flatten for Sensor {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 #[veecle_os_runtime::actor]
 async fn exclusive_read_actor(mut reader: ExclusiveReader<'_, Sensor>) -> Never {
     loop {

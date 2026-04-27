@@ -75,6 +75,10 @@ impl Default for Frame {
     }
 }
 
+impl veecle_os_runtime::Flatten for Frame {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 impl veecle_os_runtime::Storable for Frame {
     type DataType = Self;
 }

@@ -1,6 +1,6 @@
 //! Storable trait for types that can be stored in a slot.
 
-use core::fmt::Debug;
+pub use veecle_telemetry::Flatten;
 
 /// Marks a type as an identifier for the inner `DataType`, which can be transferred via a slot.
 ///
@@ -14,10 +14,15 @@ use core::fmt::Debug;
 ///
 /// ```
 /// use veecle_os_runtime::Storable;
+/// use veecle_os_runtime::{Flatten, MetricBuffer};
 ///
 /// // Identifier type.
 /// #[derive(Debug, Default)]
 /// struct Sensor;
+///
+/// impl Flatten for Sensor {
+///     fn flatten(&self, _buffer: &mut impl MetricBuffer) {}
+/// }
 ///
 /// impl Storable for Sensor {
 ///     // Data type.
@@ -28,12 +33,17 @@ use core::fmt::Debug;
 /// If the data type is unique and should be used as the identifier, the data type can be set to `Self`.
 /// ```
 /// use veecle_os_runtime::Storable;
+/// use veecle_os_runtime::{Flatten, MetricBuffer};
 ///
 /// // Identifier type.
 /// #[derive(Debug, Default)]
 /// struct Sensor{
 ///     // ...
 /// };
+///
+/// impl Flatten for Sensor {
+///     fn flatten(&self, _buffer: &mut impl MetricBuffer) {}
+/// }
 ///
 /// impl Storable for Sensor {
 ///     // Data type.
@@ -42,5 +52,5 @@ use core::fmt::Debug;
 /// ```
 pub trait Storable {
     /// The data type being read/written from/to a slot.
-    type DataType: Debug;
+    type DataType: Flatten;
 }

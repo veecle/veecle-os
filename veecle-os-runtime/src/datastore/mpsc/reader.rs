@@ -34,6 +34,9 @@ use crate::datastore::{Datastore, DefinesSlot, Storable, StoreRequest};
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Command(usize);
+/// # impl veecle_os_runtime::Flatten for Command {
+/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+/// # }
 /// #
 /// #[veecle_os_runtime::actor]
 /// async fn command_handler<const N: usize>(mut reader: Reader<'_, Command, N>) -> veecle_os_runtime::Never {
@@ -93,11 +96,7 @@ where
     pub fn take_one(&mut self) -> Option<T::DataType> {
         for index in 0..self.slot.writer_count() {
             if let Some(value) = self.slot.take(index) {
-                veecle_telemetry::trace!(
-                    "Slot taken",
-                    index = format_args!("{index:?}"),
-                    value = format_args!("{value:?}")
-                );
+                veecle_telemetry::trace!("Slot taken", index = format_args!("{index:?}"));
                 return Some(value);
             }
         }
@@ -114,11 +113,7 @@ where
     pub fn take_all(&mut self, mut f: impl FnMut(T::DataType)) {
         for index in 0..self.slot.writer_count() {
             if let Some(value) = self.slot.take(index) {
-                veecle_telemetry::trace!(
-                    "Slot taken",
-                    index = format_args!("{index:?}"),
-                    value = format_args!("{value:?}")
-                );
+                veecle_telemetry::trace!("Slot taken", index = format_args!("{index:?}"));
                 f(value);
             }
         }
@@ -138,11 +133,7 @@ where
             for index in 0..self.slot.writer_count() {
                 if let Some(value) = self.slot.take(index) {
                     wait_for_update = false;
-                    veecle_telemetry::trace!(
-                        "Slot taken",
-                        index = format_args!("{index:?}"),
-                        value = format_args!("{value:?}")
-                    );
+                    veecle_telemetry::trace!("Slot taken", index = format_args!("{index:?}"));
                     f(value);
                 }
             }
@@ -212,6 +203,9 @@ mod tests {
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     struct Data(usize);
+    impl veecle_telemetry::Flatten for Data {
+        fn flatten(&self, _buffer: &mut impl veecle_telemetry::MetricBuffer) {}
+    }
     impl Storable for Data {
         type DataType = Self;
     }

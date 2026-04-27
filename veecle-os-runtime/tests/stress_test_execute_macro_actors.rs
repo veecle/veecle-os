@@ -15,6 +15,10 @@ macro_rules! make_test {
         #[derive(Copy, Clone, Debug, veecle_os_runtime::Storable)]
         struct Data;
 
+        impl veecle_os_runtime::Flatten for Data {
+            fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+        }
+
         $(
             #[veecle_os_runtime::actor]
             async fn $ident(

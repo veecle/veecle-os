@@ -59,6 +59,9 @@ Actual engine speed which is calculated over a minimum crankshaft angle of 720 d
             }
         }
     }
+    impl ::my_veecle_os_runtime::Flatten for EngineSpeed {
+        fn flatten(&self, _buffer: &mut impl ::my_veecle_os_runtime::MetricBuffer) {}
+    }
     impl ::my_veecle_os_runtime::Storable for EngineSpeed {
         type DataType = Self;
     }
@@ -137,6 +140,9 @@ impl From<Eec1> for ::my_veecle_os_data_support_can::Frame {
         Self::from(&value)
     }
 }
+impl ::my_veecle_os_runtime::Flatten for Eec1 {
+    fn flatten(&self, _buffer: &mut impl ::my_veecle_os_runtime::MetricBuffer) {}
+}
 impl ::my_veecle_os_runtime::Storable for Eec1 {
     type DataType = Self;
 }
@@ -206,6 +212,9 @@ Wheel-Based Vehicle Speed: Speed of the vehicle as calculated from wheel or tail
                 })
             }
         }
+    }
+    impl ::my_veecle_os_runtime::Flatten for WheelBasedVehicleSpeed {
+        fn flatten(&self, _buffer: &mut impl ::my_veecle_os_runtime::MetricBuffer) {}
     }
     impl ::my_veecle_os_runtime::Storable for WheelBasedVehicleSpeed {
         type DataType = Self;
@@ -284,6 +293,9 @@ impl From<Ccvs1> for ::my_veecle_os_data_support_can::Frame {
     fn from(value: Ccvs1) -> Self {
         Self::from(&value)
     }
+}
+impl ::my_veecle_os_runtime::Flatten for Ccvs1 {
+    fn flatten(&self, _buffer: &mut impl ::my_veecle_os_runtime::MetricBuffer) {}
 }
 impl ::my_veecle_os_runtime::Storable for Ccvs1 {
     type DataType = Self;

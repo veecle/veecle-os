@@ -15,9 +15,15 @@
 //!
 //! #[derive(Copy, Clone, Debug, Storable, serde::Deserialize)]
 //! pub struct Ping(u8);
+//! impl veecle_os_runtime::Flatten for Ping {
+//!     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+//! }
 //!
 //! #[derive(Copy, Clone, Debug, Storable, serde::Serialize)]
 //! pub struct Pong(u8);
+//! impl veecle_os_runtime::Flatten for Pong {
+//!     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+//! }
 //!
 //! #[veecle_os_runtime::actor]
 //! async fn local_actor(

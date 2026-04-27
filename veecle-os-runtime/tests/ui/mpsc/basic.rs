@@ -1,6 +1,10 @@
 #[derive(Debug, Default, veecle_os_runtime::Storable)]
 pub struct Command(pub u8);
 
+impl veecle_os_runtime::Flatten for Command {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 #[veecle_os_runtime::actor]
 async fn writer_actor<const N: usize>(
     mut _writer: veecle_os_runtime::mpsc::Writer<'_, Command, N>,

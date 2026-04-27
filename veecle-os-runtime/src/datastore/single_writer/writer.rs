@@ -34,6 +34,9 @@ use core::pin::Pin;
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
+/// # impl veecle_os_runtime::Flatten for Foo {
+/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+/// # }
 /// #
 /// #[veecle_os_runtime::actor]
 /// async fn foo_writer(mut writer: Writer<'_, Foo>) -> veecle_os_runtime::Never {
@@ -52,6 +55,9 @@ use core::pin::Pin;
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo(usize);
+/// # impl veecle_os_runtime::Flatten for Foo {
+/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+/// # }
 /// #
 /// #[veecle_os_runtime::actor]
 /// async fn foo_writer(
@@ -79,6 +85,9 @@ use core::pin::Pin;
 /// #
 /// # #[derive(Debug, Default, Storable)]
 /// # pub struct Foo;
+/// # impl veecle_os_runtime::Flatten for Foo {
+/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+/// # }
 /// #
 /// #[veecle_os_runtime::actor]
 /// async fn foo_writer(mut writer: Writer<'_, Foo>) -> veecle_os_runtime::Never {
@@ -142,10 +151,7 @@ where
                     let modify_wrapper = Modify::new(value, &mut modified);
                     f(modify_wrapper);
                     if modified {
-                        veecle_telemetry::trace!(
-                            "Slot modified",
-                            value = format_args!("{value:?}")
-                        );
+                        veecle_telemetry::trace!("Slot modified");
                     }
                 },
                 span_context,
@@ -204,6 +210,9 @@ mod tests {
         use futures::FutureExt;
         #[derive(Debug)]
         pub struct Data();
+        impl veecle_telemetry::Flatten for Data {
+            fn flatten(&self, _buffer: &mut impl veecle_telemetry::MetricBuffer) {}
+        }
         impl Storable for Data {
             type DataType = Self;
         }
@@ -238,6 +247,9 @@ mod tests {
 
         #[derive(Debug)]
         pub struct Data;
+        impl veecle_telemetry::Flatten for Data {
+            fn flatten(&self, _buffer: &mut impl veecle_telemetry::MetricBuffer) {}
+        }
         impl Storable for Data {
             type DataType = Self;
         }

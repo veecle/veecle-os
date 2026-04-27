@@ -46,6 +46,10 @@ pub enum ControlRequest {
     },
 }
 
+impl veecle_os_runtime::Flatten for ControlRequest {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 /// Response to a control request.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, veecle_os_runtime::Storable)]
 pub enum ControlResponse {
@@ -57,6 +61,10 @@ pub enum ControlResponse {
 
     /// Error occurred while processing the control request.
     Error(String),
+}
+
+impl veecle_os_runtime::Flatten for ControlResponse {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
 }
 
 /// A message between a runtime instance and the `veecle-orchestrator`.

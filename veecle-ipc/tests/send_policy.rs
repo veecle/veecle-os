@@ -16,6 +16,10 @@ struct TestData {
     value: u32,
 }
 
+impl veecle_os_runtime::Flatten for TestData {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 /// Test that `try_send` returns an error when channel is full (drop policy).
 #[tokio::test]
 #[cfg_attr(coverage_nightly, coverage(off))]

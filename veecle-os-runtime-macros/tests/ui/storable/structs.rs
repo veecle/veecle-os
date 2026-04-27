@@ -9,17 +9,37 @@ where
     test2: T,
 }
 
+impl<T: std::fmt::Debug> veecle_os_runtime::Flatten for Sensor0<T> {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 #[derive(Debug, PartialEq, veecle_os_runtime_macros::Storable)]
 pub struct Sensor1(u8, u8, u8);
+
+impl veecle_os_runtime::Flatten for Sensor1 {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
 
 #[derive(Debug, PartialEq, veecle_os_runtime_macros::Storable)]
 pub struct Sensor2;
 
+impl veecle_os_runtime::Flatten for Sensor2 {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 #[derive(Debug, PartialEq, veecle_os_runtime_macros::Storable)]
 pub struct Sensor3(Sensor1);
 
+impl veecle_os_runtime::Flatten for Sensor3 {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 #[derive(Debug, PartialEq, veecle_os_runtime_macros::Storable)]
 pub struct Sensor4(std::string::String);
+
+impl veecle_os_runtime::Flatten for Sensor4 {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
 
 fn value() -> u8 {
     1

@@ -6,13 +6,25 @@ where
     test: T,
 }
 
+impl<T: std::fmt::Debug + 'static> veecle_os_runtime::Flatten for Sensor<T> {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 #[derive(Debug, veecle_os_runtime_macros::Storable)]
 pub struct Sensor1<T>(std::marker::PhantomData<T>)
 where
     T: std::fmt::Debug;
 
+impl<T: std::fmt::Debug> veecle_os_runtime::Flatten for Sensor1<T> {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 #[derive(Debug, veecle_os_runtime_macros::Storable)]
 pub struct Sensor2<const N: usize>([u8; N]);
+
+impl<const N: usize> veecle_os_runtime::Flatten for Sensor2<N> {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
 
 #[veecle_os_runtime_macros::actor]
 async fn macro_test_actor<T, const N: usize>(

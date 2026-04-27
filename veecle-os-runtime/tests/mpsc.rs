@@ -12,6 +12,10 @@ use veecle_os_runtime::{Never, Storable};
 #[derive(Debug, PartialEq, Eq, Clone, Storable)]
 pub struct Event(pub u8);
 
+impl veecle_os_runtime::Flatten for Event {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 static READ_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 #[veecle_os_runtime::actor]
@@ -65,6 +69,10 @@ fn two_writers_one_reader() {
 /// Tests that mpsc can coexist with single_writer in the same system.
 #[derive(Debug, PartialEq, Eq, Clone, Storable)]
 pub struct Trigger;
+
+impl veecle_os_runtime::Flatten for Trigger {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
 
 static MIXED_COUNTER: AtomicUsize = AtomicUsize::new(0);
 

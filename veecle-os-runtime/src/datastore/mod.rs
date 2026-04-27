@@ -10,7 +10,7 @@ mod modify;
 pub mod mpsc;
 pub mod single_writer;
 mod slot;
-mod storable;
+pub mod storable;
 mod store_request;
 pub(crate) mod sync;
 
