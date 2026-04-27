@@ -42,5 +42,21 @@ use core::fmt::Debug;
 /// ```
 pub trait Storable {
     /// The data type being read/written from/to a slot.
-    type DataType: Debug;
+    type DataType: Debug + Flatten;
+}
+
+/// Marks a type as able to store a key-value (`&'static [str]`-[`veecle_telemetry::transient::Value`]) into a type implementing [`MetricBuffer`].
+pub trait Flatten {
+    /// Create a telemetry value
+    fn flatten(&self, buffer: &mut impl MetricBuffer);
+}
+
+/// Trait that a given metric container has to implement (to be used with the [`Flatten`] trait).
+pub trait MetricBuffer {
+    /// Adds the metric to the given container structure.
+    fn add_metric(
+        &mut self,
+        key: &'static str,
+        value: veecle_telemetry::protocol::transient::Value,
+    );
 }
