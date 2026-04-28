@@ -149,6 +149,9 @@ mod tests {
         use futures::FutureExt;
         #[derive(Debug)]
         pub struct Data();
+        impl crate::datastore::storable::Flatten for Data {
+            fn flatten(&self, _buffer: &mut impl crate::datastore::storable::MetricBuffer) {}
+        }
         impl Storable for Data {
             type DataType = Self;
         }
@@ -172,6 +175,9 @@ mod tests {
     fn multiple_writers_get_unique_indices() {
         #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         pub struct Data(usize);
+        impl crate::datastore::storable::Flatten for Data {
+            fn flatten(&self, _buffer: &mut impl crate::datastore::storable::MetricBuffer) {}
+        }
         impl Storable for Data {
             type DataType = Self;
         }
@@ -193,6 +199,9 @@ mod tests {
         use futures::FutureExt;
         #[derive(Debug)]
         pub struct Data();
+        impl crate::datastore::storable::Flatten for Data {
+            fn flatten(&self, _buffer: &mut impl crate::datastore::storable::MetricBuffer) {}
+        }
         impl Storable for Data {
             type DataType = Self;
         }

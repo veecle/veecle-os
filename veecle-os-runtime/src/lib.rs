@@ -114,6 +114,7 @@ pub mod memory_pool;
 pub use self::actor::{Actor, StoreRequest, actor};
 pub use self::datastore::mpsc;
 pub use self::datastore::single_writer;
+pub use self::datastore::storable::{Flatten, MetricBuffer};
 pub use self::datastore::{CombinableReader, CombineReaders, Modify, Storable};
 
 /// Internal exports for proc-macro and `macro_rules!` purposes.

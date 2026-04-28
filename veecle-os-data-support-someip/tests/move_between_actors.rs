@@ -35,7 +35,27 @@ fn yoke() {
     pub struct Output;
 
     impl Storable for Output {
-        type DataType = Yoke<YokeWrapper<'static>, Chunk<'static, [u8; 84]>>;
+        type DataType = ParsedMessage;
+    }
+
+    #[derive(Debug)]
+    pub struct ParsedMessage(Yoke<YokeWrapper<'static>, Chunk<'static, [u8; 84]>>);
+
+    impl veecle_os_runtime::Flatten for ParsedMessage {
+        fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+    }
+
+    impl core::ops::Deref for ParsedMessage {
+        type Target = Yoke<YokeWrapper<'static>, Chunk<'static, [u8; 84]>>;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl From<Yoke<YokeWrapper<'static>, Chunk<'static, [u8; 84]>>> for ParsedMessage {
+        fn from(yoke: Yoke<YokeWrapper<'static>, Chunk<'static, [u8; 84]>>) -> Self {
+            Self(yoke)
+        }
     }
 
     #[derive(Debug, Yokeable)]
@@ -60,7 +80,7 @@ fn yoke() {
                     )
                 });
 
-            writer.write(yoked).await;
+            writer.write(ParsedMessage::from(yoked)).await;
         }
     }
 
