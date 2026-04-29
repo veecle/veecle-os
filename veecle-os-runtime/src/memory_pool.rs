@@ -270,6 +270,15 @@ where
     }
 }
 
+impl<T> crate::datastore::storable::Flatten for Chunk<'_, T>
+where
+    T: crate::datastore::storable::Flatten,
+{
+    fn flatten(&self, buffer: &mut impl crate::datastore::storable::MetricBuffer) {
+        (**self).flatten(buffer);
+    }
+}
+
 impl<'a, T> Chunk<'a, T> {
     /// Creates a new [`Chunk`].
     ///

@@ -175,6 +175,9 @@ mod tests {
 
     #[derive(Debug)]
     struct Data(usize);
+    impl crate::datastore::storable::Flatten for Data {
+        fn flatten(&self, _buffer: &mut impl crate::datastore::storable::MetricBuffer) {}
+    }
     impl Storable for Data {
         type DataType = Self;
     }

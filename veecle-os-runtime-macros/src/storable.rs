@@ -101,6 +101,9 @@ impl StorableDerive {
             .map(Ok)
             .unwrap_or_else(crate::veecle_os_runtime_path)?;
 
+        let lifetimes_without_constraints2 = self.lifetimes_without_constraints();
+        let generic_types_without_constraints2 = self.generic_types_without_constraints();
+
         Ok(quote!(
             #[automatically_derived]
             impl
@@ -110,6 +113,16 @@ impl StorableDerive {
             #where_clause
             {
                 type DataType = Self;
+            }
+
+            #[automatically_derived]
+            impl
+            #lt_token #generic_params #gt_token
+            #veecle_os_runtime::Flatten for #ident
+            #lt_token #(#lifetimes_without_constraints2,)* #(#generic_types_without_constraints2),* #gt_token
+            #where_clause
+            {
+                fn flatten(&self, _buffer: &mut impl #veecle_os_runtime::MetricBuffer) {}
             }
         ))
     }

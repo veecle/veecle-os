@@ -702,6 +702,10 @@ fn generate_signal(
                 }
             }
 
+            impl #veecle_os_runtime::Flatten for #name {
+                fn flatten(&self, _buffer: &mut impl #veecle_os_runtime::MetricBuffer) {}
+            }
+
             impl #veecle_os_runtime::Storable for #name {
                 type DataType = Self;
             }
@@ -851,6 +855,10 @@ fn generate_message(options: &crate::Options, dbc: &Dbc, message: &Message) -> R
             fn from(value: #name) -> Self {
                 Self::from(&value)
             }
+        }
+
+        impl #veecle_os_runtime::Flatten for #name {
+            fn flatten(&self, _buffer: &mut impl #veecle_os_runtime::MetricBuffer) {}
         }
 
         impl #veecle_os_runtime::Storable for #name {

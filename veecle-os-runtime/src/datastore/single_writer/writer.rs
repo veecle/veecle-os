@@ -204,6 +204,9 @@ mod tests {
         use futures::FutureExt;
         #[derive(Debug)]
         pub struct Data();
+        impl crate::datastore::storable::Flatten for Data {
+            fn flatten(&self, _buffer: &mut impl crate::datastore::storable::MetricBuffer) {}
+        }
         impl Storable for Data {
             type DataType = Self;
         }
@@ -238,6 +241,9 @@ mod tests {
 
         #[derive(Debug)]
         pub struct Data;
+        impl crate::datastore::storable::Flatten for Data {
+            fn flatten(&self, _buffer: &mut impl crate::datastore::storable::MetricBuffer) {}
+        }
         impl Storable for Data {
             type DataType = Self;
         }

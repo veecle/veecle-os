@@ -6,9 +6,13 @@ pub struct Sensor(u8);
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub struct GenericData<T>(T);
 
+impl<T> veecle_os_runtime::Flatten for GenericData<T> {
+    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
+}
+
 impl<T> veecle_os_runtime::Storable for GenericData<T>
 where
-    T: core::fmt::Debug + 'static,
+    T: core::fmt::Debug + veecle_os_runtime::Flatten + 'static,
 {
     type DataType = Self;
 }
