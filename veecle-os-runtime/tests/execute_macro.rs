@@ -1,18 +1,10 @@
 #![expect(missing_docs)]
 
-#[derive(Eq, PartialEq, Debug, Clone, veecle_os_runtime::Storable)]
+#[derive(Eq, PartialEq, Debug, Clone, veecle_os_runtime::Storable, veecle_os_runtime::FlattenNoop)]
 pub struct Sensor(u8);
 
-impl veecle_os_runtime::Flatten for Sensor {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-}
-
-#[derive(Eq, PartialEq, Debug, Clone)]
+#[derive(Eq, PartialEq, Debug, Clone, veecle_os_runtime::FlattenNoop)]
 pub struct GenericData<T>(T);
-
-impl<T> veecle_os_runtime::Flatten for GenericData<T> {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-}
 
 impl<T> veecle_os_runtime::Storable for GenericData<T>
 where
@@ -21,19 +13,11 @@ where
     type DataType = Self;
 }
 
-#[derive(Eq, PartialEq, Debug, Clone, veecle_os_runtime::Storable)]
+#[derive(Eq, PartialEq, Debug, Clone, veecle_os_runtime::Storable, veecle_os_runtime::FlattenNoop)]
 pub struct Other(u8);
 
-impl veecle_os_runtime::Flatten for Other {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-}
-
-#[derive(Eq, PartialEq, Debug, Clone, veecle_os_runtime::Storable)]
+#[derive(Eq, PartialEq, Debug, Clone, veecle_os_runtime::Storable, veecle_os_runtime::FlattenNoop)]
 pub struct Data(u8);
-
-impl veecle_os_runtime::Flatten for Data {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-}
 
 async fn yield_once() {
     let mut yielded = false;

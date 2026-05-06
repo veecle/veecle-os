@@ -12,12 +12,8 @@
 
 macro_rules! make_test {
     ($($ident:ident)*) => {
-        #[derive(Copy, Clone, Debug, veecle_os_runtime::Storable)]
+        #[derive(Copy, Clone, Debug, veecle_os_runtime::Storable, veecle_os_runtime::FlattenNoop)]
         struct Data;
-
-        impl veecle_os_runtime::Flatten for Data {
-            fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-        }
 
         $(
             #[veecle_os_runtime::actor]

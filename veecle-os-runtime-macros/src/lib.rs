@@ -14,11 +14,8 @@ mod storable;
 /// use veecle_os_runtime::single_writer::{Reader, Writer};
 /// # use veecle_os_runtime::{Never, Storable};
 /// #
-/// # #[derive(Debug, PartialEq, Clone, Default, Storable)]
+/// # #[derive(Debug, PartialEq, Clone, Default, Storable, veecle_os_runtime::FlattenNoop)]
 /// # pub struct Sensor(pub u8);
-/// # impl veecle_os_runtime::Flatten for Sensor {
-/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// # }
 ///
 /// #[veecle_os_runtime::actor]
 /// async fn macro_test_actor(
@@ -46,11 +43,8 @@ mod storable;
 /// use my_veecle_os_runtime::single_writer::{Reader, Writer};
 /// # use my_veecle_os_runtime::{Never, Storable};
 /// #
-/// # #[derive(Debug, PartialEq, Clone, Default, Storable)]
+/// # #[derive(Debug, PartialEq, Clone, Default, Storable, my_veecle_os_runtime::FlattenNoop)]
 /// # pub struct Sensor(pub u8);
-/// # impl my_veecle_os_runtime::Flatten for Sensor {
-/// #     fn flatten(&self, _buffer: &mut impl my_veecle_os_runtime::MetricBuffer) {}
-/// # }
 ///
 /// #[my_veecle_os_runtime::actor(crate = my_veecle_os_runtime)]
 /// async fn macro_test_actor(
@@ -96,7 +90,7 @@ fn actor2(
 /// use core::fmt::Debug;
 /// use veecle_os_runtime::Storable;
 ///
-/// #[derive(Debug, Storable)]
+/// #[derive(Debug, Storable, veecle_os_runtime::FlattenNoop)]
 /// pub struct Sensor<T>
 /// where
 ///     T: Debug,
@@ -106,28 +100,16 @@ fn actor2(
 ///     test1: T,
 /// }
 ///
-/// impl<T: Debug> veecle_os_runtime::Flatten for Sensor<T> {
-///     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// }
-///
-/// #[derive(Debug, Storable)]
+/// #[derive(Debug, Storable, veecle_os_runtime::FlattenNoop)]
 /// pub struct Motor {
 ///     test: u8,
 /// }
 ///
-/// impl veecle_os_runtime::Flatten for Motor {
-///     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// }
-///
-/// #[derive(Debug, Storable)]
+/// #[derive(Debug, Storable, veecle_os_runtime::FlattenNoop)]
 /// pub enum Actuator {
 ///     Variant1,
 ///     Variant2(u8),
 ///     Variant3 { test: u8 },
-/// }
-///
-/// impl veecle_os_runtime::Flatten for Actuator {
-///     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
 /// }
 /// ```
 #[proc_macro_derive(Storable, attributes(storable))]

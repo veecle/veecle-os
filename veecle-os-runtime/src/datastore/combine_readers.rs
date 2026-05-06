@@ -146,18 +146,12 @@ mod tests {
 
     #[test]
     fn read_exclusive_reader() {
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor0(u8);
-        impl crate::Flatten for Sensor0 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor1(u8);
-        impl crate::Flatten for Sensor1 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let slot0 = pin!(Slot::<Sensor0>::new());
         let slot1 = pin!(Slot::<Sensor1>::new());
@@ -170,18 +164,12 @@ mod tests {
 
     #[test]
     fn wait_for_update_exclusive_reader() {
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor0(u8);
-        impl crate::Flatten for Sensor0 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor1(u8);
-        impl crate::Flatten for Sensor1 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let source = pin!(generational::Source::new());
         let slot0 = pin!(Slot::<Sensor0>::new());
@@ -213,18 +201,12 @@ mod tests {
 
     #[test]
     fn read() {
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor0(u8);
-        impl crate::Flatten for Sensor0 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor1(u8);
-        impl crate::Flatten for Sensor1 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let source = pin!(generational::Source::new());
         let slot0 = pin!(Slot::<Sensor0>::new());
@@ -247,18 +229,12 @@ mod tests {
 
     #[test]
     fn wait_for_update() {
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor0(u8);
-        impl crate::Flatten for Sensor0 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor1(u8);
-        impl crate::Flatten for Sensor1 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let source = pin!(generational::Source::new());
         let slot0 = pin!(Slot::<Sensor0>::new());
@@ -290,18 +266,12 @@ mod tests {
 
     #[test]
     fn read_mixed() {
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor0(u8);
-        impl crate::Flatten for Sensor0 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor1(u8);
-        impl crate::Flatten for Sensor1 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let source = pin!(generational::Source::new());
         let slot0 = pin!(Slot::<Sensor0>::new());
@@ -321,18 +291,12 @@ mod tests {
 
     #[test]
     fn is_updated() {
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor0(u8);
-        impl crate::Flatten for Sensor0 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor1(u8);
-        impl crate::Flatten for Sensor1 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let source = pin!(generational::Source::new());
         let slot0 = pin!(Slot::<Sensor0>::new());
@@ -357,18 +321,12 @@ mod tests {
 
     #[test]
     fn is_updated_exclusive_reader() {
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor0(u8);
-        impl crate::Flatten for Sensor0 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor1(u8);
-        impl crate::Flatten for Sensor1 {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let source = pin!(generational::Source::new());
         let slot0 = pin!(Slot::<Sensor0>::new());

@@ -229,6 +229,34 @@ pub fn instrument(
     .into()
 }
 
+/// Derives an empty [`Flatten`] implementation for a struct or enum.
+///
+/// Use this for types that do not produce telemetry data. For types that should
+/// emit telemetry, implement [`Flatten`] manually instead.
+///
+/// [`Flatten`]: https://docs.rs/veecle-telemetry/latest/veecle_telemetry/flatten/trait.Flatten.html
+#[proc_macro_derive(FlattenNoop)]
+pub fn derive_flatten_noop(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
+    let veecle_telemetry_crate = veecle_telemetry_path();
+    let veecle_telemetry_crate = match veecle_telemetry_crate {
+        Ok(path) => path,
+        Err(error) => return error.to_compile_error().into(),
+    };
+
+    quote!(
+        #[automatically_derived]
+        impl #impl_generics #veecle_telemetry_crate::Flatten for #name #ty_generics #where_clause {
+            fn flatten(&self, _buffer: &mut impl #veecle_telemetry_crate::MetricBuffer) {}
+        }
+    )
+    .into()
+}
+
 /// Returns the span name expression.
 ///
 /// Uses `type_name_of_val(&|| ())` via a declarative macro helper to capture the
@@ -362,6 +390,17 @@ fn veecle_telemetry_path() -> syn::Result<syn::Path> {
             }
         })
         .or_else(|_| {
+            proc_macro_crate::crate_name("veecle-os-runtime").map(|found| match found {
+                proc_macro_crate::FoundCrate::Itself => {
+                    syn::parse_quote!(::veecle_os_runtime)
+                }
+                proc_macro_crate::FoundCrate::Name(name) => {
+                    let ident = syn::Ident::new(&name, proc_macro2::Span::call_site());
+                    syn::parse_quote!(::#ident)
+                }
+            })
+        })
+        .or_else(|_| {
             proc_macro_crate::crate_name("veecle-os").map(|found| match found {
                 proc_macro_crate::FoundCrate::Itself => {
                     todo!("unused currently, not sure what behavior will be wanted")
@@ -375,7 +414,7 @@ fn veecle_telemetry_path() -> syn::Result<syn::Path> {
         .map_err(|_| {
             syn::Error::new(
                 proc_macro2::Span::call_site(),
-                "could not find either veecle-telemetry or veecle-os crates",
+                "could not find either veecle-telemetry, veecle-os-runtime, or veecle-os crates",
             )
         })
 }

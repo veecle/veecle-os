@@ -35,17 +35,11 @@ pub use veecle_os_runtime_macros::actor;
 /// # use veecle_os_runtime::single_writer::{Reader, Writer};
 /// # use veecle_os_runtime::{Never, Storable};
 /// #
-/// # #[derive(Debug, Default, Storable)]
+/// # #[derive(Debug, Default, Storable, veecle_os_runtime::FlattenNoop)]
 /// # pub struct Foo;
-/// # impl veecle_os_runtime::Flatten for Foo {
-/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// # }
 /// #
-/// # #[derive(Debug, Default, Storable)]
+/// # #[derive(Debug, Default, Storable, veecle_os_runtime::FlattenNoop)]
 /// # pub struct Bar;
-/// # impl veecle_os_runtime::Flatten for Bar {
-/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// # }
 /// #
 /// # pub struct Ctx;
 ///
@@ -74,17 +68,11 @@ pub use veecle_os_runtime_macros::actor;
 /// # use veecle_os_runtime::{Never, Storable, Actor};
 /// # use veecle_os_runtime::__exports::{AppendCons, DefinesSlot};
 /// #
-/// # #[derive(Debug, Default, Storable)]
+/// # #[derive(Debug, Default, Storable, veecle_os_runtime::FlattenNoop)]
 /// # pub struct Foo;
-/// # impl veecle_os_runtime::Flatten for Foo {
-/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// # }
 /// #
-/// # #[derive(Debug, Default, Storable)]
+/// # #[derive(Debug, Default, Storable, veecle_os_runtime::FlattenNoop)]
 /// # pub struct Bar;
-/// # impl veecle_os_runtime::Flatten for Bar {
-/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// # }
 /// #
 /// # pub struct Ctx;
 ///

@@ -22,22 +22,14 @@
 //! use veecle_os_runtime::single_writer::{Reader, Writer};
 //! use veecle_os_runtime::{Never, Storable};
 //!
-//! #[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
+//! #[derive(Debug, Clone, PartialEq, Eq, Default, Storable, veecle_os_runtime::FlattenNoop)]
 //! pub struct Ping {
 //!     value: u32,
 //! }
 //!
-//! impl veecle_os_runtime::Flatten for Ping {
-//!     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-//! }
-//!
-//! #[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
+//! #[derive(Debug, Clone, PartialEq, Eq, Default, Storable, veecle_os_runtime::FlattenNoop)]
 //! pub struct Pong {
 //!     value: u32,
-//! }
-//!
-//! impl veecle_os_runtime::Flatten for Pong {
-//!     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
 //! }
 //!
 //! #[veecle_os_runtime::actor]
@@ -122,7 +114,7 @@ pub mod memory_pool;
 pub use self::actor::{Actor, StoreRequest, actor};
 pub use self::datastore::mpsc;
 pub use self::datastore::single_writer;
-pub use veecle_telemetry::{Flatten, MetricBuffer};
+pub use veecle_telemetry::{Flatten, FlattenNoop, MetricBuffer};
 pub use self::datastore::{CombinableReader, CombineReaders, Modify, Storable};
 
 /// Internal exports for proc-macro and `macro_rules!` purposes.

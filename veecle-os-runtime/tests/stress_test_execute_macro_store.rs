@@ -15,12 +15,8 @@ macro_rules! make_test {
         // Submodule so that we can reuse `$ident` as an identifier-pattern in the actors.
         mod data {
             $(
-                #[derive(Copy, Clone, Debug, veecle_os_runtime::Storable)]
+                #[derive(Copy, Clone, Debug, veecle_os_runtime::Storable, veecle_os_runtime::FlattenNoop)]
                 pub(super) struct $ident;
-
-                impl veecle_os_runtime::Flatten for $ident {
-                    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-                }
             )*
         }
 

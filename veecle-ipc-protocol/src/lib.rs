@@ -23,7 +23,7 @@ pub enum Priority {
 }
 
 /// A control request sent from a runtime to the orchestrator.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, veecle_os_runtime::Storable)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, veecle_os_runtime::Storable, veecle_os_runtime::FlattenNoop)]
 pub enum ControlRequest {
     /// Request to start a runtime instance.
     StartRuntime {
@@ -46,12 +46,8 @@ pub enum ControlRequest {
     },
 }
 
-impl veecle_os_runtime::Flatten for ControlRequest {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-}
-
 /// Response to a control request.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, veecle_os_runtime::Storable)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, veecle_os_runtime::Storable, veecle_os_runtime::FlattenNoop)]
 pub enum ControlResponse {
     /// Runtime started successfully.
     Started,
@@ -61,10 +57,6 @@ pub enum ControlResponse {
 
     /// Error occurred while processing the control request.
     Error(String),
-}
-
-impl veecle_os_runtime::Flatten for ControlResponse {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
 }
 
 /// A message between a runtime instance and the `veecle-orchestrator`.

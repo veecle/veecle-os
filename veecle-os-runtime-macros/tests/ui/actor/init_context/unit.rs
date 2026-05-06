@@ -1,9 +1,5 @@
-#[derive(Debug, PartialEq, Clone, Default, veecle_os_runtime::Storable)]
+#[derive(Debug, PartialEq, Clone, Default, veecle_os_runtime::Storable, veecle_os_runtime::FlattenNoop)]
 pub struct Sensor(pub u8);
-
-impl veecle_os_runtime::Flatten for Sensor {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-}
 
 #[veecle_os_runtime_macros::actor]
 async fn macro_test_actor(

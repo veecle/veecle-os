@@ -11,13 +11,9 @@ use veecle_ipc::SendPolicy;
 use veecle_ipc_protocol::Message;
 use veecle_os_runtime::Storable;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Storable, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Storable, Serialize, Deserialize, veecle_os_runtime::FlattenNoop)]
 struct TestData {
     value: u32,
-}
-
-impl veecle_os_runtime::Flatten for TestData {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
 }
 
 /// Test that `try_send` returns an error when channel is full (drop policy).

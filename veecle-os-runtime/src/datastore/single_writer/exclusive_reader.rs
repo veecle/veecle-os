@@ -56,11 +56,8 @@ use crate::datastore::{CombinableReader, Datastore, DefinesSlot, Storable, Store
 /// #
 /// # use veecle_os_runtime::{Storable, single_writer::ExclusiveReader};
 /// #
-/// # #[derive(Debug, Default, Storable)]
+/// # #[derive(Debug, Default, Storable, veecle_os_runtime::FlattenNoop)]
 /// # pub struct Foo;
-/// # impl veecle_os_runtime::Flatten for Foo {
-/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// # }
 /// #
 /// #[veecle_os_runtime::actor]
 /// async fn foo_reader(mut reader: ExclusiveReader<'_, Foo>) -> veecle_os_runtime::Never {
@@ -257,12 +254,9 @@ mod tests {
 
     #[test]
     fn read() {
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor(u8);
-        impl crate::Flatten for Sensor {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());
@@ -288,12 +282,9 @@ mod tests {
 
     #[test]
     fn take() {
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor(u8);
-        impl crate::Flatten for Sensor {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());
@@ -310,12 +301,9 @@ mod tests {
 
     #[test]
     fn read_updated() {
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor(u8);
-        impl crate::Flatten for Sensor {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());
@@ -335,12 +323,9 @@ mod tests {
 
     #[test]
     fn take_updated() {
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor(u8);
-        impl crate::Flatten for Sensor {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());
@@ -357,12 +342,9 @@ mod tests {
 
     #[test]
     fn is_updated() {
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor(u8);
-        impl crate::Flatten for Sensor {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());
@@ -382,12 +364,9 @@ mod tests {
 
     #[test]
     fn wait_for_update() {
-        #[derive(Eq, PartialEq, Debug, Clone, Storable)]
+        #[derive(Eq, PartialEq, Debug, Clone, Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct Sensor(u8);
-        impl crate::Flatten for Sensor {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let source = pin!(generational::Source::new());
         let slot = pin!(Slot::<Sensor>::new());

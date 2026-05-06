@@ -24,12 +24,8 @@ use veecle_os_runtime::single_writer::{Reader, Writer};
 const BUFFER_SIZE: usize = 16;
 
 /// Message sent between runtime instances via unix pipe.
-#[derive(Debug, Default, Storable)]
+#[derive(Debug, Default, Storable, veecle_os_runtime::FlattenNoop)]
 pub struct PipeMessage(pub [u8; BUFFER_SIZE]);
-
-impl veecle_os_runtime::Flatten for PipeMessage {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-}
 
 #[veecle_os_runtime::actor]
 async fn write_pipe_runtime_actor(#[init_context] pipe_tx_fd: RawFd) -> veecle_os_runtime::Never {

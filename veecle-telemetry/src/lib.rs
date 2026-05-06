@@ -107,3 +107,4 @@ pub use flatten::{Flatten, MetricBuffer};
 pub use id::{ProcessId, SpanContext, SpanId};
 pub use span::{CurrentSpan, Span, SpanGuard, SpanGuardRef};
 pub use veecle_telemetry_macros::instrument;
+pub use veecle_telemetry_macros::FlattenNoop;

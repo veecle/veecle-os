@@ -38,12 +38,8 @@ fn yoke() {
         type DataType = ParsedMessage;
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, veecle_os_runtime::FlattenNoop)]
     pub struct ParsedMessage(Yoke<YokeWrapper<'static>, Chunk<'static, [u8; 84]>>);
-
-    impl veecle_os_runtime::Flatten for ParsedMessage {
-        fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-    }
 
     impl core::ops::Deref for ParsedMessage {
         type Target = Yoke<YokeWrapper<'static>, Chunk<'static, [u8; 84]>>;

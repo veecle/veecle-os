@@ -4,22 +4,14 @@ use serde::Serialize;
 use veecle_os_runtime::single_writer::{Reader, Writer};
 use veecle_os_runtime::{CombineReaders, Never, Storable};
 
-#[derive(Debug, Default, Storable, Serialize)]
+#[derive(Debug, Default, Storable, Serialize, veecle_os_runtime::FlattenNoop)]
 pub struct Ping {
     pub value: u32,
 }
 
-impl veecle_os_runtime::Flatten for Ping {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-}
-
-#[derive(Debug, Default, Storable, Serialize)]
+#[derive(Debug, Default, Storable, Serialize, veecle_os_runtime::FlattenNoop)]
 pub struct Pong {
     value: u32,
-}
-
-impl veecle_os_runtime::Flatten for Pong {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
 }
 
 #[veecle_telemetry::instrument]

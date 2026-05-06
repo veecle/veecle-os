@@ -14,15 +14,11 @@ pub use veecle_telemetry::Flatten;
 ///
 /// ```
 /// use veecle_os_runtime::Storable;
-/// use veecle_os_runtime::{Flatten, MetricBuffer};
+/// use veecle_os_runtime::FlattenNoop;
 ///
 /// // Identifier type.
-/// #[derive(Debug, Default)]
+/// #[derive(Debug, Default, FlattenNoop)]
 /// struct Sensor;
-///
-/// impl Flatten for Sensor {
-///     fn flatten(&self, _buffer: &mut impl MetricBuffer) {}
-/// }
 ///
 /// impl Storable for Sensor {
 ///     // Data type.
@@ -33,17 +29,13 @@ pub use veecle_telemetry::Flatten;
 /// If the data type is unique and should be used as the identifier, the data type can be set to `Self`.
 /// ```
 /// use veecle_os_runtime::Storable;
-/// use veecle_os_runtime::{Flatten, MetricBuffer};
+/// use veecle_os_runtime::FlattenNoop;
 ///
 /// // Identifier type.
-/// #[derive(Debug, Default)]
+/// #[derive(Debug, Default, FlattenNoop)]
 /// struct Sensor{
 ///     // ...
 /// };
-///
-/// impl Flatten for Sensor {
-///     fn flatten(&self, _buffer: &mut impl MetricBuffer) {}
-/// }
 ///
 /// impl Storable for Sensor {
 ///     // Data type.

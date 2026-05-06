@@ -1,9 +1,5 @@
-#[derive(veecle_os_runtime_macros::Storable, Clone, Debug)]
+#[derive(veecle_os_runtime_macros::Storable, Clone, Debug, veecle_os_runtime::FlattenNoop)]
 pub struct Reference<'a>(&'a u8);
-
-impl<'a> veecle_os_runtime::Flatten for Reference<'a> {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-}
 
 fn verify_static(_: &'static u8) {}
 

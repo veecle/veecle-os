@@ -23,16 +23,10 @@ use crate::{Connector, SendPolicy};
 /// ```no_run
 /// # use serde::{Serialize, Deserialize};
 /// # use veecle_os_runtime::Storable;
-/// # #[derive(Debug, Storable, Serialize, Deserialize)]
+/// # #[derive(Debug, Storable, Serialize, Deserialize, veecle_os_runtime::FlattenNoop)]
 /// # struct CriticalData;
-/// # impl veecle_os_runtime::Flatten for CriticalData {
-/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// # }
-/// # #[derive(Debug, Storable, Serialize, Deserialize)]
+/// # #[derive(Debug, Storable, Serialize, Deserialize, veecle_os_runtime::FlattenNoop)]
 /// # struct TelemetryData;
-/// # impl veecle_os_runtime::Flatten for TelemetryData {
-/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// # }
 /// # async fn example() {
 /// # let connector: &'static veecle_ipc::Connector = todo!();
 /// use veecle_ipc::SendPolicy;

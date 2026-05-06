@@ -1,18 +1,10 @@
 use ::{veecle_os_runtime, veecle_os_runtime_macros};
 
-#[derive(Debug, PartialEq, Clone, Default, veecle_os_runtime::Storable)]
+#[derive(Debug, PartialEq, Clone, Default, veecle_os_runtime::Storable, veecle_os_runtime::FlattenNoop)]
 pub struct Sensor(pub u8);
 
-impl veecle_os_runtime::Flatten for Sensor {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-}
-
-#[derive(Debug, PartialEq, Clone, Default, veecle_os_runtime::Storable)]
+#[derive(Debug, PartialEq, Clone, Default, veecle_os_runtime::Storable, veecle_os_runtime::FlattenNoop)]
 pub struct Sensor1(pub u8);
-
-impl veecle_os_runtime::Flatten for Sensor1 {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-}
 
 macro_rules! make_actor {
     () => {

@@ -481,22 +481,14 @@ where
 /// use veecle_os_runtime::single_writer::{Reader, Writer};
 /// use veecle_os_runtime::{Never, Storable};
 ///
-/// #[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
+/// #[derive(Debug, Clone, PartialEq, Eq, Default, Storable, veecle_os_runtime::FlattenNoop)]
 /// pub struct Ping {
 ///     value: u32,
 /// }
 ///
-/// impl veecle_os_runtime::Flatten for Ping {
-///     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// }
-///
-/// #[derive(Debug, Clone, PartialEq, Eq, Default, Storable)]
+/// #[derive(Debug, Clone, PartialEq, Eq, Default, Storable, veecle_os_runtime::FlattenNoop)]
 /// pub struct Pong {
 ///     value: u32,
-/// }
-///
-/// impl veecle_os_runtime::Flatten for Pong {
-///     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
 /// }
 ///
 /// #[veecle_os_runtime::actor]
@@ -672,12 +664,9 @@ mod tests {
         expected = "no slot available for `veecle_os_runtime::execute::tests::nil_slot_panics_with_correct_message::TestType`, required by `test_requestor`"
     )]
     fn nil_slot_panics_with_correct_message() {
-        #[derive(Debug, crate::datastore::Storable)]
+        #[derive(Debug, crate::datastore::Storable, crate::FlattenNoop)]
         #[storable(crate = crate)]
         struct TestType;
-        impl crate::Flatten for TestType {
-            fn flatten(&self, _buffer: &mut impl crate::MetricBuffer) {}
-        }
 
         let nil = pin!(Cons(Source::new(), Nil));
         let _slot: core::pin::Pin<&Slot<TestType>> =

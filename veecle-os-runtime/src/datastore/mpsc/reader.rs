@@ -32,11 +32,8 @@ use crate::datastore::{Datastore, DefinesSlot, Storable, StoreRequest};
 /// #
 /// # use veecle_os_runtime::{Storable, mpsc::Reader};
 /// #
-/// # #[derive(Debug, Default, Storable)]
+/// # #[derive(Debug, Default, Storable, veecle_os_runtime::FlattenNoop)]
 /// # pub struct Command(usize);
-/// # impl veecle_os_runtime::Flatten for Command {
-/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// # }
 /// #
 /// #[veecle_os_runtime::actor]
 /// async fn command_handler<const N: usize>(mut reader: Reader<'_, Command, N>) -> veecle_os_runtime::Never {

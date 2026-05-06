@@ -1,9 +1,5 @@
-#[derive(Debug, Default, veecle_os_runtime::Storable)]
+#[derive(Debug, Default, veecle_os_runtime::Storable, veecle_os_runtime::FlattenNoop)]
 pub struct Command(pub u8);
-
-impl veecle_os_runtime::Flatten for Command {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-}
 
 #[veecle_os_runtime::actor]
 async fn writer_actor1<const N: usize>(

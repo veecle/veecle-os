@@ -32,11 +32,8 @@ use core::pin::Pin;
 /// #
 /// # use veecle_os_runtime::{Storable, single_writer::Writer};
 /// #
-/// # #[derive(Debug, Default, Storable)]
+/// # #[derive(Debug, Default, Storable, veecle_os_runtime::FlattenNoop)]
 /// # pub struct Foo;
-/// # impl veecle_os_runtime::Flatten for Foo {
-/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// # }
 /// #
 /// #[veecle_os_runtime::actor]
 /// async fn foo_writer(mut writer: Writer<'_, Foo>) -> veecle_os_runtime::Never {
@@ -53,11 +50,8 @@ use core::pin::Pin;
 /// #
 /// # use veecle_os_runtime::{Storable, single_writer::Writer};
 /// #
-/// # #[derive(Debug, Default, Storable)]
+/// # #[derive(Debug, Default, Storable, veecle_os_runtime::FlattenNoop)]
 /// # pub struct Foo(usize);
-/// # impl veecle_os_runtime::Flatten for Foo {
-/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// # }
 /// #
 /// #[veecle_os_runtime::actor]
 /// async fn foo_writer(
@@ -83,11 +77,8 @@ use core::pin::Pin;
 /// #
 /// # use veecle_os_runtime::{Storable, single_writer::{Reader, Writer}};
 /// #
-/// # #[derive(Debug, Default, Storable)]
+/// # #[derive(Debug, Default, Storable, veecle_os_runtime::FlattenNoop)]
 /// # pub struct Foo;
-/// # impl veecle_os_runtime::Flatten for Foo {
-/// #     fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-/// # }
 /// #
 /// #[veecle_os_runtime::actor]
 /// async fn foo_writer(mut writer: Writer<'_, Foo>) -> veecle_os_runtime::Never {

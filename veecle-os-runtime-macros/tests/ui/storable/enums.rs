@@ -1,24 +1,16 @@
-#[derive(Debug, PartialEq, veecle_os_runtime_macros::Storable)]
+#[derive(Debug, PartialEq, veecle_os_runtime_macros::Storable, veecle_os_runtime::FlattenNoop)]
 pub enum Sensor0 {
     Variant1,
     Variant2(u8),
     Variant3 { test: u8 },
 }
 
-impl veecle_os_runtime::Flatten for Sensor0 {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
-}
-
 #[repr(usize)]
-#[derive(Debug, PartialEq, veecle_os_runtime_macros::Storable)]
+#[derive(Debug, PartialEq, veecle_os_runtime_macros::Storable, veecle_os_runtime::FlattenNoop)]
 pub enum Sensor1 {
     Variant1 = 5,
     Variant2(u8),
     Variant3 { test: u8 },
-}
-
-impl veecle_os_runtime::Flatten for Sensor1 {
-    fn flatten(&self, _buffer: &mut impl veecle_os_runtime::MetricBuffer) {}
 }
 
 #[veecle_os_runtime_macros::actor]
