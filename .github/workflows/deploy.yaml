@@ -115,7 +115,7 @@ jobs:
       # Since we're only publishing rustdoc output there is no root page, we can instead redirect to an arbitrary crate.
       - run: echo '/ /veecle_os/' > target/doc/_redirects
       - id: wrangler
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ vars.CF_ACCOUNT_ID }}
@@ -141,7 +141,7 @@ jobs:
           name: user-manual
           path: docs/user-manual/book
       - id: wrangler
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ vars.CF_ACCOUNT_ID }}
@@ -166,7 +166,7 @@ jobs:
           name: veecle-telemetry-ui-wasm
           path: veecle-telemetry-ui/dist
       - id: wrangler
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ vars.CF_ACCOUNT_ID }}
