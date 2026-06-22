@@ -28,7 +28,7 @@ jobs:
           app-id: ${{ secrets.VEECLE_CI_ACCESS_APP_ID }}
           private-key: ${{ secrets.VEECLE_CI_ACCESS_APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # Required to push commits back to the PR branch.
           ref: ${{ github.head_ref }}
